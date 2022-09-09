@@ -25,15 +25,2174 @@ abstract: |
 
 bibliography: bibliography.bib
 output: rticles::asa_article
+
+header-includes:
+   - \usepackage[dvipsnames]{xcolor} % colors
+   - \newcommand{\aak}[1]{{\textcolor{blue}{#1}}}
+   - \newcommand{\svp}[1]{{\textcolor{RedOrange}{#1}}}
+   - \newcommand{\yg}[1]{{\textcolor{Green}{#1}}}
+   - \usepackage[capitalise]{cleveref}
+   - \newcommand\pcref[1]{(\cref{#1})}
+   - \usepackage{algorithm,algpseudocode,booktabs}
 ---
 
+```{r setup, include = F}
+knitr::opts_chunk$set(
+  echo = F, eval = T, message = F, warning = F,
+  fig.width = 6, fig.height = 4,  fig.align = 'center',
+  out.width = "\\linewidth", dpi = 300, 
+  tidy = T, tidy.opts=list(width.cutoff=45),
+  fig.pos = "tbp",
+  out.extra = ""
+)
+```
+
+
+```{r load-packages, include = F}
+
+library(knitr)
+library(FNN)
+library(expss)
+library(reshape2)
+library(sf)
+library(ggpubr)
+library(tidyverse)
+library(fields)
+library(crosstalk)
+library(plotly)
+library(factoextra)
+library(sp)
+library(GpGp)
+library(mvtnorm)
+library(expss)
+library(FNN)
+library(gridExtra)
+library(RColorBrewer)
+library(kableExtra)
+library(zoo)
+
+```
+
+```{r load-functions, include = T}
+
+## Needed Functions
+bbox_summary <- function(df) {
+  # Function takes data frame with k, xmap, ymap
+  # and returns a bounding box and trajectory
+  df <- arrange(df, k) # sort by k
+  df %>%
+    summarize(
+      x = mean(xmap), y = mean(ymap),
+      xmin = min(xmap), xmax = max(xmap),
+      ymin = min(ymap), ymax = max(ymap),
+      xbox = xmax - xmin,
+      ybox = ymax - ymin,
+      dx = xmap[n()] - xmap[1],
+      dy = ymap[n()] - ymap[1],
+      angle = atan2(dy, dx),
+      kmin = min(k),
+      kmax = max(k),
+      npts = n(),
+    )
+}
+
+getmode <- function(v) {
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+#New Cluster Membership based on 10 NN
+
+lonely <- function(frame, tf){
+  anim_p <- filter(frame, t == tf)[,c(1,5,6,9,10)]
+  anim_p <- anim_p %>% group_by(gpid) %>% summarise(xmap_m = mean(xmap),ymap_m = mean(ymap),clust_m = mean(as.numeric(clust))) #Averaging to deal with mult observations at a t value
+  colnames(anim_p) <- c("gpid", "xmap", "ymap", "clust")
+  n = n_distinct(anim_p$gpid)
+  test=get.knn(anim_p[,c(2,3)], k=10)
+  df_new<- rownames_to_column(anim_p, "index")
+  df_new <- data.frame(df_new,test[1])
+  df_new1<- vlookup(df_new$nn.index.1,df_new,5,1)
+  df_new2<- vlookup(df_new$nn.index.2,df_new,5,1)
+  df_new3<- vlookup(df_new$nn.index.3,df_new,5,1)
+  df_new4<- vlookup(df_new$nn.index.4,df_new,5,1)
+  df_new5<- vlookup(df_new$nn.index.5,df_new,5,1)
+  df_new6<- vlookup(df_new$nn.index.6,df_new,5,1)
+  df_new7<- vlookup(df_new$nn.index.7,df_new,5,1)
+  df_new8<- vlookup(df_new$nn.index.8,df_new,5,1)
+  df_new9<- vlookup(df_new$nn.index.9,df_new,5,1)
+  df_new10<- vlookup(df_new$nn.index.10,df_new,5,1)
+  df_new <- data.frame(df_new, df_new1, df_new2, df_new3, df_new4, df_new5, df_new6, df_new7, df_new8, df_new9, df_new10)
+  data <- data.frame(NA_col = rep(NA,n))
+  for (i in 1:n){
+    x = getmode(df_new[i,c(16:25)])
+    data[i,] <- x
+  }
+  df_new <- data.frame(df_new,data)
+  df_new <- df_new[,c(1:5,26)]
+  anim_plot <- df_new %>%
+    ggplot(aes(x = xmap, y = ymap, group = gpid, ids = gpid,
+               color = factor(NA_col), fill = factor(NA_col))) + 
+    geom_point() + 
+    #scale_shape_manual("Imputed", values = c("FALSE" = 15, "TRUE" = 0)) + 
+    scale_color_viridis_d() + 
+    scale_fill_viridis_d() + ggtitle("test")
+  
+  plotly::ggplotly(anim_plot)
+  new <- df_new[,-c(5)]
+  colnames(new) <- c("index", "gpid", "xmap", "ymap", "clust")
+  return(new)
+}
+
+#Getting Polygons
+#Get Data into the format that we need. 
+polygon_data2 <- function(frame){
+  my.sf.point <- st_as_sf(x = frame, 
+                          coords = c("xmap", "ymap"))
+  polys = st_sf(
+    aggregate(
+      my.sf.point$geometry,
+      list(my.sf.point$n),
+      function(g){
+        st_cast(st_combine(g),"POLYGON")
+      }
+    ))
+  #Should be final data frame needed
+  y <- st_cast(polys, "MULTIPOLYGON")
+  return(y)
+}
+#Get coordinates of the polygons
+coordinates2 <- function(frame, n){
+  coord <- frame[,c(3,4)]
+  ConvexHull = chull(coord)
+  x <- data.frame(coord[ConvexHull,],n )
+  return(x)
+}
+
+#Getting Intersections
+get_int <- function(timeframe,a,b) {
+  intersections_pp <- st_intersection(a, b) %>% mutate(int_name = paste0(Group.1, "-", Group.1.1))
+  points <-st_as_sf(timeframe, coords = c("xmap", "ymap"))
+  polyg <-intersections_pp$geometry
+  z <- st_intersects(polyg,points) #Return index of points within each intersection
+  FrameData <- lapply(z, function(x) as.data.frame(x))
+  new<- melt(FrameData)[,-1] #gives list of index and intersection group
+  colnames(new) <- c("index", "intersection")
+  n <- merge(timeframe, new, by = "index")[,-1] #Data frame of 
+  df_n <- subset(timeframe,!(timeframe$gpid%in%n$gpid))[,-1] 
+  return(n) #If want data set of gpids and intersections
+} #If want data set of gpids and intersections
+
+get_int2 <- function(timeframe,a,b) {
+  intersections_pp <- st_intersection(a, b) %>% mutate(int_name = paste0(Group.1, "-", Group.1.1))
+  points <-st_as_sf(timeframe, coords = c("xmap", "ymap"))
+  polyg <-intersections_pp$geometry
+  return(polyg)
+}
+
+int_plot <- function(timeframe,a,b){
+  intersections_pp <- st_intersection(a, b) %>% mutate(int_name = paste0(Group.1, "-", Group.1.1))
+  ggplot() + #If want to plot the clusters
+  geom_sf(data = intersections_pp) + ggtitle ("(c). Week 1/2 Intersections")
+  #, aes(fill = int_name))
+}
+
+nn_df <- function(d, t, og_df){
+  d_t <- filter(d, t==t)
+  d_new<- rownames_to_column(d_t, "index")
+  g <- knn(d_t[,1:2], og_df[,5:6], cl = d_t$cluster, k=1)
+  indices <- attr(g, "nn.index")
+  og_new <- data.frame(og_df,indices) #get 6th column with nn index
+  og_new$ux<- vlookup(og_new$indices,d_new,6,1)
+  og_new$uy<- vlookup(og_new$indices,d_new,7,1)
+  og_new$xnew <- og_new$xnew+ og_new$ux
+  og_new$ynew <- og_new$ynew+ og_new$uy
+  og_new$t <- og_new$t+1
+  final <- og_new[,-7]
+  return(final)
+}
+
+week1 <- function(x_ini_disp, y_ini_disp, rho_x, rho_y, init_grid){
+q_t1 <- data.frame(xmap = x_ini_disp+cg$xmap, ymap = y_ini_disp+cg$ymap, t = cg$t+1, cluster = cg$cluster) #, gpid = 1:400)
+q_t2 <- data.frame(xmap = (rho_x*(q_t1$xmap-cg$x)) + q_t1$xmap, ymap = (rho_y*(q_t1$ymap-cg$y)) + q_t1$ymap, t = q_t1$t+1, cluster = cg$cluster) #, gpid = 1:400)
+q_t3 <- data.frame(xmap = (rho_x*(q_t2$xmap-q_t1$xmap)) + q_t2$xmap, ymap = (rho_y*(q_t2$ymap-q_t1$ymap)) + q_t2$ymap, t = q_t2$t+1, cluster = cg$cluster) #, gpid = 1:400)
+q_t4 <- data.frame(xmap = (rho_x*(q_t3$xmap-q_t2$xmap)) + q_t3$xmap, ymap = (rho_y*(q_t3$ymap-q_t2$ymap)) + q_t3$ymap, t = q_t3$t+1, cluster = cg$cluster) #, gpid = 1:400)
+q_t5 <- data.frame(xmap = (rho_x*(q_t4$xmap-q_t3$xmap)) + q_t4$xmap, ymap = (rho_y*(q_t4$ymap-q_t3$ymap)) + q_t4$ymap, t = q_t4$t+1, cluster = cg$cluster) #, gpid = 1:400)
+q_t6 <- data.frame(xmap = (rho_x*(q_t5$xmap-q_t4$xmap)) + q_t5$xmap, ymap = (rho_y*(q_t5$ymap-q_t4$ymap)) + q_t5$ymap, t = q_t5$t+1, cluster = cg$cluster) #, gpid = 1:400)
+
+all_w1 <- rbind(cg,q_t1,q_t2,q_t3,q_t4,q_t5,q_t6)
+return(all_w1)
+}
+
+```
+
+
+```{r sim-inter-functions}
+
+polygon_sim <- function(tp, preds){
+feat_t1 <- filter(preds, t == tp)
+feat_t1_og <- rownames_to_column(feat_t1, "index")
+points <- st_as_sf(feat_t1, coords = c("xmap", "ymap"))
+q_smallest <- filter(feat_t1_og, clust == 1)
+###1###
+coord <- q_smallest[,c(6,7)]
+ConvexHull = chull(coord)
+coord_1 <- data.frame(coord[ConvexHull,],1)
+my.sf.point <- st_as_sf(x = coord_1, 
+                        coords = c("xmap", "ymap"))
+polys = st_sf(
+  aggregate(
+    my.sf.point$geometry,
+    list(my.sf.point$X1),
+    function(g){
+      st_cast(st_combine(g),"POLYGON")
+    }
+  ))
+#Should be final data frame needed
+y1 <- st_cast(polys, "MULTIPOLYGON")
+polyg <- y1$geometry
+z <- st_intersects(polyg,points)
+z_idex <- data.frame(z[1])
+colnames(z_idex) <- "index"
+df <- merge(z_idex, feat_t1_og, by= "index")
+df2 <- subset(feat_t1_og,!(feat_t1_og$gpid%in%df$gpid))
+###2###
+coord2 <- df2[,c(6,7)]
+ConvexHull2 = chull(coord2)
+coord_2 <- data.frame(coord2[ConvexHull2,],2)
+my.sf.point2 <- st_as_sf(x = coord_2, 
+                         coords = c("xmap", "ymap"))
+polys2 = st_sf(
+  aggregate(
+    my.sf.point2$geometry,
+    list(my.sf.point2$X2),
+    function(g){
+      st_cast(st_combine(g),"POLYGON")
+    }
+  ))
+#Should be final data frame needed
+y2 <- st_cast(polys2, "MULTIPOLYGON")
+polyg2 <- y2$geometry
+z2 <- st_intersects(polyg2,points)
+z_idex2 <- data.frame(z2[1])
+colnames(z_idex2) <- "index"
+df3 <- merge(z_idex2, df2, by= "index")
+df4 <- subset(df2,!(df2$gpid%in%df3$gpid))
+y = rbind(y1, y2)
+return(y)
+}
+
+grid_tp_sim <- function(frame, tp, m){
+  time_og <- filter(frame, t==tp)
+  pts <- st_as_sf(time_og, coords = c("xmap", "ymap")) 
+  grid_50 <- st_make_grid(m, cellsize = c(5, 5)) %>% 
+    st_sf(grid_id = 1:length(.))
+  grid_lab <- st_centroid(grid_50) %>% cbind(st_coordinates(.))
+  pts_grd <- pts %>% st_join(grid_50, join = st_intersects) %>% as.data.frame
+  all_pts_grd <- left_join(pts_grd,grid_lab,by= "grid_id")
+  all_pts_grd2 <- all_pts_grd %>% distinct(gpid, .keep_all= TRUE)
+  g1 <- all_pts_grd2[,c(1,6,8,7,9,10,11)]
+  g1 <- rownames_to_column(g1, "index")
+  return(g1)
+}
+
+sim_known <- function(m,int, tp, grid,w){
+  int1 <- filter(m, intersection == int)[,-c(2,3,4,5,6,7)]
+  int_t1 <- right_join(grid, int1, by = "gpid")
+  anim_t1 <- filter(w, t == tp)
+  int_t1_2 <- inner_join(int_t1, anim_t1, by = "gpid")
+  final_int_t1 <- int_t1_2[,c(2,4,10,11,14,15,17)]
+  t1_notimputed =  filter(final_int_t1, !is.na(xmap))
+  colnames(t1_notimputed) <- c("gpid", "gpid_id", "intersection", "obs_time", "xmap","ymap", "clust")
+  return(t1_notimputed)
+}
+
+sim_estimate <- function(m, int, tp, grid, w){
+  int1 <- filter(m, intersection == int)[,-c(2,3,4,5,6,7)]
+  int_t1 <- right_join(grid, int1, by = "gpid")
+  anim_t1 <- filter(w, t == tp)
+  int_t1_2 <- inner_join(int_t1, anim_t1, by = "gpid")
+  t1_imputed =  filter(int_t1_2, is.na(xmap))
+  final_int_t1 <- t1_imputed[,c(2,4,6,7,10,11,17)]
+  colnames(final_int_t1) <- c("gpid", "gpid_id",  "xmap","ymap", "intersection", "obs_time", "clust")
+  return(final_int_t1)
+}
+
+
+lat_est_sim <- function(int, m, m_new, tp, frame, frame2){
+  grid <- grid_tp_sim(frame2,tp,m)
+  known1 <- sim_known(m_new,int,tp-1,grid,frame)
+  known2 <- sim_known(m_new,int,tp,grid, frame)
+  known3 <- sim_known(m_new,int,tp+1,grid, frame)
+  known4 <- sim_known(m_new,int,tp+2,grid, frame)
+  if(nrow(known3) ==0){known <- rbind(known1, known2, known4)}
+  else(known <- rbind(known1, known2, known3))
+  loc <- known[,c("xmap","ymap", "obs_time")] ## locations that I will use to fit the model with time (xmap, ymap,obs_time)
+  locs<-as.matrix(loc)                                ## convert them into matrix
+  X <- as.matrix( rep(1,nrow(locs)))                  ## intercept
+  N <- nrow(known)
+  Y <- known[,5]
+  fit <- fit_model(Y,locs, X, "exponential_spacetime", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,min(30,N-1)), silent = TRUE) #needs to go to number of rows - 1
+  return(fit)
+}
+
+long_est_sim <- function(int, m, m_new, tp, frame, frame2){
+  grid <- grid_tp_sim(frame2,tp,m)
+  known1 <- sim_known(m_new,int,tp-1,grid,frame)
+  known2 <- sim_known(m_new,int,tp,grid, frame)
+  known3 <- sim_known(m_new,int,tp+1,grid, frame)
+  known4 <- sim_known(m_new,int,tp+2,grid, frame)
+  if(nrow(known3) ==0){known <- rbind(known1, known2, known4)}
+  else(known <- rbind(known1, known2, known3))
+  loc <- known[,c("xmap","ymap", "obs_time")] ## locations that I will use to fit the model with time (xmap, ymap,obs_time)
+  locs<-as.matrix(loc)                                ## convert them into matrix
+  X <- as.matrix( rep(1,nrow(locs)))                  ## intercept
+  N <- nrow(known)
+  Y <- known[,6]
+  fit <- fit_model(Y,locs, X, "exponential_spacetime", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,min(30,N-1)), silent = TRUE) #needs to go to number of rows - 1
+  return(fit)
+}
+
+lat_pred_sim <- function(est, int, m, m_new, tp, frame, frame2){
+  grid <- grid_tp_sim(frame2,tp,m)
+  
+  known_grd <- sim_estimate(m_new,int,tp,grid, frame)
+  
+  locs_pred <- as.matrix(known_grd[,c("xmap", "ymap","obs_time")]) # Would need to create obs_time when don't have them (round number?)
+  colnames(locs_pred) <- c("xmap", "ymap", "obs_time")
+  X_pred <- as.matrix( rep(1,nrow(locs_pred)))
+  pred_grid<-predictions(est,locs_pred, X_pred,covparms = est$covparms, covfun_name = est$covfun_name, 
+                         y_obs = est$y,locs_obs = est$locs
+                         ,X_obs= est$X, beta=est$betahat, m = 10, reorder = TRUE)
+  return(pred_grid) 
+}
+
+long_pred_sim <- function(est, int, m, m_new, tp, frame, frame2){
+  grid <- grid_tp_sim(frame2,tp,m)
+  known_grd <- sim_estimate(m_new,int,tp,grid, frame)
+  
+  locs_pred <- as.matrix(known_grd[,c("xmap", "ymap","obs_time")]) # Would need to create obs_time when don't have them (round number?)
+  colnames(locs_pred) <- c("xmap", "ymap", "obs_time")
+  X_pred <- as.matrix( rep(1,nrow(locs_pred)))
+  pred_grid<-predictions(est,locs_pred, X_pred,covparms = est$covparms, covfun_name = est$covfun_name, 
+                         y_obs = est$y,locs_obs = est$locs
+                         ,X_obs= est$X, beta=est$betahat, m = 10, reorder = TRUE)
+  return(pred_grid) 
+}
+
+both_sim_lat <- function(int, m, m_new, tp, frame, frame2){
+  est <- lat_est_sim(int, m, m_new, tp, frame, frame2)
+  pred<- lat_pred_sim(est, int, m, m_new, tp, frame, frame2)
+  return(pred)
+}
+
+both_sim_long <- function(int, m, m_new, tp, frame, frame2){
+  est <- long_est_sim(int, m, m_new, tp, frame, frame2)
+  pred<- long_pred_sim(est, int, m, m_new, tp, frame, frame2)
+  return(pred)
+}
+
+pred_all <- NULL
+all_sim_lat <- function(r,df, df2, int_list, int_df){
+  for (i in 1:4){
+    tryCatch({
+      pred = both_sim_lat(i,int_list,int_df,r,df, df2)
+      pred_df = data.frame(pred,r)
+      grid_t <- grid_tp_sim(df2,r,int_list)
+      known2 <- sim_estimate(int_df,i,r,grid_t, df)
+      pred_df = data.frame(pred,r, known2$gpid, i)
+      pred_all = rbind(pred_all, pred_df)}, error=function(e){return(NA)})
+  }
+  return(pred_all)
+}
+
+all_sim_long <- function(r,df, df2, int_list, int_df){
+  for (i in 1:4){
+    tryCatch({
+      pred = both_sim_long(i,int_list,int_df,r,df, df2)
+      pred_df = data.frame(pred,r)
+      grid_t <- grid_tp_sim(df2,r,int_list)
+      known2 <- sim_estimate(int_df,i,r,grid_t, df)
+      pred_df = data.frame(pred,r, known2$gpid, i)
+      pred_all = rbind(pred_all, pred_df)}, error=function(e){return(NA)})
+  }
+  return(pred_all)
+}
+
+
+#Getting Coverage Probability 
+
+lat_sim <- function(int, m, m_new, tp, frame, frame2){
+  grid <- grid_tp_sim(frame2,tp,m)
+  known1 <- sim_known(m_new,int,tp-1,grid,frame)
+  known2 <- sim_known(m_new,int,tp,grid, frame)
+  known3 <- sim_known(m_new,int,tp+1,grid, frame)
+  known4 <- sim_known(m_new,int,tp+2,grid, frame)
+  if(nrow(known3) ==0){known <- rbind(known1, known2, known4)}
+  else(known <- rbind(known1, known2, known3))
+  loc <- known[,c("xmap","ymap", "obs_time")] ## locations that I will use to fit the model with time (xmap, ymap,obs_time)
+  locs<-as.matrix(loc)                                ## convert them into matrix
+  X <- as.matrix( rep(1,nrow(locs)))                  ## intercept
+  N <- nrow(known)
+  Y <- known[,5]
+  fit <- fit_model(Y,locs, X, "exponential_spacetime", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,min(30,N-1)), silent = TRUE) #needs to go to number of rows - 1
+  known_grd <- sim_estimate(m_new,int,tp,grid, frame)
+  locs_pred <- as.matrix(known_grd[,c("xmap", "ymap","obs_time")]) # Would need to create obs_time when don't have them (round number?)
+  colnames(locs_pred) <- c("xmap", "ymap", "obs_time")
+  X_pred <- as.matrix(rep(1,nrow(locs_pred)))
+  ncondsim <- 30
+  sims <- cond_sim(fit = fit, locs_pred = locs_pred, X_pred = X_pred, covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+                   ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE, nsims = ncondsim)
+  ##for prediction
+  pred_grid<-predictions(fit,locs_pred, X_pred,covparms = fit$covparms, covfun_name = fit$covfun_name, 
+                         y_obs = fit$y,locs_obs = fit$locs
+                         ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE)
+  b <- list(sims,pred_grid)
+  return(b)
+}
+
+long_sim <- function(int, m, m_new, tp, frame, frame2){
+  grid <- grid_tp_sim(frame2,tp,m)
+  known1 <- sim_known(m_new,int,tp-1,grid,frame)
+  known2 <- sim_known(m_new,int,tp,grid, frame)
+  known3 <- sim_known(m_new,int,tp+1,grid, frame)
+  known4 <- sim_known(m_new,int,tp+2,grid, frame)
+  if(nrow(known3) ==0){known <- rbind(known1, known2, known4)}
+  else(known <- rbind(known1, known2, known3))
+  loc <- known[,c("xmap","ymap", "obs_time")] ## locations that I will use to fit the model with time (xmap, ymap,obs_time)
+  locs<-as.matrix(loc)                                ## convert them into matrix
+  X <- as.matrix( rep(1,nrow(locs)))                  ## intercept
+  N <- nrow(known)
+  Y <- known[,6]
+  fit <- fit_model(Y,locs, X, "exponential_spacetime", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,min(30,N-1)), silent = TRUE) #needs to go to number of rows - 1
+  known_grd <- sim_estimate(m_new,int,tp,grid, frame)
+  locs_pred <- as.matrix(known_grd[,c("xmap", "ymap","obs_time")]) # Would need to create obs_time when don't have them (round number?)
+  colnames(locs_pred) <- c("xmap", "ymap", "obs_time")
+  X_pred <- as.matrix(rep(1,nrow(locs_pred)))
+  ncondsim <- 30
+  sims <- cond_sim(fit = fit, locs_pred = locs_pred, X_pred = X_pred, covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+                   ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE, nsims = ncondsim)
+  ##for prediction
+  pred_grid<-predictions(fit,locs_pred, X_pred,covparms = fit$covparms, covfun_name = fit$covfun_name, 
+                         y_obs = fit$y,locs_obs = fit$locs
+                         ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE)
+  b <- list(sims,pred_grid)
+  return(b)
+}
+
+all_pred <- NULL
+pred_cv <- NULL
+all_lat <- function(df, df2, int_list, int_df){
+for (r in 1:7){
+  for (i in 1:4){
+    tryCatch({
+      pred = lat_sim(i,int_list,int_df,r,df, df2)
+      sd_df <- sd_pred_sim(pred[[1]],pred[[2]])
+      grid_t <- grid_tp_sim(df2,r,int_list)
+      known2 <- sim_estimate(int_df,i,r,grid_t, df)
+      df_p = data.frame(sd_df, i, r, known2$gpid)
+      pred_cv = rbind.data.frame(pred_cv, df_p)}, error=function(e){return(NA)})
+  }
+  all_pred <- rbind.data.frame(all_pred,pred_cv)
+}
+  return(all_pred)
+}
+
+all_long <- function(df, df2, int_list, int_df){
+  for (r in 1:7){
+    for (i in 1:4){
+      tryCatch({
+        pred = long_sim(i,int_list,int_df,r,df, df2)
+        sd_df <- sd_pred_sim(pred[[1]],pred[[2]])
+        grid_t <- grid_tp_sim(df2,r,int_list)
+        known2 <- sim_estimate(int_df,i,r,grid_t, df)
+        df_p = data.frame(sd_df, i, r, known2$gpid)
+        pred_cv = rbind.data.frame(pred_cv, df_p)}, error=function(e){return(NA)})
+    }
+    all_pred <- rbind.data.frame(all_pred,pred_cv)
+  }
+  return(all_pred)
+}
+
+
+sd_pred_sim <- function(sim, pred_df){
+  v <- NULL
+  pred_df2 <- data.frame(pred_df)
+  sum_squares <- rep(0,nrow(sim))
+  for(j in 1:30){
+    v <- sim[,j] #fill in Known with estimated
+    sum_squares <- sum_squares + (pred_df - v)^2
+  }
+  pred_rmse <- sqrt(1/30*sum_squares)
+  pred_df2$sd <- pred_rmse
+  pred_df2$lc <- pred_df2$pred_df - (2*pred_rmse)
+  pred_df2$uc <- pred_df2$pred_df + (2*pred_rmse)
+  return(pred_df2)
+}
+
+
+```
+
+```{r sim-function-noint, message=FALSE, warning = FALSE}
+
+#Make A Polygon of The Data?
+
+polyg_noint <- function(df, tp){
+feat_t1 <- filter(df, t == tp)
+feat_t1_og <- rownames_to_column(feat_t1, "index")
+points <- st_as_sf(feat_t1, coords = c("xmap", "ymap"))
+coord <- feat_t1_og[,c(6,7)]
+ConvexHull = chull(coord)
+coord_1 <- data.frame(coord[ConvexHull,],1)
+my.sf.point <- st_as_sf(x = coord_1, 
+                        coords = c("xmap", "ymap"))
+polys = st_sf(
+  aggregate(
+    my.sf.point$geometry,
+    list(my.sf.point$X1),
+    function(g){
+      st_cast(st_combine(g),"POLYGON")
+    }
+  ))
+#Should be final data frame needed
+op <- st_cast(polys, "MULTIPOLYGON")
+poly <- op$geometry #(p)- polygon of the whole dataset
+return(poly)
+}
+
+## Get Grid of The Polygon
+grid_tp_sim_noint <- function(frame, tp, p){
+  time_og <- filter(frame, t==tp)
+  pts <- st_as_sf(time_og, coords = c("xmap", "ymap")) 
+  grid_50 <- st_make_grid(p, cellsize = c(5, 5)) %>% 
+    st_sf(grid_id = 1:length(.))
+  grid_lab <- st_centroid(grid_50) %>% cbind(st_coordinates(.))
+  pts_grd <- pts %>% st_join(grid_50, join = st_intersects) %>% as.data.frame
+  all_pts_grd <- left_join(pts_grd,grid_lab,by= "grid_id")
+  all_pts_grd2 <- all_pts_grd %>% distinct(gpid, .keep_all= TRUE)
+  g1 <- all_pts_grd2[,c(1,6,8,7,9,10,11)]
+  g1 <- rownames_to_column(g1, "index")
+  return(g1)
+}
+
+
+#Get Known Data
+
+
+sim_known_noint <- function(tp, grid,w){
+  anim_t1 <- filter(w, t == tp)
+  int_t1 <- right_join(grid, anim_t1, by = "gpid")
+  final_int_t1 <- int_t1[,c(1,4,9,12,13,15)]
+  t1_notimputed =  filter(final_int_t1, !is.na(xmap))
+  colnames(t1_notimputed) <- c("gpid", "gpid_id","obs_time", "xmap","ymap", "clust")
+  return(t1_notimputed)
+}
+
+
+#Get Estimate Data
+
+sim_estimate_noint <- function(tp, grid, w){
+  anim_t1 <- filter(w, t == tp)
+  int_t1 <- right_join(grid, anim_t1, by = "gpid")
+  t1_imputed =  filter(int_t1, is.na(xmap))
+  final_int_t1 <- t1_imputed[,c(2,4,6,7,9,15)]
+  colnames(final_int_t1) <- colnames(final_int_t1) <- c("gpid", "gpid_id",  "xmap","ymap", "obs_time", "clust")
+  return(final_int_t1)
+}
+
+
+#Latitude Estimate (p is overall polygon, tp is time, frame = )
+lat_est_sim_noint <- function(p, tp, frame, frame2){
+  grid <- grid_tp_sim_noint(frame2,tp,p)
+  known1 <- sim_known_noint(tp-1,grid,frame)
+  known2 <- sim_known_noint(tp,grid, frame)
+  known3 <- sim_known_noint(tp+1,grid, frame)
+  known4 <- sim_known_noint(tp+2,grid, frame)
+  if(nrow(known3) ==0){known <- rbind(known1, known2, known4)}
+  else(known <- rbind(known1, known2, known3))
+  loc <- known[,c("xmap","ymap", "obs_time")] ## locations that I will use to fit the model with time (xmap, ymap,obs_time)
+  locs<-as.matrix(loc)                                ## convert them into matrix
+  X <- as.matrix( rep(1,nrow(locs)))                  ## intercept
+  N <- nrow(known)
+  Y <- known[,4]
+  fit <- fit_model(Y,locs, X, "exponential_spacetime", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,N-1), silent = TRUE) #needs to go to number of rows - 1
+  return(fit)
+}
+
+
+#Longitude Estimate
+
+long_est_sim_noint <- function(p, tp, frame, frame2){
+  grid <- grid_tp_sim_noint(frame2,tp,p)
+  known1 <- sim_known_noint(tp-1, grid,frame)
+  known2 <- sim_known_noint(tp, grid, frame)
+  known3 <- sim_known_noint(tp+1,grid, frame)
+  known4 <- sim_known_noint(tp+2,grid, frame)
+  if(nrow(known3) ==0){known <- rbind(known1, known2, known4)}
+  else(known <- rbind(known1, known2, known3))
+  loc <- known[,c("xmap","ymap", "obs_time")] ## locations that I will use to fit the model with time (xmap, ymap,obs_time)
+  locs<-as.matrix(loc)                                ## convert them into matrix
+  X <- as.matrix( rep(1,nrow(locs)))                  ## intercept
+  N <- nrow(known)
+  Y <- known[,5]
+  fit <- fit_model(Y,locs, X, "exponential_spacetime", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,N-1), silent = TRUE) #needs to go to number of rows - 1
+  return(fit)
+}
+
+
+#Latidude Prediction (estimated model, polygon, time, with_missing, without_missing(for grid))
+lat_pred_sim_noint <- function(est, p, tp, frame, frame2){
+  grid <- grid_tp_sim_noint(frame2,tp,p)
+  known_grd <- sim_estimate_noint(tp,grid, frame)
+  locs_pred <- as.matrix(known_grd[,c("xmap", "ymap","obs_time")]) # Would need to create obs_time when don't have them (round number?)
+  colnames(locs_pred) <- c("xmap", "ymap", "obs_time")
+  X_pred <- as.matrix( rep(1,nrow(locs_pred)))
+  pred_grid<-predictions(est,locs_pred, X_pred,covparms = est$covparms, covfun_name = est$covfun_name, 
+                         y_obs = est$y,locs_obs = est$locs
+                         ,X_obs= est$X, beta=est$betahat, m = min(10,nrow(known_grd)-1), reorder = TRUE)
+  return(pred_grid) 
+}
+
+
+
+# Longitude Prediction - Same Idea
+long_pred_sim_noint <- function(est, p, tp, frame, frame2){
+grid <- grid_tp_sim_noint(frame2,tp,p)
+known_grd <- sim_estimate_noint(tp,grid, frame)
+locs_pred <- as.matrix(known_grd[,c("xmap", "ymap","obs_time")]) # Would need to create obs_time when don't have them (round number?)
+colnames(locs_pred) <- c("xmap", "ymap", "obs_time")
+X_pred <- as.matrix( rep(1,nrow(locs_pred)))
+pred_grid<-predictions(est,locs_pred, X_pred,covparms = est$covparms, covfun_name = est$covfun_name, 
+                       y_obs = est$y,locs_obs = est$locs
+                       ,X_obs= est$X, beta=est$betahat, min(10,nrow(known_grd)-1), reorder = TRUE)
+return(pred_grid) 
+}
+
+
+#Estimate and Predict Together
+
+both_sim_lat_noint <- function(p, tp, frame, frame2){
+  est <- lat_est_sim_noint(p, tp, frame, frame2)
+  pred<- lat_pred_sim_noint(est, p, tp, frame, frame2)
+  return(pred)
+}
+
+both_sim_long_noint <- function(p, tp, frame, frame2){
+  est <- long_est_sim_noint(p, tp, frame, frame2)
+  pred<- long_pred_sim_noint(est, p, tp, frame, frame2)
+  return(pred)
+}
+
+#Loop Through Each Time Point
+
+pred_all <- NULL
+all_sim_lat_noint <- function(df, df2){
+  for (r in min(df$t):max(df$t)){
+    tryCatch({
+      p = polyg_noint(df2, r)
+      pred = both_sim_lat_noint(p,r,df, df2)
+      pred_df = data.frame(pred,r)
+      grid_t <- grid_tp_sim_noint(df2,r,p)
+      known2 <- sim_estimate_noint(r,grid_t, df)
+      pred_df = data.frame(x = pred, t=r, gpid = known2$gpid)
+      pred_all = rbind(pred_all, pred_df)}, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
+  }
+  return(pred_all)
+}
+
+all_sim_long_noint <- function(df, df2){
+  for (r in min(df$t):max(df$t)){
+    tryCatch({
+      p = polyg_noint(df2, r)
+      pred = both_sim_long_noint(p,r,df, df2)
+      pred_df = data.frame(pred,r)
+      grid_t <- grid_tp_sim_noint(df2,r, p)
+      known2 <- sim_estimate_noint(r,grid_t, df)
+      pred_df = data.frame(y = pred,t = r, gpid = known2$gpid)
+      pred_all = rbind(pred_all, pred_df)}, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
+  }
+  return(pred_all)
+}
+
+
+```
+
+
+```{r load-data}
+
+datn = read.delim("data/lagrange_n.dat",sep="")
+gpidn = unique(datn[,1]) #3364
+colnames(datn) <- c("gpid","k","obs_time","xmap","ymap")
+datn["location"] <- rep("n", 51926)
+dato = read.delim("data/lagrange_o.dat",sep="")
+gpido = unique(dato[,1]) #1941
+colnames(dato) <- c("gpid","k","obs_time","xmap","ymap")
+dato["location"] <- rep("o", 26106)
+datp = read.delim("data/lagrange_p.dat",sep="")
+gpidp = unique(datp[,1]) #2034
+colnames(datp) <- c("gpid","k","obs_time","xmap","ymap")
+datp["location"] <- rep("p", 26382)
+datq = read.delim("data/lagrange_q.dat",sep="")
+gpidq = unique(datq[,1]) #1472
+colnames(datq) <- c("gpid","k","obs_time","xmap","ymap")
+datq["location"] <- rep("q", 21033)
+
+dat <- rbind(datn, dato, datp, datq)
+gpid=unique(dat[,1]) #8811
+n = length(gpid)
+dat$t = floor(dat$obs_time) 
+t = sort(unique(dat[,"t"]))
+dat_time = split(dat,dat[,"t"]) 
+tmp <- map2_df(dat_time, 1:length(dat_time), function(x, y) mutate(x, i = y))
+
+```
+
+
+
 # Introduction
+
+Sea ice is frozen sea water in the Arctic Ocean that generally occurs as an ice pack which can drift over the oceans surface. Understanding ice dynamics plays an vital role in climate models as it acts as a barrier between the colder atmosphere and the warmer ocean. Therefore, sea ice plays a role in the Earth's energy balance. Cracks in the ice can form due to dynamic processes, which includes wind, ocean currents, and tides [@hutter_leads_2019]. When a narrow linear crack, or lead, forms in the sea ice, it allows for heat from the ocean to be transferred to the atmosphere [@schreyer_elastic_2006]. Only small amounts of the ice cover in the winter are occupied by leads (1-2%), but leads account for half of the heat flux between the ocean and the atmosphere [@badgley_1961]. Additionally, leads are understood to be sources of global methane emissions, which makes them a possible force for greenhouse gasses [@kort_atmos_2012]. Hence, it is important to be able to determine where these leads may form in order to accurately account for their impact in climate models.
+
+Previous methods to determine lead locations involve the use of deformation calculations and thermal information from satellite images. Drawbacks of satellite images include being low in resolution and are affected by atmospheric conditions, like clouds [@key_detectability_1993]. Thus, results may be impacted by errors due to inaccurate data. For example, errors in deformation calculations may lead to incorrect locations of ice cracks [@bouillon_producing_2015]. Our approach to discover cracks uses the idea that sea ice is not stationary, as ocean currents and atmospheric winds drive its movement [@peterson_evaluating_2011]. Hence, using only data on the movement of an ice sheet, we hope to determine the location of sea ice cracks through the clustering of similar movements in the sea ice. We hypothesize that cracks will form at the location of the boundaries between clusters, as this is the boundary between different movements in the ice sheet. 
+
+An additional complication is that satellite data is often missing in chunks because the satellite may not pass over a certain region on a day. Thus, in order to have complete gridded data, we also developed an interpolation method that uses information given by our clusters to estimate missing regions. 
+
+## Data
+
+
+Motion data of the ice sheet comes from the RADARSTAT Geophysical Processing System (RGPS). In general, this data is collected through the use of RADARSTAT synthetic aperture radar (SAR) images obtained by satellites. The SAR images are then processed and produce estimates of items, like sea ice motion [@lindsay_radarsat_2003]. In order to track movement, an initial grid is created at the start of the study period, where each cell dimension is 10 km on a side [@kwok_seasonal_2002]. The vertices of each cell are assigned an identifier. These points will be referred to as gpids ($g$) moving forward. The trajectory of the sea ice is then found by tracking these gpids in sequential radar images [@kwok_seasonal_2002]. Typically the tracking continues until the melting season begins. The set of trajectories of all the gpids may be formally represented as $\mathcal{T}$ = ($g_1, ..., g_n$), where $g_{k}$ = <$s_{1,j},...,s_{t,j}>$ and \textbf{$s_{i,j}$} = $(x_{i,j}, y_{i,j})$. In other words, in a set of n gpid trajectories each $g_k$ is the trajectory of a gpid, k, for days i = 1,...,t, with t being the last day, and k = 1,...,n. Additionally, if considering the time period as a day, a gpid may have more than one observation for a day as the satellite may have passed over the region at multiple times.  Thus, our notation includes j to account for a day potentially having multiple observations. We developed our methods using 22 days worth of data (t=22) where a difference of one integer means those observations are one day apart. We are using a small data set in order to see if methodology can be developed where not a lot of data is used in order for computational feasibility.
+
+```{r clustering-at-51, fig.cap= "Plot of gpids at t=1. Missing data is represented by unfilled boxes, and is show to be missing in chunks instead of at random points", message=FALSE, warning = FALSE, cache=TRUE}
+
+colnames(tmp) <- c("gpid", "k", "obs_time", "xmap", "ymap", "location", "t", "i")
+
+
+anim_plot_data <- tmp %>%
+  mutate(imputed = F) %>%
+  complete(crossing(gpid, t), fill = list(imputed = T)) %>%
+  ungroup() %>%
+  arrange(gpid, t) %>%
+  group_by(gpid) %>%
+  fill(xmap, ymap, matches("clust"), .direction = "downup") %>%
+  arrange(gpid)
+
+anim_plot_data51 <- filter(anim_plot_data, t==51)
+
+anim_plot <- anim_plot_data51 %>%
+  ggplot(aes(x = xmap, y = ymap, frame = t, group = gpid, ids = gpid, shape = imputed)) + 
+  geom_point() + 
+  scale_shape_manual("Imputed", values = c("FALSE" = 15, "TRUE" = 0)) + 
+  scale_color_viridis_d() + 
+  scale_fill_viridis_d() 
+
+anim_plot
+
+
+
+```
+
+
+```{r trajectories, fig.cap = "Plot of gpid trajectories over time to show movement and direction of movement of each gpid", cache=TRUE, message=FALSE, warning = FALSE}
+colnames(tmp) <- c("gpid", "k", "obs_time", "x", "y", "location", "t", "i") #Why did I do this?
+
+tmp2 <- tmp %>% highlight_key(~gpid)
+
+ggplot(tmp2, aes(x = x, y = y, group = gpid, 
+                      hoverinfo = NULL,
+                      color = factor(gpid %% 10))) + 
+  geom_path(arrow = arrow(length = unit(0.7, "mm")), alpha = .4) + 
+  scale_color_viridis_d() +
+  theme(legend.position="none")
+
+colnames(tmp) <- c("gpid", "k", "obs_time", "xmap", "ymap", "location", "t", "i")
+```
+
+
+## Challenges
+
+Determining the locations of sea ice cracks is challenging with the given data for multiple reasons. First, we want to develop our methods only using motion data of the ice sheet. That is, using only the location of gpids at different time points. Secondly, due to obtaining the data through sequential satellite images, data may be missing because the satellite may not have passed over part of the sea ice at a given time resulting in chunks of missing data. \cref{fig:clustering-at-51} shows a plot of the ice sheet on the first day in the data. Each box is a gpid and the unfilled boxes (imputed = TRUE) are gpids that are unobserved at that time. The location of the unfilled boxes in the plot is its closest known location. In this image, there is a large patch of data missing in the middle of the region, which makes it difficult to know what is happening in those areas as there may not be a neighbor we can infer from. Additionally, the missing data creates gpid trajectories of different lengths, which are not allowed in many standard trajectory distance functions. The third challenge is that the gpids were created on a grid, disqualifying the use of many popular spatio-temporal data mining methods based on the density of observations as point density will be consistent across the domain. 
+
+
+## Nonstationary Spatio-Temporal Methods
+
+###  Method Motivation
+
+Since we want to detect cracks only using movement data, it is important to first see what the movement looks like. Thus, in order to visualize the movement of each gpid over the time frame, a plot of the trajectory of each gpid was created and is shown in \cref{fig:trajectories}. Each observed gpid location is connected with an arrow to indicate movement direction. The colors are used to distinguish individual trajectories but, otherwise they do not have a special meaning. This figure shows that groups of gpids appear to move with similar patterns. For instance, at the top of \cref{fig:trajectories}, a group of gpids seem to be traveling upwards, while in the middle a group is traveling from right to left. Visualizing these movements led to the idea of clustering similar trajectories. Trajectories can be summarized by a bounding box that represents its movement over time. This allows for the creation of features that can be used in clustering algorithms and it circumnavigates the missing data issue since trajectories do not need to be the same length. After the boundary box features are created, the gpid trajectories can then be grouped together with others that have similar features using a clustering algorithm. The idea is that sea ice cracks may form on the border between clusters, as gpids in different clusters have different movements, which may cause them to move apart. 
 
 
 # Methods {#methods}
 
+## Spatio-Temporal Clustering: Bounding Box
+
+### Bounding Box Features
+
+The bounding box created around each gpid trajectory, which represent its movement, is made up of a number of different features. Bounding boxes can be created around a whole trajectory, or for smaller sub-trajectories, like a week. Sub-trajectories may provide more information while ensuring adequate data is available for the clustering process. A balance between ensuring data completeness and capturing sufficient movement is essential. An example of the points used to calculate the features of a trajectory may be found in \cref{fig:bb-pic}. Features of the bounding box includes the length of x traveled and the length of y traveled between the maximum and minimum location ($x_{max} - x_{min}$ and $y_{max} - y_{min}$), representing the total distance traveled. However, the maximum and minimum locations may not always correspond to the first and last days of the time frame. Hence, the difference in x and y from the latest observation to the earliest observation in a time period ($x_{1} - x_{0}$ and $y_{1} - y_{0})$ was also found. The change from latest to earliest observation is then used to calculate the angle of change in order to find the direction of movement of the trajectory. Further, since the focus is on the cluster boundaries, we must ensure the clusters are continguous, meaning clusters are not co-located across multiple geographic locations. To ensure some geographic continuity, we also include the average x and y value for each gpid. Finally, creating clusters for subtrajectories, for instance by week, can also be accomplished using a bounding box. However, previous week features can also be included as inputs into the clustering algorithm. This may be done in order for there to be some consistency between consecutive time frames, as previous movement may impact current movement. After all of the different features were calculated, the values were then standardized to give each feature similar weight in the clustering process. 
+
+
+### K-Means
+
+We used k-means clustering, which partitions n observations into k clusters with k being a pre-specified number. The goal of this clustering method is to minimize the squared Euclidean distance between an observation and the centroid vector of a cluster. The centroid vectors are found by averaging the features of each cluster member. K-means clustering is an iterative procedure:
+
+1. The k clusters are given initial vectors. 
+2. The Euclidean distance between the $i^{th}$ observation and $k^{th}$ initial vector is obtained, and the observations are assigned to the cluster in which they have the smallest distance. 
+3. After all observations are allocated, the centroid vector for each cluster is then calculated by averaging each feature.
+4. Observations are moved to a different cluster when appropriate (ie. has minimum Euclidean distance to a different cluster's centroid vector).
+5. The centroid vector of the clusters is recalculated. 
+
+These steps are repeated until observations are no longer moving between clusters [@steinley_kmeans_2006]. 
+
+A drawback of k-means is that the number of clusters must be known and specified prior to clustering. We determine the number of clusters using the Silhouette statistic, which compares within cluster distances to between cluster differences. The silhouette width is defined as $$s(i) = \frac{b(i) - a(i)}{max(a(i), b(i))} \quad (1)$$ where i is an observation and i $\in$ n. The value a(i) is the average distance between i and the other observations in the same cluster, and b(i) is the minimum average distance between i and the observations in other clusters. Silhouette width ranges from -1 to 1, with -1 meaning it was misclustered and 1 meaning it is well-clustered. The desired number of clusters is then determined by the largest average silhouette width [@kodinariya_2013]. Ice movement is a dynamic process, so if clustering subtrajectories, like weeks, then would expect that each week may have a different number of clusters. Thus, when clustering by week, the silhouette statistic will be calculated separately for each week. 
+
+
+## Spatio-Temporal Interpolation
+
+### Finding Spatio-Temporal Neighbors
+
+Next, as seen previously, due to the data collection method, the data is susceptible to be missing in chunks. Hence, want to be able to interpolate these missing data points in order to have completely gridded data. This can be challenging due to the lack of close neighbors, as all the data around a point may also be missing. Additionally, some interpolation methods are not available due to the nonstationarity of the data, as the ice is moving in patches, with the patches determined by our clustering method. 
+
+Our proposed method for interpolating missing gpid locations involves finding and using the spatial-temporal neighbors of the missing gpid. The clusters determined by our bounding box method can be used to identify these spatio-temporal neighbors. Creating the clusters is determined by similar movements, so can use the information given to us by these clusters in order to interpolate. Meaning, if we know how points move in a cluster at a specific time, we can assume a missing gpid in that same cluster would move similarly. In this method, new clusters are created for each week. The idea is that the intersection of one week's clusters with the week before and week after would create groups. Each member of a group is then a spatio-temporal neighbor of the other members as they are in a similar geographic region over time.  
+  
+The first step in order to find these intersections is to create polygons for each of the clusters for each week. A polygon is created by finding the boundary coordinates of each of the clusters. In a sequential manner, a polygon is created around each cluster, generally starting with one on the top edge of the ice sheet followed by neighboring clusters until there is a polygon for each cluster. After each polygon is created, then all of the gpids that are located within this polygon are then removed from the data set, even if the gpid was assigned to a different cluster. This was done to reduce the amount of polygon overlapping. Additionally, if a gpid is classified to a different cluster than all of its neighbors, most likely that gpid should actually be classified like its neighbors. For Week 1 and Week 2, one of the clusters is distinctly split into two non-connected locations (see \cref{fig:by-week-cluster-plot}). For this particular cluster, a different polygon was created for each of the two different locations and considered separately.
+
+  
+Once we create the polygons for each week, we can find the intersection of polygons for different weeks to define spatio-temporal neighbors. The coordinates of the overlapping polygons create an intersection, where these coordinates also form a polygon. Gpids are then assigned to an intersection based on which intersection coordinates contains its first observed location of the week. All of the points within that intersection are considered to be spatio-temporal neighbors, since they are located in a similar geographic region over time. For example, if we want to interpolate missing data in Week 1, would first need to find its spatio-temporal neighbors. Since it is the first week, there is no previous week information, so we can only use Week 2 to find neighbors. Next, we identify the coordinates for the intersecting polygons for these two weeks. Then, the gpids located in each intersecting polygon are found and assigned to that intersection. Gpids located in the same intersection polygon are spatio-temporal neighbors and will be used to create a model for interpolation in each of the intersecting polygons. \cref{fig:int-picture} shows this process with (a) and (b) showing the polygons of the clusters for Week 1 and Week 2 respectively, and (c) showing the intersections of the polygons. Some of the intersection polygons are not shown due to their being duplicate intersections (caused by overlapping polygons), but each gpid is only assigned to one intersection. If a gpid is not found in an intersection, it is then removed from the data during this process, which is a potential area for improvement. Week 3 spatio-temporal neighbors can be found using a similar process, using just Week 2, as this was the last week in the data set. Creating the intersecting polygons for Week 2 involved the intersection of it's polygons from both Week 1 and Week 3. 
+  
+In order to use this interpolation method, a spatial grid encompassing the ice sheet is created at each time. The grid is used in our created model as an estimation of the initial locations of the missing gpids, where the model will adjust this location using it's known neighbors. The size of our grid cells is 10 km by 10 km, which allows for a maximum of four gpids to be located in the cell. Additionally, this is the size of the initial grid used to track the gpids [@kwok_seasonal_2002]. The centroid of the gpids was used to estimate each grid cell, so each of the gpids located in that cell would have the same initial estimate.  
+
+### Univariate Interpolation
+  
+Once the grid was created for initial location estimates of missing data, a univariate model was developed for both x and y. These models were creating using the GpGp package in R, which uses the Vecchia's Approximation for a Gaussian Process [@gpgp_pkg]. @vecchia1988estimation developed this approximation for a Gaussian Process, as generally likelihood methods for the covariance parameter estimates of the Gaussian Process are computationally unfeasible. This method approximates the Gaussian Process by writing the joint density as a product of conditional distributions, where only a subset of the data is used to create these conditional distributions. The subset chosen greatly affects the approximation and is formed by neighbors of the observation. Ordering the the observations by one of the coordinates determines these neighbors. In @guinness_permutation_2018, updates to the ordering process were developed. A maximum minimum based ordering is used to sort the data based on sequentially picking the next point that has the maximum minimum distance to all previously selected points. Then the number of neighbors used for the subset can be defined and found from this ordering. Additionally, @guinness_permutation_2018 introduces a grouping method where groups are determined by partitioning observations into blocks, and each block's input to the likelihood can be computed at the same time. These updates were shown to further increase the accuracy of these models and lower computation time. Further, @guinness_gaussian_2021, provides an efficient method for applying Fisher's scoring to maximize the log-likelihood by developing a single pass algorithm to compute the Fisher's Information and the gradient of the Vecchia Approximation. Once again, this was done to help lower computation time. The updates made in @guinness_permutation_2018 and @guinness_gaussian_2021 are implemented in the GpGp package. 
+
+In order to fit the model, we need to define:
+
+ + Y = x or y. Dimension interested in (univariate response)
+ + loc = The matrix of x, y, and time (t) of known data. Made of locations at the desired time (t), the day before (t-1), and the day after (t+1). 
+ + X = Is a matrix of 1's the length of the number of observed data, also known as the design matrix.
+ + m_seq = A sequence of values for number of neighbors in each subset. Our models used a sequence of 10 to min(N-1, 30). Includes N-1 in case we have a small number of observations, the model does not try to create subset in which it needs more neighbors than there are observations. 
+
+We specified the covariance function as the exponential space-time covariance function, as defined by the GpGp package documentation [@gpgp_pkg]. It is defined as $$C(\theta) = \sigma^2e^{-||D^{-1}(x-y)||}. \quad (2)$$ where $$D = \left(\begin{array}{ccccc} 
+\phi + c_0 & \\
+ & \phi + c_0\\
+ &  & \ddots\\
+ &  &  & \phi + c_0 \\
+ &  &  &  &  \tau+c_0
+\end{array}\right). $$ The parameters in the covariance function are of $\sigma^2$ (variance), $\phi$ (spatial range), $\tau$ (temporal range), and $c_0$ (nugget). The spatial and temporal ranges are smoothness parameters that relate to dependence over space and time respectively. The nugget parameter is the measurement error. The output is the maximum Vecchia likelihood estimates for the mean and covariance parameters. The model created by these estimates can be used to predict the unobserved locations at the time (t). The initial grid estimates of the x and y values are used as the starting locations in the prediction function and shifted based on the estimated model parameters. Predictions for x or y (depending on the Y specified in the fitted model) are made by finding the conditional expectation of the model developed.  
+
 
 # Simulation Study {#simulation}
+
+## Data Simulation
+
+
+To test the validity of our methods, we conducted a simulation study. The data was simulated to mimic the motion of sea ice, where the movement happens in patches that are driven by external factors. Separate grids are created to simulate the observed data and the underlying process that is causing the movement. First, to create the underlying process, a fine grid is created with each cell vertex representing a point. This grid is a 30x30 equally spaced grid, which is a total of 900 points. Next, initial cluster memberships are assigned to create the patches. For simplicity, the points are assigned into two clusters, each with an equal number of points. Then, this grid is shifted seven times, to represent seven days, simulating movement in the underlying process. The movement at each time step of the grid decreases over time. This data is then used in the exponential space-time covariance function (defined in (2)), along with defined parameter values to simulate a covariance matrix. The covariance function will have different parameter values for each cluster. Additionally, the parameter values may also slightly differ for X and Y within a cluster. The covariance functions and defined mean trend is then used to simulate a Gaussian Process model of the displacement for each location on the grid at a time. Hence,$$ U_{d,c}(s,t) \sim GP(\mu_{d,c}, C_{d,c}(\theta)) \quad (4),$$ where c is the cluster (c=1 or 2), d is the dimension (d=x or y), and the parameter values for the mean ($\mu_{d,c}$) and covariance function ($C_{d,c}(\theta)$) can be found in \cref{tab:parms-table}. Thus, $U_{d,c}(s,t)$ gives the displacement, or movement, for each point on the underlying grid for each day.   
+
+
+After the underlying process is created, a coarse grid representing the observed data is created in similar fashion to the ice data given by satellites. This is a smaller grid that is encompassed by the underlying process. Furthermore, since it is coarser, it is made up of less points. Each point is represented by $(x_{t,j}, y_{t,j})$, where t is the time, and j is the identifier used to track the movement (like a gpid). The initial observed grid values would then be represented as $(x_{t=0,j}, y_{t=0,j})$. Movement of the observed point is determined by the value of the nearest point of the underlying process for that day, determined by Euclidean Distance, to the observed point.  Hence, $$(x_{t,j}, y_{t,j}) = (U^{X}_{t-1,c,g}, U^{Y}_{t-1,c,g}) + (x_{t-1,j}, y_{t-1,j}) \quad (5),$$ where $U^d_{t,c,g}$ is the underlying process for dimension d (d=X,Y), cluster c (c=1,2), at time t-1 (t=1,...,7), for grid value $g$, which is the closest grid location of the underling process to $(x_{t-1,j}, y_{t-1,j})$. This process is continued until t=7 in order to get a final simulated data of a week's worth of data. \cref{fig:grids-combined} shows the initial grid locations for the underlying process and observed data together. It also shows the true cluster membership for each grid location. 
+
+In order to evaluate our clustering and interpolation method, three different data sets were simulated in this manner with slightly different parameter values, which can be found in \cref{tab:parms-table}. A plot of the trajectories for each simulation can be found in \cref{fig:traj-wrap}. In Simulation 1 and Simulation 3, the trajectories generally start mostly linear, with curvature towards the end of the week. In Simulation 2, more curvature happens earlier in the week, with more gradual curves as the week progresses.
+ 
+
+```{r initial-grid, message=FALSE, warning = FALSE}
+
+xmap <- seq(1,30,by = 1)
+ymap <- seq(1,30,by = 1)
+
+
+u_grid <- as.matrix(expand.grid(xmap,ymap)) # create grid
+
+set.seed(4)
+clust <- kmeans(u_grid,2) # clusters are straight lines
+cluster <- clust$cluster
+
+cg <- data.frame(u_grid,cluster)
+cg = data.frame(xmap=cg$Var1,ymap=cg$Var2,t=0) # get data frame of inital grid with cluster
+
+cg$cluster <- 1
+cg$cluster[cg$ymap > 15.5] <- 2
+```
+
+
+```{r og-grid, message=FALSE, warning = FALSE}
+## Observed Grid
+
+xmap2 <- seq(5,25,by = 2) #half the number of cells as underlying
+ymap2 <- seq(5,25,by = 2)
+
+og_grid <- as.matrix(expand.grid(xmap2,ymap2)) # create grid
+
+og <- data.frame(gpid = 1:nrow(og_grid), xmap = og_grid[,1], ymap = og_grid[,2], t = 0)
+
+```
+
+
+```{r grids-combined, message=FALSE, warning = FALSE, fig.scap = "Simulation Grids", fig.cap = "Underlying Process Grid and Observed Grid together, where the true cluster is also given.", cache=TRUE}
+
+og_combine <- og[,-1]
+og_combine$cluster <- 1
+og_combine$cluster[og_combine$ymap > 15.5] <- 2
+og_combine$grid <- "Observed"
+
+cg$grid <- "Underlying"
+
+both_grid <- rbind(og_combine, cg)
+both_grid$cluster <- as.factor(both_grid$cluster)
+
+
+both_grid %>%
+  ggplot(aes(x = xmap, y = ymap, frame = t, color = cluster, shape = grid)) + 
+  geom_point() + 
+  scale_shape_manual("Grid", values = c("Observed" = 2, "Underlying" = 20)) + 
+  #scale_color_viridis_d() + 
+  scale_fill_manual(values = alpha(c("blue", "orange"), .5))
+
+```
+
+
+```{r ex-1, message=FALSE, warning = FALSE, cache=TRUE}
+#Creating Underlying Process Grid -> U
+#seems to be doing ok - make grid bigger
+xmap <- seq(1,30,by = 1)
+ymap <- seq(1,30,by = 1)
+
+u_grid <- as.matrix(expand.grid(xmap,ymap)) # create grid
+
+set.seed(4)
+clust <- kmeans(u_grid,2) # clusters are straight lines
+cluster <- clust$cluster
+
+cg <- data.frame(u_grid,cluster)
+cg = data.frame(xmap=cg$Var1,ymap=cg$Var2,t=0) # get data frame of inital grid with cluster
+
+cg$cluster <- 1
+cg$cluster[cg$ymap > 15.5] <- 2
+
+#Move Grid
+
+all_q1 <- week1(14, 14, 0.75, 0.8, cg)
+
+covparms_c2x <- c(40,60,10,0)
+covparms_c2y <- c(80,50,10,0) # y
+
+covparms_c1x <- c(5,5,5,0)
+covparms_c1y <- c(5,5,5,0)
+
+d_c1 <- filter(all_q1, cluster == 1)
+d_c2 <- filter(all_q1, cluster == 2)
+
+set.seed(4)
+sigma_clus1x <- exponential_spacetime(covparms_c1x,as.matrix(d_c1[,1:3]))
+set.seed(4)
+sigma_clus2x <- exponential_spacetime(covparms_c2x,as.matrix(d_c2[,1:3]))
+
+set.seed(44)
+sigma_clus1y <- exponential_spacetime(covparms_c1y,as.matrix(d_c1[,1:3]))
+set.seed(44)
+sigma_clus2y <- exponential_spacetime(covparms_c2y,as.matrix(d_c2[,1:3]))
+
+#Playing with mean and covariance function -> see if can separate. 
+
+set.seed(44)
+foo1 = rmvnorm(1, rep(2,ncol(sigma_clus1x)),sigma_clus1x) #u_x,c1
+set.seed(44)
+foo2 = rmvnorm(1, rep(10,ncol(sigma_clus2x)),sigma_clus2x) #u_x,c2
+set.seed(44)
+foo3 = rmvnorm(1, rep(1.5,ncol(sigma_clus1y)),sigma_clus1y) #u_y,c1
+set.seed(44)
+foo4 = rmvnorm(1, rep(6,ncol(sigma_clus2y)),sigma_clus2y) #u_y,c2
+
+
+d_c1$rex <- c(foo1)
+d_c2$rex <- c(foo2)
+
+d_c1$rey <- c(foo3)
+d_c2$rey <- c(foo4)
+
+
+d <- rbind(d_c1, d_c2)%>% arrange(t) #Final data frame for underlying distribution
+
+xmap2 <- seq(5,25,by = 2) #half the number of cells as underlying
+ymap2 <- seq(5,25,by = 2)
+
+og_grid <- as.matrix(expand.grid(xmap2,ymap2)) # create grid
+
+og <- data.frame(gpid = 1:nrow(og_grid), xmap = og_grid[,1], ymap = og_grid[,2], t = 0)
+
+#Get Data - match observed value to nearest neighbor in underlying distribution
+
+#From t = 0 to t = 1
+d_t1 <- filter(d, t==0)
+d_new1<- rownames_to_column(d_t1, "index")
+
+g <- knn(d_t1[,1:2], og[,2:3], cl = d_t1$cluster, k=1)
+indices <- attr(g, "nn.index")
+
+og_new <- data.frame(og,indices)
+og_new$ux <- vlookup(og_new$indices,d_new1,6,1)
+og_new$uy <- vlookup(og_new$indices,d_new1,7,1)
+og_new$xnew <- og_new$xmap+ og_new$ux
+og_new$ynew <- og_new$ymap+ og_new$uy
+og_new$t <- og_new$t+1
+
+t_1 <- og_new[c(1,4,6,7,8,9)]
+t_2 <- nn_df(d, 1, t_1)
+t_3 <- nn_df(d, 2, t_2)
+t_4 <- nn_df(d, 3, t_3)
+t_5 <- nn_df(d, 4, t_4)
+t_6 <- nn_df(d, 5, t_5)
+t_7 <- nn_df(d, 6, t_6)
+t_8 <- nn_df(d, 7, t_7)
+t_9 <- nn_df(d, 8, t_8)
+t_10 <- nn_df(d, 9, t_9)
+t_11 <- nn_df(d, 10, t_10)
+t_12 <- nn_df(d, 11, t_11)
+t_13 <- nn_df(d, 12, t_12)
+t_14 <- nn_df(d, 13, t_13)
+
+final_t1 <- rbind(t_1, t_2, t_3, t_4, t_5, t_6, t_7,t_8, t_9, t_10, t_11, t_12, t_13, t_14) #all days - final simulated dataset
+
+
+
+```
+
+```{r plot-ex1, message=FALSE, warning = FALSE}
+
+######## Plot Trajectories of gpids
+
+#Probably need to plays with parameter values a bit more. What should this look like?
+
+og_clust <- og
+og_clust$clust <- 1
+og_clust$clust[og_clust$ymap > 15.5] <- 2
+og_clust$clust <- as.factor(og_clust$clust)
+
+final_t1_2 <- full_join(og_clust, final_t1[,-2], by = "gpid")
+final_t1_2$simulation <- 1
+
+```
+
+```{r ex-2 , cache=TRUE, message=FALSE, warning = FALSE}
+#Creating Underlying Process Grid -> U
+#seems to be doing ok - make grid bigger
+xmap <- seq(1,30,by = 1)
+ymap <- seq(1,30,by = 1)
+
+u_grid <- as.matrix(expand.grid(xmap,ymap)) # create grid
+
+set.seed(4)
+clust <- kmeans(u_grid,2) # clusters are straight lines
+cluster <- clust$cluster
+
+cg <- data.frame(u_grid,cluster)
+cg = data.frame(xmap=cg$Var1,ymap=cg$Var2,t=0) # get data frame of inital grid with cluster
+
+cg$cluster <- 1
+cg$cluster[cg$ymap > 15.5] <- 2
+
+#Move Grid
+all_q2 <- week1(10, 10, 0.75, 0.8, cg)
+
+
+covparms_c2x <- c(20,20,2,0)
+covparms_c2y <- c(25,20,3,0) # y
+
+covparms_c1x <- c(1,10,5,0)
+covparms_c1y <- c(2,10,7,0)
+
+
+d_c1 <- filter(all_q2, cluster == 1)
+d_c2 <- filter(all_q2, cluster == 2)
+
+set.seed(4)
+sigma_clus1x <- exponential_spacetime(covparms_c1x,as.matrix(d_c1[,1:3]))
+set.seed(4)
+sigma_clus2x <- exponential_spacetime(covparms_c2x,as.matrix(d_c2[,1:3]))
+
+set.seed(44)
+sigma_clus1y <- exponential_spacetime(covparms_c1y,as.matrix(d_c1[,1:3]))
+set.seed(44)
+sigma_clus2y <- exponential_spacetime(covparms_c2y,as.matrix(d_c2[,1:3]))
+
+#Playing with mean and covariance function -> see if can separate. 
+set.seed(44)
+foo1 = rmvnorm(1, rep(0.5,ncol(sigma_clus1x)),sigma_clus1x) #u_x,c1
+set.seed(44)
+foo2 = rmvnorm(1, rep(2,ncol(sigma_clus2x)),sigma_clus2x) #u_x,c2
+set.seed(44)
+foo3 = rmvnorm(1, rep(2,ncol(sigma_clus1y)),sigma_clus1y) #u_y,c1
+set.seed(44)
+foo4 = rmvnorm(1, rep(4,ncol(sigma_clus2y)),sigma_clus2y) #u_y,c2
+
+
+
+d_c1$rex <- c(foo1)
+d_c2$rex <- c(foo2)
+
+d_c1$rey <- c(foo3)
+d_c2$rey <- c(foo4)
+
+
+d <- rbind(d_c1, d_c2)%>% arrange(t) #Final data frame for underlying distribution
+
+
+## Observed Grid
+
+xmap2 <- seq(5,25,by = 2) #half the number of cells as underlying
+ymap2 <- seq(5,25,by = 2)
+
+og_grid <- as.matrix(expand.grid(xmap2,ymap2)) # create grid
+
+og <- data.frame(gpid = 1:nrow(og_grid), xmap = og_grid[,1], ymap = og_grid[,2], t = 0)
+
+og_clust <- og
+og_clust$cluster <- 1
+og_clust$cluster[og_clust$ymap > 15.5] <- 2
+
+#Get Data - match observed value to nearest neighbor in underlying distribution
+
+#From t = 0 to t = 1
+d_t1 <- filter(d, t==0)
+d_new1<- rownames_to_column(d_t1, "index")
+
+g <- knn(d_t1[,1:2], og[,2:3], cl = d_t1$cluster, k=1)
+indices <- attr(g, "nn.index")
+
+og_new <- data.frame(og,indices)
+og_new$ux <- vlookup(og_new$indices,d_new1,6,1)
+og_new$uy <- vlookup(og_new$indices,d_new1,7,1)
+og_new$xnew <- og_new$xmap+ og_new$ux
+og_new$ynew <- og_new$ymap+ og_new$uy
+og_new$t <- og_new$t+1
+
+t_1 <- og_new[c(1,4,6,7,8,9)]
+t_2 <- nn_df(d, 1, t_1)
+t_3 <- nn_df(d, 2, t_2)
+t_4 <- nn_df(d, 3, t_3)
+t_5 <- nn_df(d, 4, t_4)
+t_6 <- nn_df(d, 5, t_5)
+t_7 <- nn_df(d, 6, t_6)
+t_8 <- nn_df(d, 7, t_7)
+t_9 <- nn_df(d, 8, t_8)
+t_10 <- nn_df(d, 9, t_9)
+t_11 <- nn_df(d, 10, t_10)
+t_12 <- nn_df(d, 11, t_11)
+t_13 <- nn_df(d, 12, t_12)
+t_14 <- nn_df(d, 13, t_13)
+
+final_t2 <- rbind(t_1, t_2, t_3, t_4, t_5, t_6, t_7,t_8, t_9, t_10, t_11, t_12, t_13, t_14) #all days - final simulated dataset
+
+```
+
+
+```{r plot-ex2, message=FALSE, warning = FALSE}
+######## Plot Trajectories of gpids
+
+#Probably need to plays with parameter values a bit more. What should this look like?
+
+og_clust <- og
+og_clust$clust <- 1
+og_clust$clust[og_clust$ymap > 15.5] <- 2
+og_clust$clust <- as.factor(og_clust$clust)
+
+final_t2_2 <- full_join(og_clust, final_t2[,-2], by = "gpid")
+final_t2_2$simulation <- 2
+
+```
+
+
+```{r ex-3, cache=TRUE, message=FALSE, warning = FALSE}
+#Creating Underlying Process Grid -> U
+#seems to be doing ok - make grid bigger
+xmap <- seq(1,30,by = 1)
+ymap <- seq(1,30,by = 1)
+
+u_grid <- as.matrix(expand.grid(xmap,ymap)) # create grid
+
+set.seed(4)
+clust <- kmeans(u_grid,2) # clusters are straight lines
+cluster <- clust$cluster
+
+cg <- data.frame(u_grid,cluster)
+cg = data.frame(xmap=cg$Var1,ymap=cg$Var2,t=0) # get data frame of inital grid with cluster
+
+cg$cluster <- 1
+cg$cluster[cg$ymap > 15.5] <- 2
+
+#Move Grid
+all_q3 <- week1(10, 10, 0.75, 0.8, cg)
+
+covparms_c2x <- c(20,20,10,0)
+covparms_c2y <- c(20,30,10,0) # y
+
+covparms_c1x <- c(2,10,5,0)
+covparms_c1y <- c(2,10,5,0)
+
+d_c1 <- filter(all_q3, cluster == 1)
+d_c2 <- filter(all_q3, cluster == 2)
+
+set.seed(4)
+sigma_clus1x <- exponential_spacetime(covparms_c1x,as.matrix(d_c1[,1:3]))
+set.seed(4)
+sigma_clus2x <- exponential_spacetime(covparms_c2x,as.matrix(d_c2[,1:3]))
+
+set.seed(44)
+sigma_clus1y <- exponential_spacetime(covparms_c1y,as.matrix(d_c1[,1:3]))
+set.seed(44)
+sigma_clus2y <- exponential_spacetime(covparms_c2y,as.matrix(d_c2[,1:3]))
+
+#Playing with mean and covariance function -> see if can separate. 
+set.seed(44)
+foo1 = rmvnorm(1, rep(1.5,ncol(sigma_clus1x)),sigma_clus1x) #u_x,c1
+set.seed(44)
+foo2 = rmvnorm(1, rep(6,ncol(sigma_clus2x)),sigma_clus2x) #u_x,c2
+set.seed(44)
+foo3 = rmvnorm(1, rep(1,ncol(sigma_clus1y)),sigma_clus1y) #u_y,c1
+set.seed(44)
+foo4 = rmvnorm(1, rep(3,ncol(sigma_clus2y)),sigma_clus2y) #u_y,c2
+
+
+d_c1$rex <- c(foo1)
+d_c2$rex <- c(foo2)
+
+d_c1$rey <- c(foo3)
+d_c2$rey <- c(foo4)
+
+d <- rbind(d_c1, d_c2)%>% arrange(t) #Final data frame for underlying distribution
+
+
+## Observed Grid
+
+xmap2 <- seq(5,25,by = 2) #half the number of cells as underlying
+ymap2 <- seq(5,25,by = 2)
+
+og_grid <- as.matrix(expand.grid(xmap2,ymap2)) # create grid
+
+og <- data.frame(gpid = 1:nrow(og_grid), xmap = og_grid[,1], ymap = og_grid[,2], t = 0)
+
+
+og_clust <- og
+og_clust$cluster <- 1
+og_clust$cluster[og_clust$ymap > 15.5] <- 2
+
+#Get Data - match observed value to nearest neighbor in underlying distribution
+
+#From t = 0 to t = 1
+d_t1 <- filter(d, t==0)
+d_new1<- rownames_to_column(d_t1, "index")
+
+g <- knn(d_t1[,1:2], og[,2:3], cl = d_t1$cluster, k=1)
+indices <- attr(g, "nn.index")
+
+og_new <- data.frame(og,indices)
+og_new$ux <- vlookup(og_new$indices,d_new1,6,1)
+og_new$uy <- vlookup(og_new$indices,d_new1,7,1)
+og_new$xnew <- og_new$xmap+ og_new$ux
+og_new$ynew <- og_new$ymap+ og_new$uy
+og_new$t <- og_new$t+1
+
+t_1 <- og_new[c(1,4,6,7,8,9)]
+t_2 <- nn_df(d, 1, t_1)
+t_3 <- nn_df(d, 2, t_2)
+t_4 <- nn_df(d, 3, t_3)
+t_5 <- nn_df(d, 4, t_4)
+t_6 <- nn_df(d, 5, t_5)
+t_7 <- nn_df(d, 6, t_6)
+t_8 <- nn_df(d, 7, t_7)
+t_9 <- nn_df(d, 8, t_8)
+t_10 <- nn_df(d, 9, t_9)
+t_11 <- nn_df(d, 10, t_10)
+t_12 <- nn_df(d, 11, t_11)
+t_13 <- nn_df(d, 12, t_12)
+t_14 <- nn_df(d, 13, t_13)
+
+final_t3 <- rbind(t_1, t_2, t_3, t_4, t_5, t_6, t_7,t_8, t_9, t_10, t_11, t_12, t_13, t_14) #all days - final simulated dataset
+
+```
+
+```{r plot-ex3, message=FALSE, warning = FALSE}
+######## Plot Trajectories of gpids
+
+og_clust <- og
+og_clust$clust <- 1
+og_clust$clust[og_clust$ymap > 15.5] <- 2
+og_clust$clust <- as.factor(og_clust$clust)
+
+final_t3_2 <- full_join(og_clust, final_t3[,-2], by = "gpid")
+final_t3_2$simulation <- 3
+
+```
+
+```{r traj-wrap, fig.cap="Trajectory Plots for each Simulated Data Set ", cache = TRUE, message=FALSE, warning = FALSE}
+
+final_traj <- rbind(final_t1_2, final_t2_2, final_t3_2)
+
+final_traj2 <- final_traj %>% highlight_key(~gpid)
+
+ggplot(final_traj2, aes(x = xnew, y = ynew, group = gpid, hoverinfo = NULL,
+                   color = clust)) + 
+  geom_path(arrow = arrow(length = unit(1, "mm")), alpha = .5) + ggtitle("Simulation Trajectories") + scale_fill_manual(values = alpha(c("blue", "orange"), .5)) + 
+  facet_wrap(vars(simulation))
+
+```
+
+```{r parms-table}
+
+parms_data <- data.frame(Cluster = c(1,2,1,2,1,2), "Var1" = c(5,40,1,20,2,20), "Spatial1" = c(5,60,10,20,10,20), "Temporal1" = c(5,10,5,2,5,10), "Nugget1" = c(0,0,0,0,0,0), "Mean1" = c(2,10,0.5,2,1.5,6), "Var2" = c(5,80,2,25,2,20), "Spatial2" = c(5,50,10,20,10,30), "Temporal2" = c(5,10,7,3,5,10), "Nugget2" = c(0,0,0,0,0,0), "Mean2" = c(1.5,6,2,4,1,3))
+# 
+kableExtra::kable(parms_data, booktabs = TRUE, caption = "Parameters Y for Underlying Process for Each Cluster", col.names = c("Cluster", "$\\sigma^{2}_{x}$", "$\\phi_{x,s}$", "$\\tau_{x}$", "$Nugget_x$", "$\\mu_x$", "$\\sigma^{2}_{y}$", "$\\phi_{y,s}$", "$\\tau_{y}$", "$Nugget_y$", "$\\mu_y$"), escape = FALSE) %>% pack_rows(
+  index = (c("Simulation 1" = 2, "Simulation 2" = 2, "Simulation 3" = 2))
+) %>% 
+  add_header_above(c(" " ,"X" = 5, "Y" = 5))
+
+```
+
+
+## Clustering Method
+
+```{r cluster1, message=FALSE, warning = FALSE, cache=TRUE}
+## Clustering ------------------------------------------------------------
+#What is the true cluster group? What is was at t=0, or at t=7 (comparing at each time point?)
+
+d_new <- data.frame(final_t1, k=1)
+colnames(d_new) <- c("gpid", "t", "ux", "uy", "xmap", "ymap", "k")
+
+d_new2 <- filter(d_new, t < 8)
+
+sim_bb <- d_new2 %>% 
+  tidyr::nest(data = -gpid) %>% 
+  mutate(summary = map(data, bbox_summary)) %>%
+  unnest(summary)
+
+
+data_scale = data.frame(scale(sim_bb[,3:13]))
+names(data_scale) <- c("x_s1", "y_s1", "xmin_s1", "xmax_s1", "ymin_s1", "ymax_s1", "xbox_s1", "ybox_s1", "dx_s1", "dy_s1", "angle_s1")
+sim_bb_feat <- data.frame(sim_bb, data_scale)
+
+set.seed(4)
+km= kmeans(select(sim_bb_feat, c(x_s1,y_s1:angle_s1)), 2, nstart=25)
+clusters = as.factor(km$cluster)
+
+feat1 = data.frame(sim_bb_feat, clusters)
+
+feat_data1_1 <- d_new2 %>%
+  left_join(select(feat1, gpid, clust = clusters)) %>%
+  complete(crossing(gpid, t), fill = list(imputed = T)) %>%
+  ungroup() %>%
+  arrange(gpid, t) %>%
+  group_by(gpid) %>%
+  arrange(gpid)
+
+```
+
+```{r clusters2, message=FALSE, warning = FALSE, cache=TRUE}
+## Clustering ------------------------------------------------------------
+
+#What is the true cluster group? What is was at t=0, or at t=7 (comparing at each time point?)
+
+d_new <- data.frame(final_t2, k=1)
+colnames(d_new) <- c("gpid", "t", "ux", "uy", "xmap", "ymap", "k")
+
+d_new2 <- filter(d_new, t < 8)
+
+sim_bb <- d_new2 %>% 
+  tidyr::nest(data = -gpid) %>% 
+  mutate(summary = map(data, bbox_summary)) %>%
+  unnest(summary)
+
+data_scale = data.frame(scale(sim_bb[,3:13]))
+names(data_scale) <- c("x_s1", "y_s1", "xmin_s1", "xmax_s1", "ymin_s1", "ymax_s1", "xbox_s1", "ybox_s1", "dx_s1", "dy_s1", "angle_s1")
+sim_bb_feat <- data.frame(sim_bb, data_scale)
+
+set.seed(4)
+km = kmeans(select(sim_bb_feat, c(x_s1,y_s1:angle_s1)), 2, nstart=25)
+clusters = as.factor(km$cluster)
+
+feat2 = data.frame(sim_bb_feat, clusters)
+
+feat_data1_2 <- d_new2 %>%
+  left_join(select(feat2, gpid, clust = clusters)) %>%
+  complete(crossing(gpid, t), fill = list(imputed = T)) %>%
+  ungroup() %>%
+  arrange(gpid, t) %>%
+  group_by(gpid) %>%
+  arrange(gpid)
+
+```
+
+```{r clusters3, message=FALSE, warning = FALSE, cache=TRUE}
+## Clustering ----------------------------------------------
+
+d_new <- data.frame(final_t3, k=1)
+colnames(d_new) <- c("gpid", "t", "ux", "uy", "xmap", "ymap", "k")
+
+d_new2 <- filter(d_new, t < 8)
+
+sim_bb <- d_new2 %>% 
+  tidyr::nest(data = -gpid) %>% 
+  mutate(summary = map(data, bbox_summary)) %>%
+  unnest(summary)
+
+data_scale = data.frame(scale(sim_bb[,3:13]))
+names(data_scale) <- c("x_s1", "y_s1", "xmin_s1", "xmax_s1", "ymin_s1", "ymax_s1", "xbox_s1", "ybox_s1", "dx_s1", "dy_s1", "angle_s1")
+sim_bb_feat <- data.frame(sim_bb, data_scale)
+
+set.seed(4)
+km = kmeans(select(sim_bb_feat, c(x_s1,y_s1:angle_s1)), 2, nstart=25)
+clusters = as.factor(km$cluster)
+
+feat3 = data.frame(sim_bb_feat, clusters)
+
+feat_data1_3 <- d_new2 %>%
+  left_join(select(feat3, gpid, clust = clusters)) %>%
+  complete(crossing(gpid, t), fill = list(imputed = T)) %>%
+  ungroup() %>%
+  arrange(gpid, t) %>%
+  group_by(gpid) %>%
+  arrange(gpid)
+
+```
+
+```{r clust-og, message=FALSE, warning = FALSE}
+
+feat_data_1 <- og %>%
+  left_join(select(feat1, gpid, clust = clusters)) %>%
+  complete(crossing(gpid, t), fill = list(imputed = T)) %>%
+  ungroup() %>%
+  arrange(gpid, t) %>%
+  group_by(gpid) %>%
+  arrange(gpid)
+
+feat_data_2 <- og %>%
+  left_join(select(feat2, gpid, clust = clusters)) %>%
+  complete(crossing(gpid, t), fill = list(imputed = T)) %>%
+  ungroup() %>%
+  arrange(gpid, t) %>%
+  group_by(gpid) %>%
+  arrange(gpid)
+
+feat_data_3 <- og %>%
+  left_join(select(feat3, gpid, clust = clusters)) %>%
+  complete(crossing(gpid, t), fill = list(imputed = T)) %>%
+  ungroup() %>%
+  arrange(gpid, t) %>%
+  group_by(gpid) %>%
+  arrange(gpid)
+
+```
+
+```{r plot-og-clus,  fig.cap= "Clusterings of Observed Data on Original Grid", message=FALSE, warning = FALSE}
+
+feat_data_1$sim <- 1
+feat_data_2$sim <- 2
+feat_data_3$sim <- 3
+
+f3 <- rbind(feat_data_1, feat_data_2, feat_data_3)
+
+
+f3 %>%
+  ggplot(aes(x = xmap, y = ymap, group = gpid, ids = gpid,
+             color = clust, fill = clust)) + 
+  geom_point() +
+  scale_color_viridis_d() + 
+  scale_fill_viridis_d() + ggtitle("Simulation at t=0") +  geom_hline(yintercept=15.5, linetype="dashed", color = "red", size=0.5) +
+  facet_wrap(vars(sim))
+
+```
+
+
+
+
+```{r all-clus, fig.cap= "Clusterings of Observed Data on Final Day of Data Set", message=FALSE, warning = FALSE}
+
+feat_data1_1$sim <- 1
+feat_data1_2$sim <- 2
+feat_data1_3$sim <- 3
+
+f2 <- rbind(feat_data1_1, feat_data1_2, feat_data1_3)
+
+
+filter(f2, t ==7) %>%
+  ggplot(aes(x = xmap, y = ymap, group = gpid, ids = gpid,
+             color = clust, fill = clust)) + 
+  geom_point() +
+  scale_color_viridis_d() + 
+  scale_fill_viridis_d() + ggtitle("Simulation Plot at t=7") +
+  facet_wrap(vars(sim))
+
+
+```
+
+
+Now, our proposed spatio-temporal clustering method, using a bounding box, is performed on each of the simulated datasets. Since the true number of clusters is two, two is used as the k input in the k-means clustering algorithm. The results are shown at two different time points. First, the k-means determined clusters is visualized on the initial grid to visualize how well our method performed when can see the true clusterings (see \cref{fig:plot-og-clus}). The cut-off for the initial assigned cluster groupings is given by the red-dashed line. In this figure, a majority of the points seem to be clustered correctly, however, there are a number of missclassified points in each of the simulations. In Simulation 1, most of the missclassifications seem to be along the border, but do seem to increase from left to right. Most of cluster 2 is clustered correctly in Simulation 2, with the majority of missclassifications in cluster 1 happening along the edges and boundary. Similarly, in Simulation 3 most of the missclassifications are near the border, with a handful along the right edge in cluster 2. If there is a missclassified point that is surrounded by points correctly classified, this would be considered a part of the same cluster of its neighbors. This is due to the desire to have contiguous clusters and we are also primarily interested in the cluster boundaries. In the future, a post-processing filter to address these anomalies can be developed. 
+
+The second time point where the clusters are visualized is on the last day of the week in order to see if the clusters determined by the bounding box can distinguish movement over time. In \cref{fig:all-clus}, there are distinguishable boundaries between clusters for each of the simulations. Simulation 3 has a little overlap along the boundary, but can still distinguish between the two clusters. Thus, by clustering using the movement features of a trajectory, we are able to distinguish the differences in the movement patterns of the data, where the cluster boundaries to define the boundaries between the movement patterns. Some of the missclassifications on the original grid may be due to the fact that the value for the underlying process that was added to get the new location was determined by the closest grid cell of the underlying process by Euclidean distance. If the point eventually becomes closer to the other cluster, meaning that cluster's underlying process values are being added to cause the movement, it will eventually start to move like it. So if it spends more time moving like cluster 1 than cluster 2, as an example, it will be most likely be classified as cluster 1, even if that was not what it was initially assigned. 
+
+
+## Interpolation Method
+
+<!----------------- Simulation 1 Interpolation----------------------->
+
+```{r week2-clust-1, message=FALSE, warning = FALSE}
+
+d_new <- data.frame(final_t1, k=1)
+colnames(d_new) <- c("gpid", "t", "ux", "uy", "xmap", "ymap", "k")
+
+
+sim_bb <- d_new %>% 
+  tidyr::nest(data = -gpid) %>% 
+  mutate(summary = map(data, bbox_summary)) %>%
+  unnest(summary)
+
+
+data_scale = data.frame(scale(sim_bb[,3:13]))
+names(data_scale) <- c("x_s1", "y_s1", "xmin_s1", "xmax_s1", "ymin_s1", "ymax_s1", "xbox_s1", "ybox_s1", "dx_s1", "dy_s1", "angle_s1")
+sim_bb_feat <- data.frame(sim_bb, data_scale)
+
+set.seed(4)
+km= kmeans(select(sim_bb_feat, c(x_s1,y_s1:angle_s1)), 2, nstart=25)
+clusters = as.factor(km$cluster)
+
+feat1 = data.frame(sim_bb_feat, clusters)
+
+feat_data1_1 <- d_new %>%
+  left_join(select(feat1, gpid, clust = clusters)) %>%
+  complete(crossing(gpid, t), fill = list(imputed = T)) %>%
+  ungroup() %>%
+  arrange(gpid, t) %>%
+  group_by(gpid) %>%
+  arrange(gpid)
+
+
+
+
+```
+
+
+```{r sim1-week2}
+
+
+f1 <- filter(feat_data1_1, t < 8)
+f2 <- filter(feat_data1_1, t > 7)
+
+```
+
+```{r sim1-int, message=FALSE, warning = FALSE}
+
+y1 <- polygon_sim(7, f1)
+y2 <- polygon_sim(8, f2)
+
+
+
+## Get Intersection
+
+intersections_pp <- st_intersection(y1, y2) %>% mutate(int_name = paste0(Group.1, "-", Group.1.1))
+feat_t1 <- filter(f1, t == 7)
+#feat_t1 <- filter(feat_data1_1, t == 7)
+points <-st_as_sf(feat_t1, coords = c("xmap", "ymap"))
+polyg1 <-intersections_pp$geometry # LIST OF INTERSECTION POLYGONS
+z <- st_intersects(polyg1,points) #Return index of points within each intersection
+FrameData <- lapply(z, function(x) as.data.frame(x))
+new<- melt(FrameData)[,-1] #gives list of index and intersection group
+colnames(new) <- c("gpid", "intersection")
+n1 <- merge(feat_t1, new, by = "gpid") #Data frame of all of the gpids with interactions
+
+
+```
+
+```{r missing-df-sim1, message=FALSE, warning = FALSE}
+#w1 <- feat_data1_1
+w1 <- f1
+f_sim1 <- f1
+
+p <- 0.1 #proportion of missing values
+set.seed(5)
+sel <- sample( nrow(w1), size = p*nrow(w1))
+# Final Data Frame that has missing values (gpid, t, ux, uy, xmap, ymap, k, clust)
+for(t in sel){
+  w1[t,c(5,6)] <- NA #w1[t,c(3,4)] <- NA
+}
+
+
+```
+
+```{r sim1-res, message=FALSE, warning = FALSE, cache=TRUE}
+
+#Gives Location for X
+int_1x = all_lat(w1, f1,polyg1,n1)
+
+#Gives Location for Y
+int_1y = all_long(w1,f1,polyg1,n1)
+
+xy1 <- data.frame(int_1x$known2.gpid, int_1x$r, int_1x$i, int_1x$pred_df, int_1x$sd, int_1x$lc, int_1x$uc, int_1y$pred_df, int_1y$sd, int_1y$lc, int_1y$uc)
+colnames(xy1) <- c("gpid", "t", "intersection", "xmap_pred", "x_sd", "x_lc", "x_uc", "ymap_pred", "y_sd", "y_lc", "y_uc")
+
+
+xy_join1 <- right_join(f1, xy1, by = c("gpid", "t"))
+xy_join1 <- xy_join1 %>% distinct(gpid,t,.keep_all= TRUE)
+
+
+error_x1 <- sum((xy_join1$xmap-xy_join1$xmap_pred)^2)/nrow(xy_join1) #6.24
+error_y1 <- sum((xy_join1$ymap-xy_join1$ymap_pred)^2)/nrow(xy_join1) #5.03
+
+
+```
+
+```{r lin-int1, message=FALSE, warning = FALSE}
+
+w1$missing <- "no"
+w1$missing[is.na(w1$xmap)] <- "yes"
+
+#estimates everything except if missing first or last day of data set
+lin1 <- w1 %>% group_by(gpid) %>%
+  mutate(xmap =na.approx(xmap, na.rm = FALSE)) %>%
+  mutate(ymap =na.approx(ymap, na.rm = FALSE))
+
+miss1 <- filter(lin1, missing == "yes")
+colnames(miss1) <- c("gpid", "t", "ux", "uy", "xmap_pred", "ymap_pred", "k", "clust","missing")
+miss_join1 <- right_join(feat_data1_1, miss1, by = c("gpid", "t"))
+
+miss_na1 <- filter(miss_join1, !is.na(xmap_pred))
+
+error_x_lin1 <- sum((miss_na1$xmap-miss_na1$xmap_pred)^2)/nrow(miss_na1) #2.89
+error_y_lin1 <- sum((miss_na1$ymap-miss_na1$ymap_pred)^2)/nrow(miss_na1) #3.515
+
+```
+
+<!----------------- Simulation 2 Interpolation----------------------->
+
+```{r week2-clust-2, message=FALSE, warning = FALSE}
+
+d_new <- data.frame(final_t2, k=1)
+colnames(d_new) <- c("gpid", "t", "ux", "uy", "xmap", "ymap", "k")
+
+
+sim_bb <- d_new %>% 
+  tidyr::nest(data = -gpid) %>% 
+  mutate(summary = map(data, bbox_summary)) %>%
+  unnest(summary)
+
+
+data_scale = data.frame(scale(sim_bb[,3:13]))
+names(data_scale) <- c("x_s1", "y_s1", "xmin_s1", "xmax_s1", "ymin_s1", "ymax_s1", "xbox_s1", "ybox_s1", "dx_s1", "dy_s1", "angle_s1")
+sim_bb_feat <- data.frame(sim_bb, data_scale)
+
+set.seed(4)
+km= kmeans(select(sim_bb_feat, c(x_s1,y_s1:angle_s1)), 2, nstart=25)
+clusters = as.factor(km$cluster)
+
+feat1 = data.frame(sim_bb_feat, clusters)
+
+feat_data1_2 <- d_new %>%
+  left_join(select(feat1, gpid, clust = clusters)) %>%
+  complete(crossing(gpid, t), fill = list(imputed = T)) %>%
+  ungroup() %>%
+  arrange(gpid, t) %>%
+  group_by(gpid) %>%
+  arrange(gpid)
+
+
+
+```
+
+
+```{r sim2-week2, message=FALSE, warning = FALSE}
+#Week 2
+
+f1 <- filter(feat_data1_2, t < 8)
+f2 <- filter(feat_data1_2, t > 7)
+
+```
+
+```{r sim2-int, message=FALSE, warning = FALSE}
+
+y1 <- polygon_sim(7, f1)
+y2 <- polygon_sim(8, f2)
+
+## Get Intersection
+
+intersections_pp <- st_intersection(y1, y2) %>% mutate(int_name = paste0(Group.1, "-", Group.1.1))
+#feat_t1 <- filter(feat_data1_2, t == 7)
+feat_t1 <- filter(f1, t == 7)
+points <-st_as_sf(feat_t1, coords = c("xmap", "ymap"))
+polyg2 <-intersections_pp$geometry # LIST OF INTERSECTION POLYGONS
+z <- st_intersects(polyg2,points) #Return index of points within each intersection
+FrameData <- lapply(z, function(x) as.data.frame(x))
+new<- melt(FrameData)[,-1] #gives list of index and intersection group
+colnames(new) <- c("gpid", "intersection")
+n2 <- merge(feat_t1, new, by = "gpid")#Data frame of all of the gpids with interactions
+
+
+```
+
+```{r missing-df-sim2, message=FALSE, warning = FALSE}
+
+w2 <- f1
+f_sim2 <- f1
+
+p <- 0.1 #proportion of missing values
+set.seed(5)
+sel <- sample(nrow(w2), size = p*nrow(w2))
+# Final Data Frame that has missing values (gpid, t, ux, uy, xmap, ymap, k, clust)
+for(t in sel){
+  w2[t,c(5,6)] <- NA #w1[t,c(3,4)] <- NA
+}
+
+
+```
+
+```{r sim2-res, message=FALSE, warning = FALSE, cache=TRUE}
+
+#Gives Location for X
+int_2x = all_lat(w2, f1,polyg2,n2)
+
+
+#Gives Location for Y
+int_2y = all_long(w2,f1,polyg2,n2)
+
+xy2 <- data.frame(int_2x$known2.gpid, int_2x$r, int_2x$i, int_2x$pred_df, int_2x$sd, int_2x$lc, int_2x$uc, int_2y$pred_df, int_2y$sd, int_2y$lc, int_2y$uc)
+colnames(xy2) <- c("gpid", "t", "intersection", "xmap_pred", "x_sd", "x_lc", "x_uc", "ymap_pred", "y_sd", "y_lc", "y_uc")
+
+
+xy_join2 <- right_join(f1, xy2, by = c("gpid", "t"))
+xy_join2 <- xy_join2 %>% distinct(gpid,t,.keep_all= TRUE)
+
+
+error_x2 <- sum((xy_join2$xmap-xy_join2$xmap_pred)^2)/nrow(xy_join2) #6.24
+error_y2 <- sum((xy_join2$ymap-xy_join2$ymap_pred)^2)/nrow(xy_join2) #5.03
+
+
+```
+
+```{r lin-int2, message=FALSE, warning = FALSE}
+
+
+w2$missing <- "no"
+w2$missing[is.na(w2$xmap)] <- "yes"
+
+#estimates everything except if missing first or last day of data set
+lin2 <- w2 %>% group_by(gpid) %>%
+  mutate(xmap =na.approx(xmap, na.rm = FALSE)) %>%
+  mutate(ymap =na.approx(ymap, na.rm = FALSE))
+
+miss2 <- filter(lin2, missing == "yes")
+colnames(miss2) <- c("gpid", "t", "ux", "uy", "xmap_pred", "ymap_pred", "k", "clust","missing")
+miss_join2 <- right_join(feat_data1_2, miss2, by = c("gpid", "t"))
+
+miss_na2 <- filter(miss_join2, !is.na(xmap_pred))
+
+error_x_lin2 <- sum((miss_na2$xmap-miss_na2$xmap_pred)^2)/nrow(miss_na2) #2.89
+error_y_lin2 <- sum((miss_na2$ymap-miss_na2$ymap_pred)^2)/nrow(miss_na2) #3.515
+
+
+
+```
+
+<!----------------- Simulation 3 Interpolation----------------------->
+
+```{r week2-clust-3, message=FALSE, warning = FALSE}
+
+d_new <- data.frame(final_t3, k=1)
+colnames(d_new) <- c("gpid", "t", "ux", "uy", "xmap", "ymap", "k")
+
+
+sim_bb <- d_new %>% 
+  tidyr::nest(data = -gpid) %>% 
+  mutate(summary = map(data, bbox_summary)) %>%
+  unnest(summary)
+
+
+
+data_scale = data.frame(scale(sim_bb[,3:13]))
+names(data_scale) <- c("x_s1", "y_s1", "xmin_s1", "xmax_s1", "ymin_s1", "ymax_s1", "xbox_s1", "ybox_s1", "dx_s1", "dy_s1", "angle_s1")
+sim_bb_feat <- data.frame(sim_bb, data_scale)
+
+set.seed(4)
+km= kmeans(select(sim_bb_feat, c(x_s1,y_s1:angle_s1)), 2, nstart=25)
+clusters = as.factor(km$cluster)
+
+feat1 = data.frame(sim_bb_feat, clusters)
+
+feat_data1_3 <- d_new %>%
+  left_join(select(feat1, gpid, clust = clusters)) %>%
+  complete(crossing(gpid, t), fill = list(imputed = T)) %>%
+  ungroup() %>%
+  arrange(gpid, t) %>%
+  group_by(gpid) %>%
+  arrange(gpid)
+
+
+```
+
+
+```{r sim3-w2-clus, message=FALSE, warning = FALSE}
+
+f1 <- filter(feat_data1_3, t < 8)
+f2 <- filter(feat_data1_3, t > 7)
+
+```
+
+
+```{r sim3-int, message=FALSE, warning = FALSE}
+
+y1 <- polygon_sim(7, f1)
+y2 <- polygon_sim(8, f2)
+
+
+## Get Intersection
+intersections_pp <- st_intersection(y1, y2) %>% mutate(int_name = paste0(Group.1, "-", Group.1.1))
+#feat_t1 <- filter(feat_data1_3, t == 7)
+feat_t1 <- filter(f1, t == 7)
+points <-st_as_sf(feat_t1, coords = c("xmap", "ymap"))
+polyg3 <-intersections_pp$geometry # LIST OF INTERSECTION POLYGONS
+z <- st_intersects(polyg3,points) #Return index of points within each intersection
+FrameData <- lapply(z, function(x) as.data.frame(x))
+new<- melt(FrameData)[,-1] #gives list of index and intersection group
+colnames(new) <- c("gpid", "intersection")
+n3 <- merge(feat_t1, new, by = "gpid") #Data frame of all of the gpids with interactions
+
+
+```
+
+```{r missing-df-sim3, message=FALSE, warning = FALSE}
+
+w3 <- f1
+f_sim3 <- f1
+
+
+p <- 0.1 #proportion of missing values
+set.seed(5)
+sel <- sample( nrow(w3), size = p*nrow(w3))
+# Final Data Frame that has missing values (gpid, t, ux, uy, xmap, ymap, k, clust)
+for(t in sel){
+  w3[t,c(5,6)] <- NA #w1[t,c(3,4)] <- NA
+}
+
+
+```
+
+
+```{r sim3-res, message=FALSE, warning = FALSE, cache=TRUE}
+
+#Gives Location for X
+int_3x = all_lat(w3, f1,polyg3,n3)
+
+#Gives Location for Y
+int_3y = all_long(w3,f1,polyg3,n3)
+
+xy3 <- data.frame(int_3x$known2.gpid, int_3x$r, int_3x$i, int_3x$pred_df, int_3x$sd, int_3x$lc, int_3x$uc, int_3y$pred_df, int_3y$sd, int_3y$lc, int_3y$uc)
+colnames(xy3) <- c("gpid", "t", "intersection", "xmap_pred", "x_sd", "x_lc", "x_uc", "ymap_pred", "y_sd", "y_lc", "y_uc")
+
+xy_join3 <- right_join(f1, xy3, by = c("gpid", "t"))
+xy_join3 <- xy_join3 %>% distinct(gpid,t, .keep_all= TRUE)
+
+error_x3 <- sum((xy_join3$xmap-xy_join3$xmap_pred)^2)/nrow(xy_join3) #6.24
+error_y3 <- sum((xy_join3$ymap-xy_join3$ymap_pred)^2)/nrow(xy_join3) #5.03
+
+
+```
+
+
+```{r lin-int3, message=FALSE, warning = FALSE}
+
+w3$missing <- "no"
+w3$missing[is.na(w3$xmap)] <- "yes"
+
+
+#estimates everything except if missing first or last day of data set
+lin3 <- w3 %>% group_by(gpid) %>%
+  mutate(xmap =na.approx(xmap, na.rm = FALSE)) %>%
+  mutate(ymap =na.approx(ymap, na.rm = FALSE))
+
+
+miss3 <- filter(lin3, missing == "yes")
+colnames(miss3) <- c("gpid", "t", "ux", "uy", "xmap_pred", "ymap_pred", "k", "clust","missing")
+miss_join3 <- right_join(feat_data1_3, miss3, by = c("gpid", "t"))
+
+miss_na3 <- filter(miss_join3, !is.na(xmap_pred))
+
+error_x_lin3 <- sum((miss_na3$xmap-miss_na3$xmap_pred)^2)/nrow(miss_na3) #2.89
+error_y_lin3 <- sum((miss_na3$ymap-miss_na3$ymap_pred)^2)/nrow(miss_na3) #3.515
+
+```
+
+<!-- No Intersection Models -->
+
+```{r sim1-noint, message=FALSE, warning = FALSE, cache = TRUE}
+
+
+x_sim1_noint <- all_sim_lat_noint(w1, f_sim1)
+y_sim1_noint <- all_sim_long_noint(w1,f_sim1)
+
+xy_noint1 <- data.frame(x_sim1_noint$gpid, x_sim1_noint$t, x_sim1_noint$x, y_sim1_noint$y)
+colnames(xy_noint1) <- c("gpid", "t", "xmap_pred", "ymap_pred")
+xy_join_noint1 <- right_join(f_sim1, xy_noint1, by = c("gpid", "t"))
+
+noint_x_sim1 <- sum((xy_join_noint1$xmap-xy_join_noint1$xmap_pred)^2)/nrow(xy_join_noint1) #1.829172
+noint_y_sim1 <- sum((xy_join_noint1$ymap-xy_join_noint1$ymap_pred)^2)/nrow(xy_join_noint1) #2.510814
+
+```
+
+```{r sim2-noint, message=FALSE, warning = FALSE, cache= TRUE}
+
+x_sim2_noint <- all_sim_lat_noint(w2, f_sim2)
+y_sim2_noint <- all_sim_long_noint(w2,f_sim2)
+
+xy_noint2 <- data.frame(x_sim2_noint$gpid, x_sim2_noint$t, x_sim2_noint$x, y_sim2_noint$y)
+colnames(xy_noint2) <- c("gpid", "t", "xmap_pred", "ymap_pred")
+xy_join_noint2 <- right_join(f_sim2, xy_noint2, by = c("gpid", "t"))
+
+noint_x_sim2 <- sum((xy_join_noint2$xmap-xy_join_noint2$xmap_pred)^2)/nrow(xy_join_noint2) #1.829172
+noint_y_sim2 <- sum((xy_join_noint2$ymap-xy_join_noint2$ymap_pred)^2)/nrow(xy_join_noint2) #2.510814
+
+```
+
+```{r sim3-noint, message=FALSE, warning = FALSE, cache=TRUE}
+
+x_sim3_noint <- all_sim_lat_noint(w3, f_sim3)
+y_sim3_noint <- all_sim_long_noint(w3,f_sim3)
+
+xy_noint3 <- data.frame(x_sim3_noint$gpid, x_sim3_noint$t, x_sim3_noint$x, y_sim3_noint$y)
+colnames(xy_noint3) <- c("gpid", "t", "xmap_pred", "ymap_pred")
+xy_join_noint3 <- right_join(f_sim3, xy_noint3, by = c("gpid", "t"))
+
+noint_x_sim3 <- sum((xy_join_noint3$xmap-xy_join_noint3$xmap_pred)^2)/nrow(xy_join_noint3) #1.829172
+noint_y_sim3 <- sum((xy_join_noint3$ymap-xy_join_noint3$ymap_pred)^2)/nrow(xy_join_noint3) #2.510814
+
+
+```
+
+<!-- Initial Results Table -->
+
+```{r results-table, message=FALSE, warning = FALSE, cache = TRUE}
+
+result_data <- data.frame(X1 = c(sqrt(error_x1), sqrt(error_x2), sqrt(error_x3)), Y1 = c(sqrt(error_y1), sqrt(error_y2), sqrt(error_y3)), X2 = c(sqrt(error_x_lin1), sqrt(error_x_lin2), sqrt(error_x_lin3)), Y2 = c(sqrt(error_y_lin1), sqrt(error_y_lin2), sqrt(error_y_lin3)), X3 = c(sqrt(noint_x_sim1), sqrt(noint_x_sim2), sqrt(noint_x_sim3)), Y3 = c(sqrt(noint_y_sim1), sqrt(noint_y_sim2), sqrt(noint_y_sim3)))
+ 
+kableExtra::kable(result_data, booktabs = TRUE, caption = "RMSE for Interpolation Methods", col.names = c("$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{no int}$", "$Y_{no int}$"), escape = FALSE) %>% pack_rows(
+  index = (c("Simulation 1" = 1, "Simulation 2" = 1, "Simulation 3" = 1))
+) %>% 
+  add_header_above(c("Intersection" = 2, "Linear" = 2, "No Intersection" = 2))
+
+
+```
+
+
+<!-- Coverage Probability -->
+
+```{r cp-sim1, message=FALSE, warning = FALSE, cache = TRUE}
+xy_join1$inintx <- 0
+xy_join1$inintx[xy_join1$x_lc < xy_join1$xmap & xy_join1$xmap < xy_join1$x_uc] <- 1
+cp_sim1_x <- sum(xy_join1$inintx)/nrow(xy_join1) #coverage probability
+sd_sim1_x <- mean(xy_join1$x_sd)
+
+xy_join1$ininty <- 0
+xy_join1$ininty[xy_join1$y_lc < xy_join1$ymap & xy_join1$ymap < xy_join1$y_uc] <- 1
+cp_sim1_y <- sum(xy_join1$ininty)/nrow(xy_join1) #coverage probability
+sd_sim1_y <- mean(xy_join1$y_sd)
+
+
+```
+
+
+```{r cp-sim2, message=FALSE, warning = FALSE, cache = TRUE}
+
+xy_join2$inintx <- 0
+xy_join2$inintx[xy_join2$x_lc < xy_join2$xmap & xy_join2$xmap < xy_join2$x_uc] <- 1
+cp_sim2_x <- sum(xy_join2$inintx)/nrow(xy_join2) #coverage probability
+sd_sim2_x <- mean(xy_join2$x_sd)
+
+xy_join2$ininty <- 0
+xy_join2$ininty[xy_join2$y_lc < xy_join2$ymap & xy_join2$ymap < xy_join2$y_uc] <- 1
+cp_sim2_y <- sum(xy_join2$ininty)/nrow(xy_join2) #coverage probability
+sd_sim2_y <- mean(xy_join2$y_sd)
+
+```
+
+
+```{r cp-sim3, message=FALSE, warning = FALSE, cache = TRUE}
+
+xy_join3$inintx <- 0
+xy_join3$inintx[xy_join3$x_lc < xy_join3$xmap & xy_join3$xmap < xy_join3$x_uc] <- 1
+cp_sim3_x <- sum(xy_join3$inintx)/nrow(xy_join3) #coverage probability
+sd_sim3_x <- mean(xy_join3$x_sd)
+
+xy_join3$ininty <- 0
+xy_join3$ininty[xy_join3$y_lc < xy_join3$ymap & xy_join3$ymap < xy_join3$y_uc] <- 1
+cp_sim3_y <- sum(xy_join3$ininty)/nrow(xy_join3) #coverage probability
+sd_sim3_y <- mean(xy_join3$y_sd)
+
+
+```
+
+
+The above simulations are also used to check the performance of our spatio-temporal interpolation model. For each of the simulations, another week of data is similarly created and clustered. Polygons for the two clusters are created. Then, the intersection polygons of the weeks polygons are found. Once again, an intersections represent the spatio-temporal neighbors of the data within that intersection polygon. Next, 10% of the data for the first week are randomly assigned to be missing. Then a univariate model for x and y are developed in order to obtain our estimates of the missing locations. Additionally, in order to have a baseline to compare our method to, we also ran linear interpolation on the same data. Linear interpolation estimates an objects unknown location along a straight-line path between two known locations. It has been shown to work well for trajectories that follow a straight-line path and have a lot of sampled points. On the other hand, it tends to not work as well when a trajectory follows a more curved path or is not heavily sampled [@wentz_comparison_2003; @guo_improved_2021]. A third method was used for comparison that is similar to our intersection method. Here, instead of running the model inside an intersection, the intersections were ignored, and a model was developed using all known points for t-1, t, and t+1 (this essentially ignores the nonstationarity aspect of our data). The Root Mean Square Error (RMSE) for each of the simulations and interpolation methods can be found in \cref{tab:results-table}. 
+
+Our interpolation method never seems to outperform linear interpolation. However, outside of Simulation 3, the results are not very different. In Simulation 3, running the model for each intersection performs better than the overall model. Further, since the clusters were created with different movements, in order to see if there are different areas where our method may perform better, \cref{tab:results-table-by-clust} breaks out the RMSE calculations by cluster. In this table, we see similar results. For Simulation 1, linear interpolation always performs the best. In Simulation 2, our method outperforms linear interpolation for Y in cluster 2. However, the model using all the data performs the best here. Simulation 3 is similar to Simulation 1. Nonetheless, linear interpolation performing the best may not be surprising, as there are long periods of linear movement in each of the simulations, so the results may be dependent on what points where randomly removed. Additionally, linear interpolation can not estimate the first or last point of a trajectory, so there are fewer predicted locations used to calculate the RMSE. Thus, these simulations show that linear interpolation may generally outperform our method, but our method may have some promise with curved data that may not be highly sampled. As an example, in $Y_{s2,c2}$, the data is more spread out and curved than the others. The other simulations may have curves, but samples are taken closer together, or the data may be spread out but mostly is linear. The results on if creating the intersections is necessary is mixed. However, these results may be impacted by some of the intersection not containing much data, which may impact model development. Through the simulations, we also found that having a fine enough grid for estimates of the missing data as starting values in the prediction function is key. If the grid is too coarse, this can impact the accuracy of the estimations.
+
+<!-- By Cluster -->
+
+```{r sim-by-clus1, message=FALSE, warning = FALSE}
+
+#Intersection Method
+x1_c1 <- filter(xy_join1, clust == 1)
+x1_c2 <- filter(xy_join1, clust == 2)
+
+sim1_x_c1 <- sum((x1_c1$xmap-x1_c1$xmap_pred)^2)/nrow(x1_c1)
+sim1_y_c1 <- sum((x1_c1$ymap-x1_c1$ymap_pred)^2)/nrow(x1_c1)
+sim1_x_c2 <- sum((x1_c2$xmap-x1_c2$xmap_pred)^2)/nrow(x1_c2)
+sim1_y_c2 <- sum((x1_c2$ymap-x1_c2$ymap_pred)^2)/nrow(x1_c2)
+
+#Linear Interpolation
+miss_na_1 <- filter(miss_na1, clust.x == 1)
+miss_na_2 <- filter(miss_na1, clust.x == 2)
+
+lin1_x_c1 <-sum((miss_na_1$xmap-miss_na_1$xmap_pred)^2)/nrow(miss_na_1) 
+lin1_y_c1 <- sum((miss_na_1$ymap-miss_na_1$ymap_pred)^2)/nrow(miss_na_1) 
+lin1_x_c2 <- sum((miss_na_2$xmap-miss_na_2$xmap_pred)^2)/nrow(miss_na_2)
+lin1_y_c2 <- sum((miss_na_2$ymap-miss_na_2$ymap_pred)^2)/nrow(miss_na_2) 
+
+
+#Model without Intersection
+
+x1_c1_noint <- filter(xy_join_noint1, clust == 1)
+x1_c2_noint <- filter(xy_join_noint1, clust == 2)
+
+sim1_x_c1_noi <- sum((x1_c1_noint$xmap-x1_c1_noint$xmap_pred)^2)/nrow(x1_c1_noint)
+sim1_y_c1_noi <- sum((x1_c1_noint$ymap-x1_c1_noint$ymap_pred)^2)/nrow(x1_c1_noint)
+sim1_x_c2_noi <- sum((x1_c2_noint$xmap-x1_c2_noint$xmap_pred)^2)/nrow(x1_c2_noint)
+sim1_y_c2_noi <- sum((x1_c2_noint$ymap-x1_c2_noint$ymap_pred)^2)/nrow(x1_c2_noint)
+
+
+```
+
+```{r sim-by-clus2, message=FALSE, warning = FALSE}
+
+#Intersection Method
+x2_c1 <- filter(xy_join2, clust == 1)
+x2_c2 <- filter(xy_join2, clust == 2)
+
+sim2_x_c1 <- sum((x2_c1$xmap-x2_c1$xmap_pred)^2)/nrow(x2_c1)
+sim2_y_c1 <- sum((x2_c1$ymap-x2_c1$ymap_pred)^2)/nrow(x2_c1)
+sim2_x_c2 <- sum((x2_c2$xmap-x2_c2$xmap_pred)^2)/nrow(x2_c2)
+sim2_y_c2 <- sum((x2_c2$ymap-x2_c2$ymap_pred)^2)/nrow(x2_c2)
+
+#Linear Interpolation
+
+miss_na2_1 <- filter(miss_na2, clust.x == 1)
+miss_na2_2 <- filter(miss_na2, clust.x == 2)
+
+
+lin2_x_c1 <- sum((miss_na2_1$xmap-miss_na2_1$xmap_pred)^2)/nrow(miss_na2_1) 
+lin2_y_c1 <- sum((miss_na2_1$ymap-miss_na2_1$ymap_pred)^2)/nrow(miss_na2_1) 
+lin2_x_c2 <- sum((miss_na2_2$xmap-miss_na2_2$xmap_pred)^2)/nrow(miss_na2_2)
+lin2_y_c2 <- sum((miss_na2_2$ymap-miss_na2_2$ymap_pred)^2)/nrow(miss_na2_2) 
+
+#Model without Intersection
+
+x2_c1_noint <- filter(xy_join_noint2, clust == 1)
+x2_c2_noint <- filter(xy_join_noint2, clust == 2)
+
+
+sim2_x_c1_noi <- sum((x2_c1_noint$xmap-x2_c1_noint$xmap_pred)^2)/nrow(x2_c1_noint)
+sim2_y_c1_noi <- sum((x2_c1_noint$ymap-x2_c1_noint$ymap_pred)^2)/nrow(x2_c1_noint)
+sim2_x_c2_noi <- sum((x2_c2_noint$xmap-x2_c2_noint$xmap_pred)^2)/nrow(x2_c2_noint)
+sim2_y_c2_noi <- sum((x2_c2_noint$ymap-x2_c2_noint$ymap_pred)^2)/nrow(x2_c2_noint)
+
+
+```
+
+```{r sim-by-clus3, message=FALSE, warning = FALSE}
+
+#Intersection Method
+x3_c1 <- filter(xy_join3, clust == 1)
+x3_c2 <- filter(xy_join3, clust == 2)
+
+sim3_x_c1 <- sum((x3_c1$xmap-x3_c1$xmap_pred)^2)/nrow(x3_c1)
+sim3_y_c1 <- sum((x3_c1$ymap-x3_c1$ymap_pred)^2)/nrow(x3_c1)
+sim3_x_c2 <- sum((x3_c2$xmap-x3_c2$xmap_pred)^2)/nrow(x3_c2)
+sim3_y_c2 <- sum((x3_c2$ymap-x3_c2$ymap_pred)^2)/nrow(x3_c2)
+
+#Linear Interpolation
+miss_na3_1 <- filter(miss_na3, clust.x == 1)
+miss_na3_2 <- filter(miss_na3, clust.x == 2)
+
+lin3_x_c1 <- sum((miss_na3_1$xmap-miss_na3_1$xmap_pred)^2)/nrow(miss_na3_1) 
+lin3_y_c1 <- sum((miss_na3_1$ymap-miss_na3_1$ymap_pred)^2)/nrow(miss_na3_1) 
+lin3_x_c2 <- sum((miss_na3_2$xmap-miss_na3_2$xmap_pred)^2)/nrow(miss_na3_2)
+lin3_y_c2 <- sum((miss_na3_2$ymap-miss_na3_2$ymap_pred)^2)/nrow(miss_na3_2) 
+
+#Model without Intersection
+
+
+x3_c1_noint <- filter(xy_join_noint3, clust == 1)
+x3_c2_noint <- filter(xy_join_noint3, clust == 2)
+
+sim3_x_c1_noi <- sum((x3_c1_noint$xmap-x3_c1_noint$xmap_pred)^2)/nrow(x3_c1_noint)
+sim3_y_c1_noi <- sum((x3_c1_noint$ymap-x3_c1_noint$ymap_pred)^2)/nrow(x3_c1_noint)
+sim3_x_c2_noi <- sum((x3_c2_noint$xmap-x3_c2_noint$xmap_pred)^2)/nrow(x3_c2_noint)
+sim3_y_c2_noi <- sum((x3_c2_noint$ymap-x3_c2_noint$ymap_pred)^2)/nrow(x3_c2_noint)
+
+
+```
+
+<!-- Results Table -->
+
+
+```{r results-table-by-clust, message=FALSE, warning = FALSE}
+
+result_data_clust <- data.frame(Cluster = c(1,2,1,2,1,2), X1 = c(sqrt(sim1_x_c1), sqrt(sim1_x_c2), sqrt(sim2_x_c1), sqrt(sim2_x_c2), sqrt(sim3_x_c1), sqrt(sim3_x_c2)), Y1 = c(sqrt(sim1_y_c1), sqrt(sim1_y_c2), sqrt(sim2_y_c1), sqrt(sim2_y_c2), sqrt(sim3_y_c1), sqrt(sim3_y_c2)), X2 = c(sqrt(lin1_x_c1), sqrt(lin1_x_c2), sqrt(lin2_x_c1), sqrt(lin2_x_c2), sqrt(lin3_x_c1), sqrt(lin3_x_c2)), Y2 = c(sqrt(lin1_y_c1), sqrt(lin1_y_c2), sqrt(lin2_y_c1), sqrt(lin2_y_c2), sqrt(lin3_y_c1), sqrt(lin3_y_c2)), X3 = c(sqrt(sim1_x_c1_noi), sqrt(sim1_x_c2_noi), sqrt(sim2_x_c1_noi), sqrt(sim2_x_c2_noi), sqrt(sim3_x_c1_noi), sqrt(sim3_x_c2_noi)), Y3 = c(sqrt(sim1_y_c1_noi), sqrt(sim1_y_c2_noi), sqrt(sim2_y_c1_noi), sqrt(sim2_y_c2_noi), sqrt(sim3_y_c1_noi), sqrt(sim3_y_c2_noi)))
+
+kableExtra::kable(result_data_clust, booktabs = TRUE, caption = "RMSE for Interpolation Methods by cluster", col.names = c("Cluster", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{no int}$", "$Y_{no int}$"), escape = FALSE) %>% pack_rows(
+  index = (c("Simulation 1" = 2, "Simulation 2" = 2, "Simulation 3" = 2))
+) %>% 
+  add_header_above(c(" ", "Intersection" = 2, "Linear" = 2, "No Intersection" = 2))
+
+```
+
+
+```{r cp-table-sim, message=FALSE, warning = FALSE, cache = TRUE}
+
+cp_simdata <- data.frame(sim = c("1", "2", "3"), cov_probx = c(cp_sim1_x, cp_sim2_x, cp_sim3_x), sdx = c(sd_sim1_x, sd_sim2_x, sd_sim3_x), cov_proby = c(cp_sim1_y, cp_sim2_y , cp_sim3_y), sdx = c(sd_sim1_y, sd_sim2_y, sd_sim3_y))
+
+kableExtra::kable(cp_simdata, booktabs = TRUE, col.names = c("Simulation", "Proportion of X", "Avg SD of X", "Proportion of Y", "Avg SD of Y"), caption = "Proportion of Prediction interval containing observed and Average Standard Deviation of Estimates for Simulated Data") 
+
+
+```
+
+```{r cp-table-over-under, message=FALSE, warning = FALSE}
+
+cp_simdata2 <- data.frame(sim = c("1", "2", "3"), overx = c(0.351, 0.313, 0.25), underx = c(0.368, 0.5 , 0.458), overy = c(0.3421, 0.531, 0.271), undery = c(0.281, 0.219, 0.354))
+
+kableExtra::kable(cp_simdata2, booktabs = TRUE, col.names = c("Simulation", "Above Interval", "Under Interval", "Above Interval", "Under Interval"), caption = "Proportion of Interval Above/Under Actual Value")%>% 
+  add_header_above(c("Simulation", "X" = 2, "Y" = 2)) 
+
+
+```
+
+
+
+```{r cp-clust-sim, message=FALSE, warning=FALSE, cache=TRUE}
+
+cp_sim1_x <- xy_join1 %>% group_by(clust) %>% summarise(cp = sum((inintx)/n()))
+cp_sim1_y <- xy_join1 %>% group_by(clust) %>% summarise(cp = sum((ininty)/n()))
+
+cp_sim2_x <- xy_join2 %>% group_by(clust) %>% summarise(cp = sum((inintx)/n()))
+cp_sim2_y <- xy_join2 %>% group_by(clust) %>% summarise(cp = sum((ininty)/n()))
+
+cp_sim3_x <- xy_join3 %>% group_by(clust) %>% summarise(cp = sum((inintx)/n()))
+cp_sim3_y <- xy_join3 %>% group_by(clust) %>% summarise(cp = sum((ininty)/n()))
+
+
+```
+
+
+```{r cp-sim-table, message=FALSE, warning=FALSE, cache=TRUE}
+
+cp_by_clust_sim <- data.frame(Cluster = c(1,2), w1x = c(round(cp_sim1_x[,2],4)), w1y = c(round(cp_sim1_y[,2],4)), w2x = round(cp_sim2_x[,2],4), w2y = round(cp_sim2_y[,2],4), w3x = round(cp_sim3_x[,2],4),  w3y = c(round(cp_sim3_y[,2],4)))
+#
+kableExtra::kable(cp_by_clust_sim , booktabs = TRUE, caption = "Proportion of Prediction interval containing observed by Cluster for Simulated Data", col.names = c("Cluster", "$X_{s1}$", "$Y_{s1}$", "$X_{s2}$", "$Y_{s2}$", "$X_{s3}$", "$Y_{s3}$"), escape = FALSE) %>% 
+  add_header_above(c(" ", "Simulation 1" = 2, "Simulation 2" = 2, "Simulation 3" = 2))
+
+```
+
+
+A benefit of using a model-based approach to interpolate missing locations is that we are able to determine the uncertainty of the estimate. In order to do so, conditional draws of the unobserved values given the observed values can be used to quantify the uncertainty. This is accomplished by exploiting an advantage of Vecchia's Approximation that approximate draws from a Gaussian Process model can be made through the inverse Cholesky Factor [@guinness_permutation_2018]. Therefore, for each model, 30 simulations of predictions are done and used to calculate the standard deviation. These can be used to create an interval of our estimates.  The intervals are found by $\hat{x} \pm (2*sd_x)$ and $\hat{y} \pm (2*sd_y)$, where $\hat{x}$ and $\hat{y}$ are the predictions, and $sd_x$ and $sd_y$ are the standard deviations determined by the conditional simulations. Next, found the proportion of these intervals that contain the true value. For each simulation, the proportions can be found in \cref{tab:cp-table-sim}, along with the average standard deviation values. The proportions in this table are low, mainly in the 20%-30% range. Like the RMSE values, the proportions can be separated by cluster, which are found in \cref{tab:cp-sim-table}. These values are also low, with the x values for cluster 1 in Simulation 3 having almost no intervals that contain the actual value. Finally, \cref{tab:cp-table-over-under} shows the proportion of intervals that overestimate or underestimate the actual value. For Simulations 2 and 3, the x intervals underestimate, whereas the Y intervals are an overestimate. For Simulation 1, the proportion of overestimates is slightly higher than the underestimates for Y-values, but almost identical for x. 
 
 
 # Results {#results}

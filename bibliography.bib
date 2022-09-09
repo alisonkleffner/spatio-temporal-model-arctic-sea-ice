@@ -2,232 +2,1331 @@
 %% http://bibdesk.sourceforge.net/
 
 
-%% Created for Galyardt at 2014-08-21 22:49:39 -0400 
-
-
 %% Saved with string encoding Unicode (UTF-8) 
 
 
 
-@incollection{Galyardt14mmm,
-	Author = {April Galyardt},
-	Booktitle = {Handbook of Mixed Membership Models},
-	Date-Added = {2014-08-21 21:18:27 +0000},
-	Date-Modified = {2014-08-21 21:18:27 +0000},
-	Editor = {Edoardo M. Airoldi and David Blei and Erosheva, Elena and Fienberg, Stephen E.},
-	Publisher = {Chapman and Hall},
-	Title = {Interpreting Mixed Membership Models: Implications of Erosheva's Representation Theorem},
-	Year = {2014},
-	Bdsk-File-1 = {YnBsaXN0MDDUAQIDBAUGJCVYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoKgHCBMUFRYaIVUkbnVsbNMJCgsMDxJXTlMua2V5c1pOUy5vYmplY3RzViRjbGFzc6INDoACgAOiEBGABIAFgAdccmVsYXRpdmVQYXRoWWFsaWFzRGF0YV8QMi4uLy4uL1BhcGVyLU1NIGNoYXB0ZXIvR2FseWFyZHQtY2hhcHRlci03LjguMTMucGRm0hcLGBlXTlMuZGF0YU8RAeIAAAAAAeIAAgAADE1hY2ludG9zaCBIRAAAAAAAAAAAAAAAAAAAAMm3i1VIKwAAAJ3/thtHYWx5YXJkdC1jaGFwdGVyLTcuOC4xMy5wZGYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAu7Y5zgBejQAAAAAAAAAAAAIAAgAACSAAAAAAAAAAAAAAAAAAAAAQUGFwZXItTU0gY2hhcHRlcgAQAAgAAMm3w5UAAAARAAgAAM4Als0AAAABABAAnf+2ABefWwANUdgAAJg6AAIAVU1hY2ludG9zaCBIRDpVc2VyczoAYWdhbHlhcmR0OgBEcm9wYm94OgBQYXBlci1NTSBjaGFwdGVyOgBHYWx5YXJkdC1jaGFwdGVyLTcuOC4xMy5wZGYAAA4AOAAbAEcAYQBsAHkAYQByAGQAdAAtAGMAaABhAHAAdABlAHIALQA3AC4AOAAuADEAMwAuAHAAZABmAA8AGgAMAE0AYQBjAGkAbgB0AG8AcwBoACAASABEABIARFVzZXJzL2FnYWx5YXJkdC9Ecm9wYm94L1BhcGVyLU1NIGNoYXB0ZXIvR2FseWFyZHQtY2hhcHRlci03LjguMTMucGRmABMAAS8AABUAAgAQ//8AAIAG0hscHR5aJGNsYXNzbmFtZVgkY2xhc3Nlc11OU011dGFibGVEYXRhox0fIFZOU0RhdGFYTlNPYmplY3TSGxwiI1xOU0RpY3Rpb25hcnmiIiBfEA9OU0tleWVkQXJjaGl2ZXLRJidUcm9vdIABAAgAEQAaACMALQAyADcAQABGAE0AVQBgAGcAagBsAG4AcQBzAHUAdwCEAI4AwwDIANACtgK4Ar0CyALRAt8C4wLqAvMC+AMFAwgDGgMdAyIAAAAAAAACAQAAAAAAAAAoAAAAAAAAAAAAAAAAAAADJA==}}
+@article{alon_discovering_2003,
+	title = {Discovering Clusters in Motion Time-Series Data},
+	doi = {10.1109/CVPR.2003.1211378},
+	journal = {2003 IEEE Computer Society Conference on Computer Vision and Pattern Recognition},
+	author = {Alon, Jonathan and Sclaroff, Stan and Kollios, George and Pavlovic, Vladimir},
+	year = {2003},
+	publisher={IEEE},
+	volume = {1},
+	pages = {375–-381}
+}
 
-@phdthesis{Galyardt12dis,
-	Address = {Pittsburgh, PA 15213},
-	Author = {April Galyardt},
-	Date-Added = {2014-08-21 21:17:56 +0000},
-	Date-Modified = {2014-08-22 02:49:38 +0000},
-	Keywords = {mixed membership, Latent Dirichlet Allocation, cognitive diagnosis models, numerical estimation, psychometrics},
-	Month = {July},
-	School = {Carnegie Mellon University},
-	Title = {Mixed Membership Distributions with Applications to Modeling Multiple Strategy Usage},
-	Year = {2012},
-	Bdsk-File-1 = {YnBsaXN0MDDUAQIDBAUGJCVYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoKgHCBMUFRYaIVUkbnVsbNMJCgsMDxJXTlMua2V5c1pOUy5vYmplY3RzViRjbGFzc6INDoACgAOiEBGABIAFgAdccmVsYXRpdmVQYXRoWWFsaWFzRGF0YV8QRC4uLy4uLy4uL0RvY3VtZW50cy9QdWJsaWNhdGlvbnMvMjAxMi1HYWx5YXJkdC1EaXNzZXJ0YXRpb24tRmluYWwucGRm0hcLGBlXTlMuZGF0YU8RAfoAAAAAAfoAAgAADE1hY2ludG9zaCBIRAAAAAAAAAAAAAAAAAAAAMtppx9IKwAAAAuN+h8yMDEyLUdhbHlhcmR0LURpc3NlciMyNjgyNTgucGRmAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJoJYzMbb7wAAAAAAAAAAAAMAAwAACSAAAAAAAAAAAAAAAAAAAAAMUHVibGljYXRpb25zABAACAAAy2ntbwAAABEACAAAzMciPwAAAAEAEAALjfoABcifAAXIngAAuVcAAgBXTWFjaW50b3NoIEhEOlVzZXJzOgBhZ2FseWFyZHQ6AERvY3VtZW50czoAUHVibGljYXRpb25zOgAyMDEyLUdhbHlhcmR0LURpc3NlciMyNjgyNTgucGRmAAAOAEoAJAAyADAAMQAyAC0ARwBhAGwAeQBhAHIAZAB0AC0ARABpAHMAcwBlAHIAdABhAHQAaQBvAG4ALQBGAGkAbgBhAGwALgBwAGQAZgAPABoADABNAGEAYwBpAG4AdABvAHMAaAAgAEgARAASAEtVc2Vycy9hZ2FseWFyZHQvRG9jdW1lbnRzL1B1YmxpY2F0aW9ucy8yMDEyLUdhbHlhcmR0LURpc3NlcnRhdGlvbi1GaW5hbC5wZGYAABMAAS8AABUAAgAQ//8AAIAG0hscHR5aJGNsYXNzbmFtZVgkY2xhc3Nlc11OU011dGFibGVEYXRhox0fIFZOU0RhdGFYTlNPYmplY3TSGxwiI1xOU0RpY3Rpb25hcnmiIiBfEA9OU0tleWVkQXJjaGl2ZXLRJidUcm9vdIABAAgAEQAaACMALQAyADcAQABGAE0AVQBgAGcAagBsAG4AcQBzAHUAdwCEAI4A1QDaAOIC4ALiAucC8gL7AwkDDQMUAx0DIgMvAzIDRANHA0wAAAAAAAACAQAAAAAAAAAoAAAAAAAAAAAAAAAAAAADTg==}}
+@article{wang_clustering_2019,
+	title = {Clustering of Interval-Valued Time Series of Unequal Length Based on Improved Dynamic Time Warping},
+	volume = {125},
+	doi = {10.1016/j.eswa.2019.01.005},
+	journal = {Expert Systems with Applications},
+	author = {Wang, Xiao and Yu, Fusheng and Pedrycz, Witold and Yu, Lian},
+	year = {2019},
+	pages = {293--304},
+	publisher={Elsevier}
+}
 
-@conference{Galyardt13smmc,
-	Address = {Arnhem, Netherlands},
-	Author = {April Galyardt and Ilya Goldin},
-	Booktitle = {International Meeting of the Psychometric Society},
-	Date-Added = {2014-08-21 21:17:50 +0000},
-	Date-Modified = {2014-08-21 21:17:50 +0000},
-	Keywords = {conf},
-	Title = {Modeling Student Metacognitive Strategies in a Intelligent Tutoring System},
-	Year = {2013}}
+@article{heaton_nonstationary_2017,
+	title = {Nonstationary Gaussian Process Models Using Spatial Hierarchical Clustering from Finite Differences},
+	volume = {59},
+	doi = {10.1080/00401706.2015.1102763},
+	number = {1},
+	journal = {Technometrics},
+	author = {Heaton, Matthew J and Christensen, William F and Terres, Maria A},
+	year = {2017},
+	pages = {93--101},
+	publisher={Taylor \& Francis}
+}
 
-@article{Campbell02,
-	Author = {Jamie I.D. Campbell and Shauna Austin},
-	Date-Added = {2014-08-21 21:12:16 +0000},
-	Date-Modified = {2014-08-21 21:13:22 +0000},
-	Journal = {Memory \& Cognition},
-	Keywords = {strategies, addition, response time},
-	Number = {6},
-	Pages = {988-994},
-	Title = {Effects of response time deadlines on adults' strategy choices for simple addition},
-	Volume = {30},
-	Year = {2002}}
+@article{yuan_review_2017,
+	title = {A Review of Moving Object Trajectory Clustering Algorithms},
+	volume = {47},
+	doi = {10.1007/s10462-016-9477-7},
+	number = {1},
+	journal = {Artificial Intelligence Review},
+	author = {Yuan, Guan and Sun, Penghui and Zhao, Jie and Li, Daxing and Wang, Canwei},
+	year = {2017},
+	pages = {123--144},
+	publisher={Springer}
+}
 
-@article{Schubert13,
-	Author = {Schubert, Christiane C and Denmark, T Kent and Crandall, Beth and Grome, Anna and Pappas, James},
-	Date-Added = {2014-08-21 21:00:46 +0000},
-	Date-Modified = {2014-08-21 21:00:46 +0000},
-	Journal = {Annals of emergency medicine},
-	Keywords = {expert/novice differences},
-	Number = {1},
-	Pages = {96--109},
-	Publisher = {Elsevier},
-	Title = {Characterizing novice-expert differences in macrocognition: an exploratory study of cognitive work in the emergency department},
-	Volume = {61},
-	Year = {2013},
-	Bdsk-File-1 = {YnBsaXN0MDDUAQIDBAUGJCVYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoKgHCBMUFRYaIVUkbnVsbNMJCgsMDxJXTlMua2V5c1pOUy5vYmplY3RzViRjbGFzc6INDoACgAOiEBGABIAFgAdccmVsYXRpdmVQYXRoWWFsaWFzRGF0YV8QYS4uLy4uL1BhcGVyLVdoYXQncyBhIFN0cmF0ZWd5L1BhcGVycy1TdHJhdGVnaWVzL1JlYWQvU2NodWJlcnQgZXRhbCAoMjAxMikgLUVtZXJnZW5jeSBNZWRpY2luZS5wZGbSFwsYGVdOUy5kYXRhTxECVAAAAAACVAACAAAMTWFjaW50b3NoIEhEAAAAAAAAAAAAAAAAAAAAybeLVUgrAAACeKY6H1NjaHViZXJ0IGV0YWwgKDIwMTIjMjc4QTdCNi5wZGYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJ4p7bP6W1eAAAAAAAAAAAAAgAEAAAJIAAAAAAAAAAAAAAAAAAAAARSZWFkABAACAAAybfDlQAAABEACAAAz+mlngAAAAEAGAJ4pjoCeKY4ANZobAAXn1sADVHYAACYOgACAHlNYWNpbnRvc2ggSEQ6VXNlcnM6AGFnYWx5YXJkdDoARHJvcGJveDoAUGFwZXItV2hhdCdzIGEgU3RyYXRlZ3k6AFBhcGVycy1TdHJhdGVnaWVzOgBSZWFkOgBTY2h1YmVydCBldGFsICgyMDEyIzI3OEE3QjYucGRmAAAOAFoALABTAGMAaAB1AGIAZQByAHQAIABlAHQAYQBsACAAKAAyADAAMQAyACkAIAAtAEUAbQBlAHIAZwBlAG4AYwB5ACAATQBlAGQAaQBjAGkAbgBlAC4AcABkAGYADwAaAAwATQBhAGMAaQBuAHQAbwBzAGgAIABIAEQAEgBzVXNlcnMvYWdhbHlhcmR0L0Ryb3Bib3gvUGFwZXItV2hhdCdzIGEgU3RyYXRlZ3kvUGFwZXJzLVN0cmF0ZWdpZXMvUmVhZC9TY2h1YmVydCBldGFsICgyMDEyKSAtRW1lcmdlbmN5IE1lZGljaW5lLnBkZgAAEwABLwAAFQACABD//wAAgAbSGxwdHlokY2xhc3NuYW1lWCRjbGFzc2VzXU5TTXV0YWJsZURhdGGjHR8gVk5TRGF0YVhOU09iamVjdNIbHCIjXE5TRGljdGlvbmFyeaIiIF8QD05TS2V5ZWRBcmNoaXZlctEmJ1Ryb290gAEACAARABoAIwAtADIANwBAAEYATQBVAGAAZwBqAGwAbgBxAHMAdQB3AIQAjgDyAPcA/wNXA1kDXgNpA3IDgAOEA4sDlAOZA6YDqQO7A74DwwAAAAAAAAIBAAAAAAAAACgAAAAAAAAAAAAAAAAAAAPF}}
+@inproceedings{lee_trajectory_2007,
+author = {Lee, Jae-Gil and Han, Jiawei and Whang, Kyu-Young},
+title = {Trajectory Clustering: A Partition-and-Group Framework},
+year = {2007},
+isbn = {9781595936868},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+doi = {10.1145/1247480.1247546},
+booktitle = {Proceedings of the 2007 ACM SIGMOD International Conference on Management of Data},
+pages = {593–604},
+numpages = {12},
+location = {Beijing, China},
+series = {SIGMOD '07}
+}
 
-@article{Siegler87,
-	Author = {Robert S. Siegler},
-	Date-Added = {2014-08-21 21:00:35 +0000},
-	Date-Modified = {2014-08-21 21:00:35 +0000},
-	Journal = {Journal of Experimental Psychology: General},
-	Keywords = {Multiple strategy use; mathematics education; strategies; learning sciences; psychology},
-	Number = {3},
-	Pages = {250-264},
-	Title = {The perils of averaging data over strategies: An example from children's addition},
-	Volume = {116},
-	Year = {1987},
-	Bdsk-File-1 = {YnBsaXN0MDDUAQIDBAUGJCVYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoKgHCBMUFRYaIVUkbnVsbNMJCgsMDxJXTlMua2V5c1pOUy5vYmplY3RzViRjbGFzc6INDoACgAOiEBGABIAFgAdccmVsYXRpdmVQYXRoWWFsaWFzRGF0YV8Qby4uLy4uLy4uL0RvY3VtZW50cy9Kb3VybmFsLU5ld3MtQXJ0aWNsZXMvTGVhcm5pbmcgU2NpZW5jZXMsIExBLCBFRE0vU2llZ2xlci04Ny1NdWx0aXBsZSBBZGRpdGlvbiBTdHJhdGVnaWVzLnBkZtIXCxgZV05TLmRhdGFPEQJoAAAAAAJoAAIAAAxNYWNpbnRvc2ggSEQAAAAAAAAAAAAAAAAAAADLaacfSCsAAAALnbIfU2llZ2xlci04Ny1NdWx0aXBsZSBBI0I5RTE1LnBkZgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAueFcjZ9odQREYgAAAAAAADAAQAAAkgAAAAAAAAAAAAAAAAAAAAGkxlYXJuaW5nIFNjaWVuY2VzLCBMQSwgRURNABAACAAAy2ntbwAAABEACAAAyNouxwAAAAEAFAALnbIAC5wCAAXInwAFyJ4AALlXAAIAfE1hY2ludG9zaCBIRDpVc2VyczoAYWdhbHlhcmR0OgBEb2N1bWVudHM6AEpvdXJuYWwtTmV3cy1BcnRpY2xlczoATGVhcm5pbmcgU2NpZW5jZXMsIExBLCBFRE06AFNpZWdsZXItODctTXVsdGlwbGUgQSNCOUUxNS5wZGYADgBYACsAUwBpAGUAZwBsAGUAcgAtADgANwAtAE0AdQBsAHQAaQBwAGwAZQAgAEEAZABkAGkAdABpAG8AbgAgAFMAdAByAGEAdABlAGcAaQBlAHMALgBwAGQAZgAPABoADABNAGEAYwBpAG4AdABvAHMAaAAgAEgARAASAHZVc2Vycy9hZ2FseWFyZHQvRG9jdW1lbnRzL0pvdXJuYWwtTmV3cy1BcnRpY2xlcy9MZWFybmluZyBTY2llbmNlcywgTEEsIEVETS9TaWVnbGVyLTg3LU11bHRpcGxlIEFkZGl0aW9uIFN0cmF0ZWdpZXMucGRmABMAAS8AABUAAgAQ//8AAIAG0hscHR5aJGNsYXNzbmFtZVgkY2xhc3Nlc11OU011dGFibGVEYXRhox0fIFZOU0RhdGFYTlNPYmplY3TSGxwiI1xOU0RpY3Rpb25hcnmiIiBfEA9OU0tleWVkQXJjaGl2ZXLRJidUcm9vdIABAAgAEQAaACMALQAyADcAQABGAE0AVQBgAGcAagBsAG4AcQBzAHUAdwCEAI4BAAEFAQ0DeQN7A4ADiwOUA6IDpgOtA7YDuwPIA8sD3QPgA+UAAAAAAAACAQAAAAAAAAAoAAAAAAAAAAAAAAAAAAAD5w==}}
 
-@article{Chi81,
-	Author = {Chi, Michelene T.H. and Feltovich, Paul J. and Glaser, Robert},
-	Date-Added = {2014-08-21 21:00:27 +0000},
-	Date-Modified = {2014-08-21 21:00:27 +0000},
-	Journal = {Cognitive science},
-	Keywords = {expert/novice differences},
-	Number = {2},
-	Pages = {121--152},
-	Publisher = {Wiley Online Library},
-	Title = {Categorization and representation of physics problems by experts and novices},
-	Volume = {5},
-	Year = {1981},
-	Bdsk-File-1 = {YnBsaXN0MDDUAQIDBAUGJCVYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoKgHCBMUFRYaIVUkbnVsbNMJCgsMDxJXTlMua2V5c1pOUy5vYmplY3RzViRjbGFzc6INDoACgAOiEBGABIAFgAdccmVsYXRpdmVQYXRoWWFsaWFzRGF0YV8QZy4uLy4uL1BhcGVyLVdoYXQncyBhIFN0cmF0ZWd5L1BhcGVycy1TdHJhdGVnaWVzL1JlYWQvQ2hpLCBGZWx0b3ZpY2gsIEdsYXNlciAoMTk4MSktcGh5c2ljcyBwcm9ibGVtcy5wZGbSFwsYGVdOUy5kYXRhTxECZgAAAAACZgACAAAMTWFjaW50b3NoIEhEAAAAAAAAAAAAAAAAAAAAybeLVUgrAAACeKY6H0NoaSwgRmVsdG92aWNoLCBHbGEjMjc4QTdDQy5wZGYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJ4p8zP6ZB8AAAAAAAAAAAAAgAEAAAJIAAAAAAAAAAAAAAAAAAAAARSZWFkABAACAAAybfDlQAAABEACAAAz+nIvAAAAAEAGAJ4pjoCeKY4ANZobAAXn1sADVHYAACYOgACAHlNYWNpbnRvc2ggSEQ6VXNlcnM6AGFnYWx5YXJkdDoARHJvcGJveDoAUGFwZXItV2hhdCdzIGEgU3RyYXRlZ3k6AFBhcGVycy1TdHJhdGVnaWVzOgBSZWFkOgBDaGksIEZlbHRvdmljaCwgR2xhIzI3OEE3Q0MucGRmAAAOAGYAMgBDAGgAaQAsACAARgBlAGwAdABvAHYAaQBjAGgALAAgAEcAbABhAHMAZQByACAAKAAxADkAOAAxACkALQBwAGgAeQBzAGkAYwBzACAAcAByAG8AYgBsAGUAbQBzAC4AcABkAGYADwAaAAwATQBhAGMAaQBuAHQAbwBzAGgAIABIAEQAEgB5VXNlcnMvYWdhbHlhcmR0L0Ryb3Bib3gvUGFwZXItV2hhdCdzIGEgU3RyYXRlZ3kvUGFwZXJzLVN0cmF0ZWdpZXMvUmVhZC9DaGksIEZlbHRvdmljaCwgR2xhc2VyICgxOTgxKS1waHlzaWNzIHByb2JsZW1zLnBkZgAAEwABLwAAFQACABD//wAAgAbSGxwdHlokY2xhc3NuYW1lWCRjbGFzc2VzXU5TTXV0YWJsZURhdGGjHR8gVk5TRGF0YVhOU09iamVjdNIbHCIjXE5TRGljdGlvbmFyeaIiIF8QD05TS2V5ZWRBcmNoaXZlctEmJ1Ryb290gAEACAARABoAIwAtADIANwBAAEYATQBVAGAAZwBqAGwAbgBxAHMAdQB3AIQAjgD4AP0BBQNvA3EDdgOBA4oDmAOcA6MDrAOxA74DwQPTA9YD2wAAAAAAAAIBAAAAAAAAACgAAAAAAAAAAAAAAAAAAAPd}}
+@article{appice_using_2013,
+	title = {Using Trend Clusters for Spatiotemporal Interpolation of Missin Data in a Sensor Network},
+	volume = {6},
+	doi = {10.5311/JOSIS.2013.6.102},
+	journal = {Journal of Spatial Information Science},
+	author = {Appice, Annalisa and Ciampi, Anna and Malerba, Donato and Guccione, Pietro},
+	year = {2013},
+	pages = {119--153},
+	publisher = {University of Maine}
+}
 
-@incollection{Mislevy06Cog,
-	Author = {Robert Mislevy},
-	Booktitle = {Educational Assessment},
-	Chapter = {8},
-	Date-Added = {2014-08-21 20:58:59 +0000},
-	Date-Modified = {2014-08-21 20:58:59 +0000},
-	Editor = {Robert L. Brennan},
-	Publisher = {American Council on Education and Praeger Publishers},
-	Title = {Cognitive Psychology and Educational Assessment},
-	Year = {2006},
-	Bdsk-File-1 = {YnBsaXN0MDDUAQIDBAUGJCVYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoKgHCBMUFRYaIVUkbnVsbNMJCgsMDxJXTlMua2V5c1pOUy5vYmplY3RzViRjbGFzc6INDoACgAOiEBGABIAFgAdccmVsYXRpdmVQYXRoWWFsaWFzRGF0YV8QUy4uLy4uL1BhcGVyLVdoYXQncyBhIFN0cmF0ZWd5L1BhcGVycy1Nb2RlbHMvTWlzbGV2eSAoMjAwNiktQ29nIFBzeSAmIEFzc2Vzc21lbnQucGRm0hcLGBlXTlMuZGF0YU8RAjgAAAAAAjgAAgAADE1hY2ludG9zaCBIRAAAAAAAAAAAAAAAAAAAAMm3i1VIKwAAAnimNh9NaXNsZXZ5ICgyMDA2KS1Db2cgIzI3QjBENEIucGRmAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACew1Lz+7ulQAAAAAAAAAAAAIAAwAACSAAAAAAAAAAAAAAAAAAAAANUGFwZXJzLU1vZGVscwAAEAAIAADJt8OVAAAAEQAIAADP7ybVAAAAAQAUAnimNgDWaGwAF59bAA1R2AAAmDoAAgBvTWFjaW50b3NoIEhEOlVzZXJzOgBhZ2FseWFyZHQ6AERyb3Bib3g6AFBhcGVyLVdoYXQncyBhIFN0cmF0ZWd5OgBQYXBlcnMtTW9kZWxzOgBNaXNsZXZ5ICgyMDA2KS1Db2cgIzI3QjBENEIucGRmAAAOAFAAJwBNAGkAcwBsAGUAdgB5ACAAKAAyADAAMAA2ACkALQBDAG8AZwAgAFAAcwB5ACAAJgAgAEEAcwBzAGUAcwBzAG0AZQBuAHQALgBwAGQAZgAPABoADABNAGEAYwBpAG4AdABvAHMAaAAgAEgARAASAGVVc2Vycy9hZ2FseWFyZHQvRHJvcGJveC9QYXBlci1XaGF0J3MgYSBTdHJhdGVneS9QYXBlcnMtTW9kZWxzL01pc2xldnkgKDIwMDYpLUNvZyBQc3kgJiBBc3Nlc3NtZW50LnBkZgAAEwABLwAAFQACABD//wAAgAbSGxwdHlokY2xhc3NuYW1lWCRjbGFzc2VzXU5TTXV0YWJsZURhdGGjHR8gVk5TRGF0YVhOU09iamVjdNIbHCIjXE5TRGljdGlvbmFyeaIiIF8QD05TS2V5ZWRBcmNoaXZlctEmJ1Ryb290gAEACAARABoAIwAtADIANwBAAEYATQBVAGAAZwBqAGwAbgBxAHMAdQB3AIQAjgDkAOkA8QMtAy8DNAM/A0gDVgNaA2EDagNvA3wDfwORA5QDmQAAAAAAAAIBAAAAAAAAACgAAAAAAAAAAAAAAAAAAAOb}}
+@article{fouedjio_hierarchical_2016,
+	title = {A Hierarchical Clustering Method for Multivariate Geostatistical Data},
+	volume = {18},
+	issn = {2211-6753},
+	doi = {10.1016/j.spasta.2016.07.003},
+	urldate = {2021-08-25},
+	journal = {Spatial Statistics},
+	author = {Fouedjio, Francky},
+	year = {2016},
+	pages = {333--351},
+	publisher={Springer}
+}
 
-@article{Mislevy12,
-	Author = {Robert J. Mislevy and John T. Behrens and Kristen E. {DiCerbo} and Roy Levy},
-	Date-Added = {2014-03-27 15:22:33 +0000},
-	Date-Modified = {2014-03-27 15:22:33 +0000},
-	Journal = {Journal of Educational Data Mining},
-	Number = {1},
-	Title = {Design and Discovery in Educational Assessment: Evidence-Centered Design, Psychometrics, and Educational Data Mining},
-	Volume = {4},
-	Year = {2012},
-	Bdsk-File-1 = {YnBsaXN0MDDUAQIDBAUGJCVYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoKgHCBMUFRYaIVUkbnVsbNMJCgsMDxJXTlMua2V5c1pOUy5vYmplY3RzViRjbGFzc6INDoACgAOiEBGABIAFgAdccmVsYXRpdmVQYXRoWWFsaWFzRGF0YV8QWC4uLy4uL1ByaXZhdGUtRVJTSDg5OTAvUmVhZGluZ0xpc3QvQ29waWVzX1VubWFya2VkX0Rpc3RyaWJ1dGUvUjEtTWlzbGV2eSBldGFsICgyMDEyKS5wZGbSFwsYGVdOUy5kYXRhTxECQAAAAAACQAACAAAMTWFjaW50b3NoIEhEAAAAAAAAAAAAAAAAAAAAybeLVUgrAAACIbwqGlIxLU1pc2xldnkgZXRhbCAoMjAxMikucGRmAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIhvEDPPjaUAAAAAAAAAAAAAgAEAAAJIAAAAAAAAAAAAAAAAAAAABpDb3BpZXNfVW5tYXJrZWRfRGlzdHJpYnV0ZQAQAAgAAMm3w5UAAAARAAgAAM8+fOQAAAABABgCIbwqAiG8JQCmuWsAF59bAA1R2AAAmDoAAgB9TWFjaW50b3NoIEhEOlVzZXJzOgBhZ2FseWFyZHQ6AERyb3Bib3g6AFByaXZhdGUtRVJTSDg5OTA6AFJlYWRpbmdMaXN0OgBDb3BpZXNfVW5tYXJrZWRfRGlzdHJpYnV0ZToAUjEtTWlzbGV2eSBldGFsICgyMDEyKS5wZGYAAA4ANgAaAFIAMQAtAE0AaQBzAGwAZQB2AHkAIABlAHQAYQBsACAAKAAyADAAMQAyACkALgBwAGQAZgAPABoADABNAGEAYwBpAG4AdABvAHMAaAAgAEgARAASAGpVc2Vycy9hZ2FseWFyZHQvRHJvcGJveC9Qcml2YXRlLUVSU0g4OTkwL1JlYWRpbmdMaXN0L0NvcGllc19Vbm1hcmtlZF9EaXN0cmlidXRlL1IxLU1pc2xldnkgZXRhbCAoMjAxMikucGRmABMAAS8AABUAAgAQ//8AAIAG0hscHR5aJGNsYXNzbmFtZVgkY2xhc3Nlc11OU011dGFibGVEYXRhox0fIFZOU0RhdGFYTlNPYmplY3TSGxwiI1xOU0RpY3Rpb25hcnmiIiBfEA9OU0tleWVkQXJjaGl2ZXLRJidUcm9vdIABAAgAEQAaACMALQAyADcAQABGAE0AVQBgAGcAagBsAG4AcQBzAHUAdwCEAI4A6QDuAPYDOgM8A0EDTANVA2MDZwNuA3cDfAOJA4wDngOhA6YAAAAAAAACAQAAAAAAAAAoAAAAAAAAAAAAAAAAAAADqA==}}
+@article{kim_analyzing_2005,
+	title = {Analyzing Nonstationary Spatial Data Using Piecewise Gaussian Processes},
+	volume = {100},
+	doi = {10.1198/016214504000002014},
+	number = {470},
+	journal = {Journal of the American Statistical Association},
+	author = {Kim, Hyoung-Moon and Mallick, Bani K. and Holmes, C.C.},
+	year = {2005},
+	pages = {653--668},
+	publisher={Taylor \& Francis}
+}
 
-@incollection{VanLehn08,
-	Author = {Kurt VanLehn},
-	Booktitle = {The future of assessment: Shaping teaching and learning.},
-	Date-Added = {2014-03-27 14:52:29 +0000},
-	Date-Modified = {2014-03-27 14:54:32 +0000},
-	Editor = {C. Dwyer},
-	Keywords = {intelligent tutoring systems},
-	Pages = {113-138},
-	Publisher = {Erbaum},
-	Title = {Intelligent Tutoring Systems for Continuous, Embedded Assessment},
-	Year = {2008},
-	Bdsk-File-1 = {YnBsaXN0MDDUAQIDBAUGJCVYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoKgHCBMUFRYaIVUkbnVsbNMJCgsMDxJXTlMua2V5c1pOUy5vYmplY3RzViRjbGFzc6INDoACgAOiEBGABIAFgAdccmVsYXRpdmVQYXRoWWFsaWFzRGF0YV8QXS4uLy4uL05ldyBBcnRpY2xlcy9SZWFkL1ZhbkxlaG4oMjAwOCktIEludGVsbGlnZW50IHR1dG9yaW5nIHN5c3RlbXMgZm9yIGNvbnRpbnVvdXMsIGVtYmVkLnBkZtIXCxgZV05TLmRhdGFPEQJgAAAAAAJgAAIAAAxNYWNpbnRvc2ggSEQAAAAAAAAAAAAAAAAAAADJt4tVSCsAAAE5yhcfVmFuTGVobigyMDA4KS0gSW50ZSMyMkY0MUFFLnBkZgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAi9Brs9Zst0AAAAAAAAAAAACAAMAAAkgAAAAAAAAAAAAAAAAAAAABFJlYWQAEAAIAADJt8OVAAAAEQAIAADPWesdAAAAAQAUATnKFwAb8HgAF59bAA1R2AAAmDoAAgBbTWFjaW50b3NoIEhEOlVzZXJzOgBhZ2FseWFyZHQ6AERyb3Bib3g6AE5ldyBBcnRpY2xlczoAUmVhZDoAVmFuTGVobigyMDA4KS0gSW50ZSMyMkY0MUFFLnBkZgAADgCMAEUAVgBhAG4ATABlAGgAbgAoADIAMAAwADgAKQAtACAASQBuAHQAZQBsAGwAaQBnAGUAbgB0ACAAdAB1AHQAbwByAGkAbgBnACAAcwB5AHMAdABlAG0AcwAgAGYAbwByACAAYwBvAG4AdABpAG4AdQBvAHUAcwAsACAAZQBtAGIAZQBkAC4AcABkAGYADwAaAAwATQBhAGMAaQBuAHQAbwBzAGgAIABIAEQAEgBvVXNlcnMvYWdhbHlhcmR0L0Ryb3Bib3gvTmV3IEFydGljbGVzL1JlYWQvVmFuTGVobigyMDA4KS0gSW50ZWxsaWdlbnQgdHV0b3Jpbmcgc3lzdGVtcyBmb3IgY29udGludW91cywgZW1iZWQucGRmAAATAAEvAAAVAAIAEP//AACABtIbHB0eWiRjbGFzc25hbWVYJGNsYXNzZXNdTlNNdXRhYmxlRGF0YaMdHyBWTlNEYXRhWE5TT2JqZWN00hscIiNcTlNEaWN0aW9uYXJ5oiIgXxAPTlNLZXllZEFyY2hpdmVy0SYnVHJvb3SAAQAIABEAGgAjAC0AMgA3AEAARgBNAFUAYABnAGoAbABuAHEAcwB1AHcAhACOAO4A8wD7A18DYQNmA3EDegOIA4wDkwOcA6EDrgOxA8MDxgPLAAAAAAAAAgEAAAAAAAAAKAAAAAAAAAAAAAAAAAAAA80=}}
+@article{guinness_gaussian_2021,
+	title = {Gaussian Process Learning via Fisher Scoring of Vecchia's Approximation},
+	volume = {31},
+	doi = {10/1007/s11222-021-09999-1},
+	number = {25},
+	journal = {Statistics and Computing},
+	author = {Guinness, J},
+	year = {2021},
+	publisher={Springer}
 
-@article{Erosheva04,
-	Author = {Elena Erosheva and Stephen E. Fienberg and John Lafferty},
-	Date-Added = {2013-12-18 14:22:42 +0000},
-	Date-Modified = {2013-12-18 14:25:57 +0000},
-	Journal = {PNAS},
-	Number = {Suppl.1},
-	Pages = {5220-5227},
-	Title = {Mixed-Membership Models of Scientific Publications},
-	Volume = {101},
-	Year = {2004},
-	Bdsk-Url-1 = {http://www.pnas.org/cgi/content/full/101/suppl_1/5220}}
+}
 
-@incollection{Blei09,
-	Author = {David Blei and John Lafferty},
-	Booktitle = {Text Mining: Classification, Clustering, and Applications},
-	Date-Added = {2013-12-18 14:09:12 +0000},
-	Date-Modified = {2013-12-18 14:12:00 +0000},
-	Editor = {A. Srivastava and M. Sahami},
-	Publisher = {Chapman \& Hall/CRC},
-	Series = {Data Mining and Knowledge Discovery Series},
-	Title = {Topic Models},
-	Year = {2009},
-	Bdsk-Url-1 = {http://www.cs.princeton.edu/~blei/papers/BleiLafferty2009.pdf}}
 
-@article{aleven_toward_2006,
-	Author = {Aleven, V. and Mclaren, B. and Roll, I. and Koedinger, K.},
-	Date-Added = {2013-12-05 22:14:42 +0000},
-	Date-Modified = {2013-12-17 17:12:03 +0000},
-	Issue = {2},
-	Journal = {International Journal of Artificial Intelligence in Education},
-	Pages = {101-128},
-	Title = {Toward meta-cognitive tutoring: A model of help seeking with a Cognitive Tutor},
-	Volume = {16},
-	Year = {2006}}
+@article{guinness_permutation_2018,
+	title = {Permutation and Grouping Methods for Sharpening Gaussian Process Approximations},
+	volume = {60},
+	doi = {10.1080/00401706.2018.1437476},
+	number = {4},
+	journal = {Technometrics},
+	pages = {415--429},
+	author = {Guinness, J},
+	year = {2018},
+	publisher={Taylor \& Francis}
+}
 
-@inproceedings{goldin_hints:_2013,
-	Author = {Goldin, Ilya M. and Koedinger, Kenneth R. and Aleven, Vincent A. W. M. M.},
-	Booktitle = {Proceedings of 6th International Conference on Educational Data Mining},
-	Date-Added = {2013-12-05 22:14:42 +0000},
-	Date-Modified = {2013-12-17 19:51:31 +0000},
-	Editor = {{D'Mello}, Sidney K. and Calvo, Rafael A. and Olney, Andrew},
-	Location = {Memphis, {TN}},
-	Month = {July},
-	Title = {Hints: You Can't Have Just One},
-	Year = {2013},
-	Bdsk-Url-1 = {http://www.educationaldatamining.org/EDM2013/papers/rn_paper_35.pdf}}
 
-@inproceedings{goldin_learner_2012,
-	Address = {Chania, Greece},
-	Author = {Goldin, Ilya M. and Koedinger, Kenneth R. and Aleven, Vincent A. W. M. M.},
-	Booktitle = {Proceedings of 5th International Conference on Educational Data Mining},
-	Date-Added = {2013-12-05 22:14:42 +0000},
-	Date-Modified = {2013-12-17 19:50:21 +0000},
-	Editor = {Yacef, Kalina and Za{\"\i}ane, Osmar and Hershkovitz, Arnon and Yudelson, Michael and Stamper, John},
-	Pages = {73-80},
-	Title = {Learner Differences in Hint Processing},
-	Year = {2012},
-	Bdsk-Url-1 = {http://educationaldatamining.org/EDM2012/uploads/procs/Full_Papers/edm2012_full_6.pdf}}
+@article{hutter_leads_2019,
+	title = {Leads and Ridges in Arctic Sea Ice from RGPS Data and a new Tracking Algorithm},
+	volume = {13},
+	doi = {10.5194/tc-13-627-2019},
+	number = {2},
+	journal = {The Cryosphere},
+	author = {Hutter, Nils and Zampieri, Lorenzo and Losch, Martin},
+	year = {2019},
+	pages = {627--645},
+	publisher = {European Geosciences Union}
+}
 
-@inproceedings{goldin_learner_2013,
-	Address = {Memphis, {TN}},
-	Author = {Goldin, Ilya M. and Carlson, Ryan},
-	Booktitle = {Proceedings of 16th International Conference on Artificial Intelligence in Education},
-	Date-Added = {2013-12-05 22:14:42 +0000},
-	Date-Modified = {2013-12-17 17:14:16 +0000},
-	Title = {Learner Differences and Hint Content},
-	Year = {2013}}
+@article{vicente_bayesian_2020,
+	title = {Bayesian inference in multivariate spatio-temporal areal models using {INLA}: analysis of gender-based violence in small areas},
+	volume = {34},
+	doi = {10.1007/s00477-020-01808-x},
+	journal = {Stochastic Environmental Research and Risk Assessment},
+	author = {Vicente, G and Goicoa, T and Ugarte, M.D},
+	year = {2020},
+	pages = {1421--1440},
+	publisher={Springer}
+}
 
-@article{Girolami05,
-	Abstract = {To provide a parsimonious generative representation of the sequential activity of a number of individuals within a population there is a necessary tradeoff between the definition of individual specific and global 
-representations. A linear-time algorithm is proposed that defines a distributed predictive model for finite state symbolic sequences which represent the traces of the activity of a number of individuals within a group. The algorithm is based on a straightforward generalization of latent Dirichlet allocation to time-invariant Markov chains of arbitrary order. The modelling assumption made is that the possibly heterogeneous behavior of individuals may be represented by a relatively small number of simple and common behavioral traits which may interleave randomly according to an individual-specific distribution. The results of an empirical study on three different application domains indicate that this modelling approach provides an efficient low-complexity and intuitively interpretable representation scheme which is reflected by improved prediction performance over comparable models.},
-	Annote = {Builds a mixed-membership model where the basis profiles are markov chains of varying order. 
-Uses two types of estimation: Variational approximation, and "maximum a posteriori" (MAP)
-Fits model on 3 different data sets of user-log data: actions in a word processor, sequences of calls to different geographic regions (UK), and finally web page browsing. 
+@incollection{eicken_sea_2015,
+	series = {Hazards and Disasters Series},
+	title = {Sea Ice: Hazards, Risks, and Implications for Disasters},
+	isbn = {978-0-12-396483-0},
+	booktitle = {Coastal and Marine Hazards, Risks, and Disasters},
+	publisher = {Elsevier},
+	author = {Eicken, Hajo and Mahoney, Andrew R},
+	year = {2015},
+	pages = {381--401},
+}
 
-Compares models on "perplexity" which they define as the exponential of the negative-normalized log-likelihood.  (Might be a standard markov-chain goodness of fit measure, or it might be more standard to ML)
-They use t-tests and non-parametric Wilcoxon Rank-Sum tests to test for significant differences in perplexity.
+@article{li_interpolation_2004,
+	title = {Interpolation Methods for Spatio-Temporal Geographic Data},
+	volume = {28},
+	doi = {10.1016/S0198-9715(03)00018-8},
+	number = {3},
+	journal = {Computers, Environment and Urban Systems},
+	author = {Li, Lixin and Revesv, Peter},
+	year = {2004},
+	pages = {201--227},
+	publisher = {Elsevier}
+}
 
-They call their model a "simplical mixture of markov chains" and cite Minka and Lafferty 2002. 
+@article{mazimpaka_trajectory_2016,
+	title = {Trajectory Data Mining: A Review of Methods and Applications},
+	volume = {13},
+	doi = {10.5311/JOSIS.2016.13.263},
+	journal = {Journal of Spatial Information Science},
+	author = {Mazimpaka, Jean Damascene and Timpf, Sabine},
+	year = {2016},
+	pages = {61--99},
+	publisher = {University of Maine}
+}
 
-For the zero^th order Markov model (when no memory is assumed in the markov process), then their model reduces to a multinomial LDA model. 
+@article{fablet_data-driven_2017,
+	title = {Data-driven Models for the Spatio-Temporal Interpolation of satellie-derived SST Fields},
+	volume = {3},
+	issn = {2333-9403},
+	doi = {10.1109/TCI.2017.2749184},
+	number = {4},
+	journal = {IEEE Transactions on Computational Imaging},
+	author = {Fablet, Ronan and Huynh Viet, Phi and Lguensat, Redouane},
+	year = {2017},
+	pages = {647--657},
+	publisher = {IEEE}
+}
 
-They also claim that Hofmann's pLSA algorithm is equivalent to LDA when the MAP estimator is calculated through an iterative convergence method. Suggests that LDA is an improvement over pLSA because of the estimation method used.  Cites Lappalainen and Miskin (2000) on the weakness of MAP estimators. 
+@article{maceachren_constructing_1999,
+	title = {Constructing Knowledge from Multivariate Spatiotemporal data: integrating geophysical visualization with knowledge discovery in database methods},
+	volume = {13},
+	doi = {10.1080/136588199241229},
+	number = {4},
+	journal = {International Journal of Geographical Information Science},
+	author = {MacEachren, Alan M and Wachowicz, Monica and Edsall, Robert and Haug, Daniel and Masters, Raymon},
+	year = {1999},
+	pages = {311--334},
+  publisher={Taylor \& Francis}
+}
 
-For all the data sets, the mixed-membership model offers better results. Better on the goodness-of-fit measures and more interpretable results.  The differences were clearer on the bigger data sets with larger state-spaces. 
+@article{rohrs_algorithm_2012,
+	title = {An algorithm to detect sea ice leads by using AMSR-E passive microwave imagery},
+	volume = {6},
+	doi = {10.5194/tc-6-343-2012},
+	number = {2},
+	journal = {The Cryosphere},
+	author = {Rohrs, Johannes and Kaleschke, Lars and Brohan, David and Siligam, P},
+	year = {2012},
+	pages = {343--352},
+  publisher = {European Geosciences Union}
+}
 
-Data Structure:  only 1 item per model - the sequences (J=1)
-	many replications of each item (big R) 
+@incollection{peterson_evaluating_2011,
+	address = {Berlin, Heidelberg},
+	title = {Evaluating Sea Ice Deformation in the Beaufort Sea Using a Kinematic Crack Algorithm with RGPS Data},
+	isbn = {978-3-642-16541-2},
+	booktitle = {Remote Sensing of the Changing Oceans},
+	publisher = {Springer},
+	author = {Peterson, K and Sulsky, D},
+	year = {2011}
+}
 
-They offer some additional comments on computational algorithms and computational time.},
-	Author = {Mark Girolami and Ata Kaban},
-	Date-Added = {2013-06-25 19:41:00 +0000},
-	Date-Modified = {2013-06-25 19:41:00 +0000},
-	Journal = {Data Mining and Knowledge Discovery},
-	Keywords = {Latent Dirichlet Allocation, markov chains, Mixture models, user profiling, mixed membership, variational approximation},
-	Pages = {175-196},
-	Title = {Sequential Activity Profiling: Latent Dirichlet Allocation of Markov Chains},
-	Volume = {10},
-	Year = {2005},
-	Bdsk-File-1 = {YnBsaXN0MDDUAQIDBAUGJCVYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoKgHCBMUFRYaIVUkbnVsbNMJCgsMDxJXTlMua2V5c1pOUy5vYmplY3RzViRjbGFzc6INDoACgAOiEBGABIAFgAdccmVsYXRpdmVQYXRoWWFsaWFzRGF0YV8Qay4uLy4uLy4uL0RvY3VtZW50cy9Kb3VybmFsLU5ld3MtQXJ0aWNsZXMvTWl4ZWQgTWVtYmVyc2hpcC9HaXJvbGFtaSAmIEthYmFuICgyMDA1KS0gTERBIG9mIG1hcmtvdiBjaGFpbnMucGRm0hcLGBlXTlMuZGF0YU8RAlwAAAAAAlwAAgAADE1hY2ludG9zaCBIRAAAAAAAAAAAAAAAAAAAAMtppx9IKwAAAAueSx9HaXJvbGFtaSAmIEthYmFuICgyMDAjQjlFNkEucGRmAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC55qyVXqE1BERiAAAAAAAAMABAAACSAAAAAAAAAAAAAAAAAAAAAQTWl4ZWQgTWVtYmVyc2hpcAAQAAgAAMtp7W8AAAARAAgAAMlWMGMAAAABABQAC55LAAucAgAFyJ8ABcieAAC5VwACAHJNYWNpbnRvc2ggSEQ6VXNlcnM6AGFnYWx5YXJkdDoARG9jdW1lbnRzOgBKb3VybmFsLU5ld3MtQXJ0aWNsZXM6AE1peGVkIE1lbWJlcnNoaXA6AEdpcm9sYW1pICYgS2FiYW4gKDIwMCNCOUU2QS5wZGYADgBkADEARwBpAHIAbwBsAGEAbQBpACAAJgAgAEsAYQBiAGEAbgAgACgAMgAwADAANQApAC0AIABMAEQAQQAgAG8AZgAgAG0AYQByAGsAbwB2ACAAYwBoAGEAaQBuAHMALgBwAGQAZgAPABoADABNAGEAYwBpAG4AdABvAHMAaAAgAEgARAASAHJVc2Vycy9hZ2FseWFyZHQvRG9jdW1lbnRzL0pvdXJuYWwtTmV3cy1BcnRpY2xlcy9NaXhlZCBNZW1iZXJzaGlwL0dpcm9sYW1pICYgS2FiYW4gKDIwMDUpLSBMREEgb2YgbWFya292IGNoYWlucy5wZGYAEwABLwAAFQACABD//wAAgAbSGxwdHlokY2xhc3NuYW1lWCRjbGFzc2VzXU5TTXV0YWJsZURhdGGjHR8gVk5TRGF0YVhOU09iamVjdNIbHCIjXE5TRGljdGlvbmFyeaIiIF8QD05TS2V5ZWRBcmNoaXZlctEmJ1Ryb290gAEACAARABoAIwAtADIANwBAAEYATQBVAGAAZwBqAGwAbgBxAHMAdQB3AIQAjgD8AQEBCQNpA2sDcAN7A4QDkgOWA50DpgOrA7gDuwPNA9AD1QAAAAAAAAIBAAAAAAAAACgAAAAAAAAAAAAAAAAAAAPX}}
+@article{bouillon_producing_2015,
+	title = {On producing sea ice deformation dataset from SAR-derived sea ice motion},
+	volume = {9},
+	url = {www.the-cryosphere.net/9/663/2015/},
+	doi = {10.5194/tc-9-663-2015},
+	journal = {The Cryosphere},
+	author = {Bouillon, Sylvain and Rampal, Pierre},
+	year = {2015},
+	pages = {663--673},
+	publisher = {European Geosciences Union}
+}
+
+@article{birant_st-dbscan_2007,
+	title = {ST-DBSCAN: An algorithm for clustering spatial–temporal data},
+	volume = {60},
+	issn = {0169-023X},
+	doi = {10.1016/j.datak.2006.01.013},
+	number = {1},
+	journal = {Data \& Knowledge Engineering},
+	author = {Birant, Derya and Kut, Alp},
+	year = {2007},
+	pages = {208--221},
+	publisher = {Elsevier}
+}
+
+@article{wentz_comparison_2003,
+	title = {A comparison of two methods to create tracks of moving objects: linear weighted distance and constrained random walk},
+	volume = {17},
+	doi = {10.1080/1365881031000135492},
+	number = {7},
+	journal = {International Journal of Geographical Information Science},
+	author = {Wentz, Elizabeth A and Campbell, Aimee F and Houston, Robert},
+	year = {2003},
+	pages = {623--645},
+  publisher={Taylor \& Francis}
+}
+
+@article{long_kinematic_2016,
+	title = {Kinematic Interpolation of Movement Data},
+	volume = {30},
+	doi = {10.1080/13658816.2015.1081909},
+	number = {5},
+	journal = {International Journal of Geographical Information Science},
+	author = {Long, Jed A},
+	year = {2016},
+	pages = {854--868},
+	publisher={Taylor \& Francis}
+}
+
+
+@article{ansari_spatiotemporal_2020,
+  title={Spatiotemporal clustering: a review},
+  author={Ansari, Mohd Yousuf and Ahmad, Amir and Khan, Shehroz S and Bhushan, Gopal and others},
+  journal={Artificial Intelligence Review},
+  volume={53},
+  number={4},
+  pages={2381--2423},
+  year={2020},
+  publisher={Springer},
+  doi = {10.1007/s10462-019-09736-1}
+}
+
+@article{hoffman_application_2021,
+	title = {Application of a Convolutional Neural Network for the Detection of Sea Ice Leads},
+	volume = {13},
+	doi = {10.3390/rs13224571},
+	journal = {Remote Sensing},
+	author = {Hoffman, Jay P and Ackerman, Steven A and Liu, Yinghui and Key, Jeffrey R and McConnell, Iain L},
+	number = {22},
+	year = {2021},
+	pages = {4571},
+  publisher = {MDPI}
+}
+
+@article{key_detectability_1993,
+	title = {The detectability of sea-ice leads in satellite data as a function of atmospheric conditions and measurement scale},
+	volume = {17},
+	doi = {10.3189/S026030550001288X},
+	journal = {Annals of Glaciology},
+	author = {Key, J and Stone, R and Maslanik, J and Ellefsen, E},
+	year = {1993},
+	pages = {227--232},
+	publisher = {Cambridge University Press}
+}
+
+@article{willmes_pan-arctic_2015,
+	title = {Pan-Arctic lead detection from MODIS thermal infrared imagery},
+	volume = {56},
+	doi = {10.3189/2015AoG69A615},
+	journal = {Annals of Glaciology},
+	author = {Willmes, Sascha and Heinemann, Gunther},
+	year = {2015},
+	pages = {29--37},
+  publisher = {Cambridge University Press}
+}
+
+@article{reiser_new_2020,
+	title = {A New Algorithm for Daily Sea Ice Lead Identification in the Arctic and Antarctic Winter from Thermal-Infrared Satellite Imagery},
+	volume = {12},
+	doi = {10.3390/rs12121957},
+	number = {12},
+	journal = {Remote Sensing},
+	author = {Reiser, Fabian and Willmes, Sascha and Heinemann, Gunther},
+	year = {2020},
+	pages = {1957},
+  publisher = {MDPI}
+}
+
+@article{linow_object-based_2017,
+	title = {Object-Based Detection of Linear Kinematic Features in Sea Ice},
+	volume = {9},
+	doi = {10.3390/rs9050493},
+	number = {5},
+	journal = {Remote Sensing},
+	author = {Linow, S and Dierking, W},
+	year = {2017},
+	pages = {1--15},
+	publisher = {MDPI}
+}
+
+@article{lindsay_radarsat_2003,
+	title = {The RADARSAT Geophysical Processor System: Quality of sea ice trajectory and deformation estimates},
+	volume = {20},
+	doi = {10.1175/1520-0426(2003)020<1333:TRGPSQ>2.0.CO;2},
+	number = {9},
+	journal = {Journal of Atomspheric and Oceanic Technology},
+	author = {Lindsay, RW and Stern, HL},
+	year = {2003},
+	pages = {1333--1347},
+  publisher = {American Meterological Society}
+}
+
+@article{hoffman_detection_2019,
+	title = {The Detection and Characterization of Arctic Sea Ice Leads with Satellite Imagers},
+	volume = {11},
+	doi = {10.3390/rs11050521},
+	number = {5},
+	journal = {Remote Sensing},
+	author = {Hoffman, Jay P and Ackerman, Steven A and Liu, Yinghui and Key, Jeffrey R},
+	year = {2019},
+	pages = {521},
+  publisher = {MDPI}
+}
+
+@article{rinzivillo_visuallydriven_2008,
+	title = {Visually–driven analysis of movement data by progressive clustering},
+	volume = {7},
+	doi = {10.1057/palgrave.ivs.9500183.},
+	number = {3},
+	journal = {Information Visualization},
+	author = {Rinzivillo, Salvatore and Pedreschi, Dino and Nanni, Micro and Giannotti, Fosca},
+	year = {2008},
+	pages = {225--239},
+	publisher={Sage Publications}
+}
+
+
+@inproceedings{andrienko_supporting_2000,
+  author = {Andrienko, Natalia and Andrienko, Gennady and Gatalsky, Peter},
+  title = {Supporting Visual Exploration of Object Movement},
+  year = {2000},
+  isbn = {1581132522},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  doi = {10.1145/345513.345319},
+  booktitle = {Proceedings of the Working Conference on Advanced Visual Interfaces},
+  pages = {217–220},
+  numpages = {4},
+  location = {Palermo, Italy},
+  series = {AVI '00}
+}
+
+
+@article{andrienko_visual_2007,
+  author = {Andrienko, Gennady and Andrienko, Natalia and Wrobel, Stefan},
+  title = {Visual Analytics Tools for Analysis of Movement Data},
+  year = {2007},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  volume = {9},
+  number = {2},
+  issn = {1931-0145},
+  doi = {10.1145/1345448.1345455},
+  journal = {SIGKDD Explor. Newsl.},
+  pages = {38–46},
+  numpages = {9},
+}
+
+@article{andrienko_interactive_2009,
+  author = {Andrienko, Gennady and Andrienko, Natalia},
+  title = {Interactive Cluster Analysis of Diverse Types of Spatiotemporal Data},
+  year = {2010},  
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  volume = {11},
+  number = {2},
+  issn = {1931-0145},
+  doi = {10.1145/1809400.1809405},
+  journal = {SIGKDD Explor. Newsl.},
+  pages = {19–28},
+  numpages = {10}
+}
+
+@article{andrienko_exploratory_2003,
+	title = {Exploratory spatio-temporal visualization: an analytical review},
+  journal = {Journal of Visual Languages & Computing},
+  volume = {14},
+  number = {6},
+  pages = {503-541},
+  year = {2003},
+  issn = {1045-926X},
+  doi = {10.1016/S1045-926X(03)00046-6},
+  author = {Andrienko, Natalia  and Andrienko, Gennady  and Gatalsky, Peter},
+  publisher = {Elsevier}
+}
+
+@article{gaffney_probabilistic_2007,
+	title = {Probabilistic Clustering of Extratropical cyclones using regression mixture models},
+	volume = {29},
+	doi = {10.1007/s00382-007-0235-z},
+	number = {4},
+	journal = {Climate Dynamics},
+	author = {Gaffney, Scott J and Robertson, Andrew W and Smyth, Padhraic and Camargo, Suzana J and Ghil, Michael},
+	year = {2007},
+	pages = {423--440},
+	publisher = {Springer}
+}
+
+
+@INPROCEEDINGS{chen_clustering_2011,
+  author={Chen, Jinyang and Wang, Rangding and Liu, Liangxu and Song, Jiatao},
+  booktitle={2011 International Conference on Electronics, Communications and Control (ICECC)}, 
+  title={Clustering of trajectories based on Hausdorff distance}, 
+  year={2011},
+  volume={},
+  number={},
+  pages={1940-1944},
+  doi={10.1109/ICECC.2011.6066483},
+  publisher = {IEEE}
+  }
+
+@InProceedings{sabarish_clustering_2018,
+  author = {Sabarish, B.A. and Karthi, R and Gireeshkumar, T},
+  editor={Hemanth, D. Jude and Smys, S.},
+  title={Clustering of Trajectory Data Using Hierarchical Approaches},
+  booktitle = {Computational Vision and Bio Inspired Computing},
+  year = {2018},
+  publisher={Springer International Publishing},
+  pages={215--226},
+  isbn={978-3-319-71767-8},
+  volume = {28}
+}
+
+
+@article{higgs_segmentation_2015,
+	author = {Higgs, Bryan and Abbas, Montasir},
+  title = {Segmentation and Clustering of Car-Following Behavior: Recognition of Driving Patterns},
+  year = {2015},
+  publisher = {IEEE Press},
+  volume = {16},
+  number = {1},
+  doi = {10.1109/TITS.2014.2326082},
+  journal = {Trans. Intell. Transport. Syst.},
+  pages = {81–90},
+  numpages = {10}
+}
+
+@article{ossama_extended_2011,
+  title = {An extended k-means technique for clustering moving objects},
+  journal = {Egyptian Informatics Journal},
+  volume = {12},
+  number = {1},
+  pages = {45-51},
+  year = {2011},
+  issn = {1110-8665},
+  doi = {10.1016/j.eij.2011.02.007},
+  author = {Omnia Ossama and Hoda M.O. Mokhtar and Mohamed E. El-Sharkawi},
+  publisher = {Elsevier}
+}
+
+@article{ossama_dynamic_2012,
+	title = {Dynamic K-means: a clustering technique for moving object trajectories},
+	volume = {6},
+	doi = {10.1504/IJIIDS.2012.049111},
+	number = {4},
+	journal = {International Journal of Intelligent Information and Database Systems},
+	author = {Ossama, Omnia and Mokhtar, Hoda M.O. and El-Sharkawi, Mohamed E},
+	year = {2012},
+	pages = {307--327},
+	publisher = {InderScience Online}
+}
+
+@inproceedings{chudova_translation-invariant_2003,
+	author = {Chudova, Darya and Gaffney, Scott and Mjolsness, Eric and Smyth, Padhraic},
+  title = {Translation-Invariant Mixture Models for Curve Clustering},
+  year = {2003},
+  isbn = {1581137370},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  doi = {10.1145/956750.956763},
+  booktitle = {Proceedings of the Ninth ACM SIGKDD International Conference on Knowledge Discovery and   Data Mining},
+  pages = {79–88},
+  numpages = {10},
+  location = {Washington, D.C.},
+  series = {KDD '03}
+}
+
+
+@article{sabarish_graph_2020,
+  title = {Graph Similarity-based Hierarchical Clustering of Trajectory Data},
+  journal = {Procedia Computer Science},
+  volume = {171},
+  pages = {32-41},
+  year = {2020},
+  note = {Third International Conference on Computing and Network Communications (CoCoNet'19)},
+  issn = {1877-0509},
+  doi = {10.1016/j.procs.2020.04.004},
+  author = {B.A. Sabarish and R. Karthi and T. Gireesh Kumar},
+  publisher = {Elsevier}
+}
+
+
+@inproceedings{smyth_clustering_1996,
+  author = {Smyth, Padhraic},
+  title = {Clustering Sequences with Hidden Markov Models},
+  year = {1996},
+  publisher = {MIT Press},
+  address = {Cambridge, MA, USA},
+  booktitle = {Proceedings of the 9th International Conference on Neural Information Processing       Systems},
+  pages = {648–654},
+  numpages = {7},
+  location = {Denver, Colorado},
+  series = {NIPS'96}
+}
+
+@article{pope_gaussian_2019,
+  title = {Gaussian Process Modeling of Heterogeneity and Discontinuities Using Voronoi Tessellations},
+	volume = {63},
+	doi = {10.1080/00401706.2019.1692696},
+	number = {1},
+	journal = {Technometrics},
+	author = {Pope, Christopher A and Gosling, John Paul and Barber, Stuart and Johnson, Jill and Yamaguchi, Takanobu and Feingold, Graham and Blackwell, Paul G},
+	year = {2019},
+	pages = {53--63},
+  publisher={Taylor \& Francis}
+}
+
+@article{guhaniyogi_divide_2017,
+	title = {A Divide and Conquer Bayesian Approach to Large-Scale Kriging},
+	doi = {10.48550/ARXIV.1712.09767},
+	journal = {arXiv},
+	author = {Guhaniyogi, Rajarshi and Li, Chen and Savitsky, Terrance D and Srivastava, Sanvesh},
+	year = {2017},
+	publisher = {Cornell University}
+}
+
+@article{konomi_adaptive_2014,
+	title = {Adaptive Bayesian Nonstationary Modeling for Large Spatial Datasets Using Covariance Approximations},
+	volume = {23},
+	doi = {10.1080/10618600.2013.812872},
+	number = {3},
+	journal = {Journal of Computational and Graphical Statistics},
+	author = {Konomi, Bledar A. and Sang, Huiyan and Mallick, Bani K.},
+	year = {2014},
+	pages = {802--829},
+	publisher={Taylor \& Francis}
+}
+
+@phdthesis{thomas_bayesian_2015,
+	address = {OhioLINK Electronic Theses and Dissertations Center},
+	type = {Doctoral {Dissertation}},
+	title = {Bayesian Hierarchial Space-Time Clustering Methods},
+	school = {Ohio State University},
+	author = {Thomas, Zachary M},
+	year = {2015}
+}
+
+@article{gramacy_bayesian_2008,
+	title = {Bayesian Treed Gaussian Process Models with an Application to Computer Modeling},
+	volume = {103},
+	number = {483},
+	journal = {Journal of the American Statistical Association},
+	author = {Gramacy, Robert B and Lee, Herbert KH},
+	year = {2008},
+	pages = {1119--1130},
+	publisher={Taylor \& Francis}
+}
+
+@article{wang_big_2020,
+	title = {Big Trajectory Data Mining: A Survey of Methods, Applications, and Services},
+	volume = {20},
+	doi = {10.3390/s20164571},
+	number = {16},
+	journal = {Sensors},
+	author = {Wang, Di and Miwa, Tomio and Morikawa, Takayuki},
+	year = {2020},
+	pages = {4571},
+	ppublisher = {MDPI}
+}
+
+@article{napier_bayesian_2019,
+	title = {A Bayesian space-time model for clustering areal units based on their disease trends},
+	volume = {20},
+	doi = {10.1093/biostatistics/kxy024},
+	number = {4},
+	journal = {Biostatistics},
+	author = {Napier, Gary and Lee, Duncan and Robertson, Chris and Lawson, Andrew},
+	year = {2019},
+	pages = {681--697},
+	publisher = {National Library of Medicine}
+}
+
+@inproceedings{kalnis_discovering_2005,
+	title = {On Discovering Moving Clusters in Spatio-temporal Data},
+	doi = {10.1007/11535331_21},
+	booktitle = {Advances in Spatial and Temporal Databases},
+	publisher = {Springer},
+	address={Berlin, Heidelberg},
+	author = {Kalnis, Panos and Mamoulis, Nikos and Barkiras, Spiridon},
+	year = {2005},
+	pages = {364--381}
+}
+
+@incollection{han_overview_2009,
+	edition = {2},
+	title = {An Overview of Clustering Methods in Geographic Data Analysis},
+	isbn = {978-1-4200-7398-0},
+	booktitle = {Geographic Data Mining and Knowledge Discovery},
+	publisher = {CRC Press},
+	author = {Han, Jiawei and Lee, Jae Gil and Kamber, Micheline},
+	year = {2009},
+	pages = {149--188},
+}
+
+@incollection{kisilevich_spatio-temporal_nodate,
+	address = {Boston, MA},
+	title = {Spatio-temporal clustering},
+	isbn = {978-0-387-09823-4},
+	booktitle = {Data Mining and Knowledge Discovery Handbook},
+	publisher = {Springer},
+	author = {Kisilevich, Slava and Mansmann, Florian and Nanni, Micro and Rinzivillo, Salvatore},
+	pages = {855--874}
+}
+
+@article{hu_spatiotemporal_2017,
+	title = {Spatiotemporal regression Kriging to predict precipitation using time-series MODIS data},
+	volume = {20},
+	doi = {10.1007/s10586-016-0708-0},
+	journal = {Cluster Computing},
+	author = {Hu, Dangui and Shu, Hong and Hu, Hongda and Xu, Jianhui},
+	year = {2017},
+	pages = {347--357},
+  publisher = {Springer}
+}
+
+@article{ouala_neural_2018,
+  author = {Ouala, Said and Fablet, Ronan and Herzet, Cédric and Chapron, Bertrand and Pascual, Ananda and Collard, Fabrice and Gaultier, Lucile},
+  title = {Neural Network Based Kalman Filters for the Spatio-Temporal Interpolation of Satellite-Derived Sea Surface Temperature},
+  journal = {Remote Sensing},
+  volumne = {10},
+  year = {2018},
+  number = {12},
+  article-number = {1864},
+	doi = {10.3390/rs10121864},
+  publisher = {MDPI}
+}
+
+@article{susanto_spatiotemporal_2016,
+	title = {Spatiotemporal Interpolation for Environmental Modelling},
+	volume = {16},
+	doi = {10.3390/s16081245},
+	number = {8},
+	journal = {Sensors},
+	author = {Susanto, Ferry and de Sourza Jr, Paulo and He, Jing},
+	year = {2016},
+	article-number = {1245},
+  publisher = {MDPI}
+}
+
+@article{li_fast_2014,
+	title = {Fast inverse distance weighting-based spatiotemporal interpolation: a web-based application of interpolating daily fine particulate matter PM2:5 in the contiguous U.S. using parallel programming and k-d tree.},
+	volume = {11},
+	doi = {10.3390/ijerph110909101},
+	number = {9},
+	journal = {International Journal of Environmental Research and Public Health},
+	author = {Li, Lixin and Losser, Travis and Yorke, Charles and Piltner, Reinhard},
+	year = {2014},
+	pages = {9101--9141},
+  publisher = {National Library of Medicine}
+}
+
+@article{donlon_operational_2011,
+	title = {The Operational Sea Surface Temperature and Sea Ice Analysis (OSTIA) system},
+	volume = {116},
+	number = {15},
+	doi = {10.1016/j.rse.2010.10.017},
+	journal = {Remote Sensing of Environment},
+	author = {Donlon, Craig J and Martin, Matthew and Stark, John and Roberts-Jones, Jonah and Fiedler, Emma and Wimmer, Wrenfrid},
+	year = {2011},
+	pages = {140--158},
+  publisher = {Elsevier}
+}
+
+@article{beckers_eof_2003,
+	title = {EOF Calculations and Data Filling from Incomplete Oceanographic Datasets},
+	volume = {20},
+	doi = {10.1175/1520-0426(2003)020<1839:ECADFF>2.0.CO;2},
+	number = {12},
+	journal = {Journal of Atomspheric and Oceanic Technology},
+	author = {Beckers, JM and Rixen, M},
+	year = {2003},
+	pages = {1839--1856},
+  publisher = {American Meterological Society}
+}
+
+@article{snepvangers_soil_2005,
+	title = {Soil water content interpolation using spatio-temporal kriging with external drift},
+	volume = {112},
+	doi = {10.1201/9781420028188.ch16},
+	number = {3--4},
+	journal = {Geoderma},
+	author = {Snepvangers, JJJC and Heuvelink, GBM and Huisman, JA},
+	year = {2005},
+	pages = {253--271},
+  publisher = {Elsevier}
+}
+
+@article{hoyer_optimal_2007,
+	title = {Optimal Interpolation of Sea Surface Temperature for the North Sea and Baltic Sea},
+	volume = {65},
+	year = {2007},
+	doi = {10.1016/j.jmarsys.2005.03.008},
+	number = {1-4},
+	journal = {Journal of Marine Systems},
+	author = {Hoyer, Jacob L and She, Jun},
+	pages = {176--189},
+	publisher = {Elsevier}
+}
+
+@article{perry_generation_2008,
+	title = {Generation of soil moisture patterns at the catchment scale by EOF interpolation},
+	volume = {12},
+	number = {1},
+	journal = {Hydrology and Earth System Science},
+	author = {Perry, MA and Niemann, JD},
+	year = {2008},
+	pages = {39--53},
+	doi = {10.5194/hess-12-39-2008},
+	publisher = {European Geosciences Union}
+}
+
+@article{li_variational_2015,
+	title = {Variational Data Assimilative Modeling of the Gulf of Maine Circulation in Spring and Summer 2010},
+	volume = {120},
+	doi = {10.1002/2014JC010492},
+	number = {5},
+	journal = {Journal of Geophysical Research Oceans},
+	author = {Li, Yizhen and He, Ruoying and Chen, Ke and McGillicuddy Jr, Dennis J},
+	year = {2015},
+	pages = {3522--3541},
+	publisher = {Advanced Earth and Space Science}
+}
+
+@inproceedings{srinivasan_efficient_2010,
+	address = {Atlanta, GA},
+	title = {Efficient kriging for real-time spatio-temporal interpolation},
+	booktitle = {Proceedings of the 20th Conference on Probability and Statistics in the Atmospheric Sciences},
+	author = {Srinivasan, Balaji Vasan and Duraiswami, Ramani and Murtugudde, Raghu},
+	year = {2010},
+	pages = {228--235},
+	publisher = {American Meteorological Society}
+}
+
+@article{yang_method_2018,
+	title = {A method for extracting road boundary information from crowdsourcing vehicle gps trajectories},
+	volume = {18},
+	doi = {10.3390/s18041261},
+	number = {4},
+	journal = {Sensors},
+	author = {Yang, Wei and Ai, Tinghua and Lu, Wei},
+	year = {2018},
+	article-number = {1261},
+	publisher = {MDPI}
+}
+
+@article{tremblay_interpolation_2006,
+	title = {Interpolation of animal tracking data in a fluid environment.},
+	volume = {209},
+	doi = {10.1242/jeb.01970},
+	number = {1},
+	journal = {The Journal of Experimental Biology},
+	author = {Tremblay, Yann and Shaffer, Scott A and Fowler, Shannon L and Kuhn, Carey E and McDonald, Birgitte I and Weise, Michael J and Bost, Charle-Andre and Weimerskirch, Henri and Crocker, Daniel E and Goebel, Michael E and Costa, Daniel P},
+	year = {2006},
+	pages = {128--140},
+	publisher = {The Companry of Biologists}
+}
+
+@inproceedings{jie_novel_2017,
+  booktitle={2017 4th International Conference on Transportation Information and Safety (ICTIS)},
+	title = {A novel estimation algorithm for interpolating ship motion},
+	doi = {10.1109/ICTIS.2017.8047821},
+	author = {Jie, Xue and Chaozhong, Wu and Zhijun, Chen and Xiaoxuan, Chen},
+	year = {2017},
+	pages = {557--562},
+	publisher= {IEEE}
+}
+
+
+
+@article{guo_improved_2021,
+	title = {Improved kinematic interpolation for {AIS} trajectory reconstruction},
+	volume = {234},
+	doi = {10.1016/j.oceaneng.2021.109256},
+	journal = {Ocean Engineering},
+	author = {Guo, Shaoqing and Mou, Junmin and Chen, Linying and Chen, Pengfei},
+	year = {2021},
+	pages = {109256},
+	publisher = {Elsevier}
+}
+
+@article{howarth_quantitative_2010,
+	title = {Quantitative assessment of the accuracy for three interpolation techniques in kinematic analysis of human movement},
+	volume = {13},
+	doi = {10.1080/10255841003664701},
+	number = {6},
+	journal = {Computer Methods in Biomechanics and Biomedical Engineering},
+	author = {Howarth, Samuel J and Callaghan, Jack P},
+	year = {2010},
+	pages = {847--855},
+	publisher = {Taylor \& Francis}
+}
+
+@article{yao_clustering_2019,
+	title = {Clustering driver behavior using dynamic time warping and hidden Markov model},
+	volume = {25},
+	doi = {10.1080/15472450.2019.1646132},
+	number = {3},
+	journal = {Journal of Intelligent Transportation Systems},
+	author = {Yao, Ying and Zhao, Xiaohua and Wu, Yiping and Zhang, Yunlong and Rong, Jian},
+	year = {2019},
+	pages = {249--262},
+	publisher = {Taylor \& Francis}
+}
+
+@article{purwanto_spatial_2012,
+	title = {Spatial Hotspots Clustering of Forest and Land Fires using DBSCAN and ST-DBSCAN},
+	journal = {Environmental Science},
+	author = {Purwanto, Utrsi Yustina and Barus, Baba and Adrianto, Hari Agung},
+	year = {2012},
+	publisher = {Elsevier}
+}
+
+@article{deng_scalable_2015,
+	title = {A scalable and fast OPTICS for clustering trajectory big data},
+	volume = {18},
+	doi = {10.1007/s10586-014-0413-9},
+	journal = {Cluster Computing},
+	author = {Deng, Ze and Hu, Yangyang and Huang, Xiaohui and Du, Bo},
+	year = {2015},
+	pages = {549--562},
+	publisher = {Springer}
+}
+
+@INPROCEEDINGS{alowayr_review_2021,
+  author={Alowayr, Anwar D. and Alsalooli, Lama A. and Alshahrani, Amal M. and Akaichi, Jalel},
+  booktitle={2021 International Conference of Women in Data Science at Taif University (WiDSTaif )}, 
+  title={A Review of Trajectory Data Mining Applications}, 
+  year={2021},
+  volume={},
+  number={},
+  pages={1--6},
+  doi={10.1109/WiDSTaif52235.2021.9430226},
+  publisher = {IEEE}
+  }
+  
+@inproceedings{li_clustering_2004,
+author = {Li, Yifan and Han, Jiawei and Yang, Jiong},
+title = {Clustering Moving Objects},
+year = {2004},
+isbn = {1581138881},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+doi = {10.1145/1014052.1014129},
+booktitle = {Proceedings of the Tenth ACM SIGKDD International Conference on Knowledge Discovery and Data Mining},
+pages = {617–622},
+numpages = {6},
+location = {Seattle, WA, USA},
+series = {KDD '04}
+}
+
+
+@inbook{rokach_clustering_2005,
+	address = {Boston, MA},
+	title = {Clustering Methods},
+	doi={10.1007/0-387-25465-X_15},
+	booktitle = {Data Mining and Knowledge Discover Handbook},
+	publisher = {Springer},
+	author = {Rokach, Lior and Maimon, Oded},
+	pages = {321--352},
+	year = {2005}
+}
+
+@article{technitis_b_2015,
+	title = {From A to B, randomly: a point-to-point random trajectory generator for animal movement},
+	volume = {29},
+	doi = {10.1080/13658816.2014.999682},
+	number = {6},
+	journal = {International Journal of Geographical Information Science},
+	author = {Technitis, Georgios and Othman, Walied and Safi, Kamran and Weibel, Robert},
+	year = {2015},
+	pages = {912--934},
+	publisher = {Taylor \& Francis}
+}
+
+@inproceedings{andrienko_interactive_2009-1,
+	address = {Atlantic City, NJ, USA},
+	title = {Interactive visual clustering of large collections of trajectories},
+	doi = {10.1109/VAST.2009.5332584},
+	booktitle = {2009 {IEEE} {Symposium} on {Visual} {Analytics} {Science} and {Technology}},
+	author = {Andrienko, Gennady and Andrienko, Natalia and Rinzivillo, Salvatore and Nanni, Micro},
+	year = {2009},
+	pages = {3--10},
+	publisher = {IEEE}
+}
+
+
+@article{kort_atmos_2012,
+	title = {Atmospheric observations of Arctic Ocean methane emissions up to 82 north},
+	volume = {5},
+	doi = {10.1038/ngeo1452},
+	journal = {Nature Geosciences},
+	author = {Kort, E and Wofsy, S. and Daube, B. et al},
+	year = {2012},
+	pages = {318-–321},
+	publisher = {Nature}
+}
+
+@article{kwok_seasonal_2002,
+  author = {Kwok, R. and Cunningham, G. F.},
+  title = {Seasonal ice area and volume production of the Arctic Ocean: November 1996 through April 1997},
+  journal = {Journal of Geophysical Research: Oceans},
+  volume = {107},
+  number = {C10},
+  pages = {SHE 12-1-SHE 12-17},
+  doi = {10.1029/2000JC000469},
+  publisher = {AGU},
+  year = {2002}
+}
+
+@inproceedings{fanaee_spat_2012,
+  author = {Fanaee-T, Hadi},
+  year = {2012},
+  month = {01},
+  pages = {},
+  title = {Spatio-Temporal Clustering Methods Classification},
+  doi = {10.13140/RG.2.1.3812.7204}
+}
+
+
+@inbook{kisilevich_2010,
+	address = {Boston, MA},
+	title = {Spatio-temporal clustering: a survey},
+	booktitle = {Data Mining and Knowledge Discover Handbook},
+	publisher = {Springer},
+	author = {Kisilevich S. and Mansmann F. and Nanni M. and Rinzivillo S.},
+	pages = {855-–874},
+	year = {2010}
+}
+
+@inproceedings{bogorny_spatial_2010,
+  author = {Bogorny, Vania and Shekhar, Shashi},
+  year = {2010},
+  month = {12},
+  pages = {1217},
+  title = {Spatial and Spatio-temporal Data Mining},
+  doi = {10.1109/ICDM.2010.166},
+  booktitle = {2010 IEEE international conference on data mining},
+  publisher = {IEEE}
+}
+
+@INPROCEEDINGS{pelekis_sim_2007,
+  author={Pelekis, Nikos and Kopanakis, Ioannis and Marketos, Gerasimos and Ntoutsi, Irene and Andrienko, Gennady and Theodoridis, Yannis},
+  booktitle={14th International Symposium on Temporal Representation and Reasoning (TIME'07)}, 
+  title={Similarity Search in Trajectory Databases}, 
+  year={2007},
+  volume={},
+  number={},
+  pages={129-140},
+  doi={10.1109/TIME.2007.59},
+  publisher = {IEEE}
+  }
+  
+@inproceedings{gaffney_traj_1999,
+  author = {Gaffney, Scott and Smyth, Padhraic},
+  title = {Trajectory Clustering with Mixtures of Regression Models},
+  year = {1999},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  doi = {10.1145/312129.312198},
+  booktitle = {Proceedings of the Fifth ACM SIGKDD International Conference on Knowledge Discovery and Data Mining},
+  pages = {63–-72},
+  numpages = {10},
+  location = {San Diego, California, USA},
+  series = {KDD '99}
+}
+
+
+@article{guan_relative_2013,
+  author = {Guan, Bo and Liu, Liangxu and Chen, Jinyang},
+  year = {2013},
+  month = {01},
+  pages = {},
+  title = {Using Relative Distance and Hausdorff Distance to Mine Trajectory Clusters},
+  volume = {11},
+  journal = {TELKOMNIKA Indonesian Journal of Electrical Engineering},
+  doi = {10.11591/telkomnika.v11i1.1877},
+  publisher = {Institute of Advanced Engineering and Science}
+}
+
+@INPROCEEDINGS{vlachos_discovering_2002,
+  author={Vlachos, M. and Kollios, G. and Gunopulos, D.},
+  booktitle={Proceedings 18th International Conference on Data Engineering}, 
+  title={Discovering similar multidimensional trajectories}, 
+  year={2002},
+  volume={},
+  number={},
+  pages={673--684},
+  doi={10.1109/ICDE.2002.994784},
+  publisher = {IEEE}
+  }
+  
+@inproceedings{bollobas1997time,
+  title={Time-series similarity problems and well-separated geometric sets},
+  author={Bollobas, Bela and Das, Gautam and Gunopulos, Dimitrios and Mannila, Heikki},
+  booktitle={Proceedings of the thirteenth annual symposium on Computational geometry},
+  pages={454--456},
+  year={1997},
+  publisher = {ACM}
+}  
+
+@inproceedings{Berndt1994UsingDT,
+  title={Using Dynamic Time Warping to Find Patterns in Time Series},
+  author={Donald J. Berndt and James Clifford},
+  booktitle={KDD Workshop},
+  year={1994},
+  pages = {359--370},
+  publisher = {AAAI}
+}
+
+@inproceedings{sakurai_ftw_2005,
+  author = {Sakurai, Yasushi and Yoshikawa, Masatoshi and Faloutsos, Christos},
+  title = {FTW: Fast Similarity Search under the Time Warping Distance},
+  year = {2005},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  doi = {10.1145/1065167.1065210},
+  booktitle = {Proceedings of the Twenty-Fourth ACM SIGMOD-SIGACT-SIGART Symposium on Principles of Database Systems},
+  pages = {326–-337},
+  numpages = {12},
+  location = {Baltimore, Maryland},
+  series = {PODS '05}
+}
+
+@inproceedings{ester_db_1996,
+  title = {A density-based algorithm for discovering clusters in large spatial databases with noise},
+  author = {Ester, M and Kriegel, H P and Sander, J and Xiaowei, Xu},
+  booktitle = {2nd International Conference on Knowledge Discovery and Data Mining},
+  location = {Portland, OR},
+  year = {1996},
+  month = {12},
+  pages = {226--231}
+}
+ 
+@article{CHIMWAYI20181218,
+  title = {Clustering West Nile Virus Spatio-temporal data using ST-DBSCAN},
+  journal = {Procedia Computer Science},
+  volume = {132},
+  pages = {1218--1227},
+  year = {2018},
+  note = {International Conference on Computational Intelligence and Data Science},
+  doi = {10.1016/j.procs.2018.05.037},
+  url = {https://www.sciencedirect.com/science/article/pii/S1877050918307695},
+  author = {Chimwayi, K.B. and Anuradha, J}
+}
+
+
+@inproceedings{liu2012,
+  author = {Liu, Liang Xu and Song, Jia Tao and Guan, Bo and Wu, Zhao Xiao and He, Ke Jia},
+  title = {Tra-DBScan: A Algorithm of Clustering Trajectories},
+  year = {2012},
+  volume = {121},
+  pages = {4875--4879},
+  booktitle = {Frontiers of Manufacturing and Design Science II},
+  series = {Applied Mechanics and Materials},
+  publisher = {Trans Tech Publications Ltd},
+  doi = {10.4028/www.scientific.net/AMM.121-126.4875}
+}
+
+
+
+
+@article{ankerst_optics_1999,
+  author = {Ankerst, Mihael and Breunig, Markus M. and Kriegel, Hans-Peter and Sander, J\"{o}rg},
+  title = {OPTICS: Ordering Points to Identify the Clustering Structure},
+  year = {1999},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  volume = {28},
+  number = {2},
+  doi = {10.1145/304181.304187},
+  journal = {SIGMOD Rec.},
+  pages = {49–60},
+  numpages = {12},
+}
+
+@article{Nanni2006TimefocusedCO,
+  title={Time-focused clustering of trajectories of moving objects},
+  author={Nanni, M. and Pedreschi, D.},
+  journal={Journal of Intelligent Information Systems},
+  year={2006},
+  volume={27},
+  pages={267--289}, 
+  doi = {10.1007/s10844-006-9953-7},
+  publisher = {Springer}
+}
+
+@article{AGRAWAL2016388,
+title = {Development and validation of OPTICS based spatio-temporal clustering technique},
+journal = {Information Sciences},
+author = {Agrawal, KP and Garg, Sanjay and Sharma, Shashikant and Patel, Pinkal},
+volume = {369},
+pages = {388-401},
+year = {2016},
+doi = {10.1016/j.ins.2016.06.048},
+publisher = {Elsevier}
+}
+
+
+@article{coburn_interpolating_2004,
+    author = {Coburn, James and Crisco, Joseph J.},
+    title = {Interpolating Three-Dimensional Kinematic Data Using Quaternion Splines and Hermite Curves},
+    journal = {Journal of Biomechanical Engineering},
+    volume = {127},
+    number = {2},
+    pages = {311-317},
+    year = {2004},
+    doi = {10.1115/1.1865195},
+    url = {https://doi.org/10.1115/1.1865195},
+    publisher = {The American Society of Mechanical Engineers}
+}
+
+@article{schreyer_elastic_2006,
+  author = {Schreyer, H. L. and Sulsky, D. L. and Munday, L. B. and Coon, M. D. and Kwok, R.},
+  title = {Elastic-decohesive constitutive model for sea ice},
+  journal = {Journal of Geophysical Research: Oceans},
+  volume = {111},
+  number = {C11},
+  doi = {10.1029/2005JC003334},
+  year = {2006},
+  publisher = {AGU}
+}
+
+@inproceedings{badgley_1961,
+  author = {Badgley, F.I.},
+  title = {Heat balance at the surface of the arctic ocean},
+  year = {1961},
+  pages = {101--104},
+  booktitle = {Proc 29th Annual Western 528 Snow Conference Spokane}
+}
+
+@article{BLANGIARDO201333,
+  title = {Spatial and spatio-temporal models with R-INLA},
+  journal = {Spatial and Spatio-temporal Epidemiology},
+  volume = {4},
+  pages = {33--49},
+  year = {2013},
+  doi = {10.1016/j.sste.2012.12.001},
+  author = {Blangiardo, Marta and Cameletti, Michela and Baio, Gianluca and Rue, Havard},
+  publisher = {Elsevier}
+}
+
+@article{kodinariya_2013,
+  author = {Kodinariya, Trupti and Makwana, Prashant},
+  year = {2013},
+  month = {01},
+  pages = {90--95},
+  title = {Review on Determining of Cluster in K-means Clustering},
+  volume = {1},
+  journal = {International Journal of Advance Research in Computer Science and Management Studies}
+}
+
+@article{steinley_kmeans_2006,
+  author = {Steinley, Douglas},
+  title = {K-means clustering: A half-century synthesis},
+  journal = {British Journal of Mathematical and Statistical Psychology},
+  volume = {59},
+  number = {1},
+  pages = {1--34},
+  doi = {10.1348/000711005X48266},
+  year = {2006},
+  publisher = {The British Psychological Soceity}
+}
+
+@Manual{gpgp_pkg,
+    title = {GpGp: fast Gaussian process computation using Vecchia’s approximation},
+    author = {Guinness, J and Katzfuss, M},
+    year = {2021},
+    note = {R package version 0.4.0},
+    url = {https://cran.r-project.org/web/packages/GpGp}
+}
+  
+  
+@article{vecchia1988estimation,
+  title={Estimation and model identification for continuous spatial processes},
+  author={Vecchia, Aldo V},
+  journal={Journal of the Royal Statistical Society: Series B (Methodological)},
+  volume={50},
+  number={2},
+  pages={297--312},
+  year={1988},
+  publisher={Wiley Online Library}
+}
+
+@article{rue_inla_2009,
+  author = {Rue, Havard and Martino, Sara and Chopin, Nicolas},
+  title = {Approximate Bayesian inference for latent Gaussian models by using integrated nested   Laplace approximations},
+  journal = {Journal of the Royal Statistical Society: Series B (Statistical Methodology)},
+  volume = {71},
+  number = {2},
+  pages = {319-392},
+  doi = {https://doi.org/10.1111/j.1467-9868.2008.00700.x},
+  publisher = {Wiley},
+  year = {2009}
+}
+
+@article{MORAGA2021100440,
+title = {Bayesian spatial modelling of geostatistical data using INLA and SPDE methods: A case study predicting malaria risk in Mozambique},
+  journal = {Spatial and Spatio-temporal Epidemiology},
+  volume = {39},
+  pages = {100440},
+  year = {2021},
+  doi = {https://doi.org/10.1016/j.sste.2021.100440},
+  author = {Moraga, Paula and Dean, Christopher and Inoue, Joshua and Morawiecki, Piotr and Noureen, Shahzeb Raja and Wang, Fengpei},
+  publisher = {Elsevier}
+}
+
+@article{rue_review_2017,
+    title = {Bayesian computing with {INLA}: {A} review},
+    author = {H{\aa}vard Rue and Andrea I. Riebler and Sigrunn H. S{\o}rbye and Janine B. Illian and Daniel P. Simpson and Finn K. Lindgren},
+    journal = {Annual Reviews of Statistics and Its Applications},
+    year = {2017},
+    volume = {4},
+    number = {March},
+    pages = {395--421},
+    url = {http://arxiv.org/abs/1604.00860},
+  }
+  
+  
+@WWW{sea_ice_lead_2018,
+  author    = {Bob Henson},
+  title     = {Risk Levels},
+  year      = {2018},
+  date      = {2018-02-5},
+  url       = {https://www.wunderground.com/cat6/models-coming-agreement-widespread-effects-arctic-sea-ice-loss},
+  urldate   = {2022-08-26},
+  publisher = {Weather Underground},
+}
+
+@article{liu_dbscan_ex_2012,
+  author = {Liu, Qiliang and Deng, Min and Bi, Jiantao and Yang, Wentao},
+  year = {2012},
+  month = {01},
+  pages = {1--20},
+  title = {A novel method for discovering spatio-temporal clusters of different sizes, shapes, and densities in the presence of noise},
+  volume = {7},
+  journal = {International Journal of Digital Earth - INT J DIGIT EARTH},
+  doi = {10.1080/17538947.2012.655256}
+}
+
+@article{st_interpolation_eldranaly17,
+  author = {Eldrandaly, Khalid and Abdelmouty, Ahmed},
+  year = {2017},
+  month = {06},
+  pages = {},
+  title = {Spatio-temporal interpolation: Current Practices and Future Prospects},
+  volume = {11},
+  journal = {International Journal of Digital Content Technology and its Applications}
+}
+
+@misc{lead_pic_2009, 
+  title={Recurring Spring Leads and Landfast Ice in the Beaufort and Chukchi Seas, 1993-2004, Version 1},
+  url={https://nsidc.org/data/G02173/versions/1}, 
+  DOI={10.7265/N5SB43P0}, 
+  publisher={National Snow and Ice Data Center},
+  author={Eicken, H. & Shapiro, L. & Gaylord, A.G. & Mahoney, A. & Cotter, P.W.},
+  year={2009} }
