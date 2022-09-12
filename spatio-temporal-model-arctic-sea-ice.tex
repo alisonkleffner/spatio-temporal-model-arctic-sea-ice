@@ -863,6 +863,587 @@ identical for x.
 \hypertarget{results}{%
 \section{Results}\label{results}}
 
+\begin{figure}[tbp]
+
+{\centering \includegraphics[width=\linewidth,]{spatio-temporal-model-arctic-sea-ice_files/figure-latex/int-picture-1} 
+
+}
+
+\caption[Example of finding intersections]{(a). Polygons of week 1 clusters (b). Polygons of week 2 clusters (c). Intersection polygons of the overlap of week 1 and week 2 polygons}\label{fig:int-picture}
+\end{figure}
+
+\begin{figure}[tbp]
+
+{\centering \includegraphics[width=\linewidth,]{spatio-temporal-model-arctic-sea-ice_files/figure-latex/ex-result-1} 
+
+}
+
+\caption{Results of Clustering using Bounding Box Method for all the Data}\label{fig:ex-result}
+\end{figure}
+
+\begin{figure}[tbp]
+
+{\centering \includegraphics[width=1\linewidth,]{images/all_weeks_comp_correct} 
+
+}
+
+\caption{Comparison of our method to results of a previous method, which find cracks using a kinematic algorithm}\label{fig:all-week-comp}
+\end{figure}
+
+The simulation results showed some promise for our methods, so next the
+methods are applied on the ice motion dataset.
+
+\hypertarget{clustering-using-all-data}{%
+\subsection{Clustering Using All Data}\label{clustering-using-all-data}}
+
+First we used our spatio-temporal clustering method by creating bounding
+boxes around the full trajectory of each gpid. Once the bounding box
+features are created and standardized, the number of clusters were
+determined using the silhouette statistic. This silhouette statistic for
+the full trajectory data suggested five clusters to be appropriate. The
+results from the clustering algorithm are shown in \cref{fig:ex-result}.
+In \cref{fig:ex-result}, each of the colors represent one cluster; each
+of the squares represent a gpid. The locations of the gpids on this map
+are determined by its last observed location in the data set. We
+hypothesize that cracks in the sea ice will be found along the
+boundaries of the clusters as those gpids have different movements. In
+the middle of some of the clusters, there are some singular gpids whose
+cluster membership does not match its neighbors. These gpids in
+practicality will belong to the same clusters as its neighbors and a
+crack is not considered to have formed here.
+
+To see how well our method is performing, we can compare it to other sea
+ice crack detection algorithms. One such method is by plotting the
+deformation data using a kinematic crack algorithm calculated using the
+RGPS data \citep{peterson_evaluating_2011}. \cref{fig:all-week-comp}
+gives a comparison of our bounding box clustering method and the
+kinematic crack algorithm using side-by-side graphs. It is important to
+note that this image does not represent the true ice cracks, just the
+cracks determined by this method. The larger cracks, which are
+represented by the yellow and dark blue lines are more certain. The
+graphs are aligned so that their axes match up for easier comparison.
+The lines given in the left figure are derived from the opening
+magnitude of the ice sheet. Most of the figure has a color around zero,
+denoting no opening, whereas potential large cracks are found with the
+dark blue or yellow. Many of our cluster boundaries match up with the
+cracks identified by the kinematic crack algorithm, though we are
+limited due to the number of clusters. For example, on the bottom left
+side of both plots, we see a line that goes down and to the right. At
+the bottom right of both plots, we see a line moving through the hole in
+the gpids. Additionally, towards the top of both figures, we see a
+curved boundary that starts at the top of the ice sheet and moves to the
+bottom left in a curved manner.
+
+\hypertarget{clusterings-by-weeks}{%
+\subsection{Clusterings By Weeks}\label{clusterings-by-weeks}}
+
+Since trajectories can be long, it may also be useful to look at
+sub-trajectories, as we may lose information by clustering the whole
+trajectory, which may impact results. We split the data into three
+separate weeks. Through some testing of our methods, we found that by
+week was the smallest time period we could successfully cluster, as
+anything smaller led to large changes in the clusterings between each
+weeks (unstable). We would expect the weeks to have different
+clusterings, but would also expect there to be some continuity between
+them. The clusters by week can be found in
+\cref{fig:by-week-cluster-plot}, where can see some similarities in
+clusters over time.
+
+With these weekly clusters we can also compare them similarly to
+\cref{fig:all-week-comp}, instead manipulating the days used to create
+the magnitudes by the proper weeks time frame. Additionally, we had a
+picture from Day 66 of our data set, which gives an image of recurring
+leads based on visible and infrared Advanced Very High Resolution
+Radiometer (AVHRR) data \citep{lead_pic_2009}. \cref{fig:week-comp},
+includes grid lines to aid in comparison of the pictures, due to the
+aspect ratios not aligning perfectly. One major cracks stands out in
+both images. Our boundary between cluster 1 and 3 aligns until about
+(-1880,400), at this point our boundary curves in more steeply.
+Eventually, the upper section of the cluster boundary between clusters 5
+and 6 continue the crack. Additionally, we can see some of the lighter
+cracks in our graph. For example, we can also see another curved
+boundary above the one just discussed, and can see one on the bottom
+left, similar to what was seen in \cref{fig:all-week-comp}.
+
+\begin{figure}[tbp]
+
+{\centering \includegraphics[width=\linewidth,]{spatio-temporal-model-arctic-sea-ice_files/figure-latex/by-week-cluster-plot-1} 
+
+}
+
+\caption{Results of Clustering using Bounding Box Method by Week}\label{fig:by-week-cluster-plot}
+\end{figure}
+
+\begin{figure}[tbp]
+
+{\centering \includegraphics[width=1\linewidth,]{images/week-comp} 
+
+}
+
+\caption{Comparison of our method to results of a previous method for Week 3}\label{fig:week-comp}
+\end{figure}
+
+\hypertarget{univariate-interpolation-1}{%
+\subsection{Univariate Interpolation}\label{univariate-interpolation-1}}
+
+\begin{figure}[tbp]
+
+{\centering \includegraphics[width=\linewidth,]{spatio-temporal-model-arctic-sea-ice_files/figure-latex/int-best-plots-1} 
+
+}
+
+\caption[Clusters for Intersection Model has lowest MSE]{Trajectories for a) Week 1 Cluster 1 and b) Week 2 Cluster 2. These are instances where our method outperforms linear interpolation}\label{fig:int-best-plots}
+\end{figure}
+
+\begin{figure}[tbp]
+
+{\centering \includegraphics[width=\linewidth,]{spatio-temporal-model-arctic-sea-ice_files/figure-latex/lin-best-plots-1} 
+
+}
+
+\caption[Clusters for Linear Interpolation has lowest MSE]{Trajectories for a) Week 1 Cluster 4 and b) Week 3 Cluster 3. These are instances linear interpolation outperforms our method}\label{fig:lin-best-plots}
+\end{figure}
+
+\begin{table}
+
+\caption{\label{tab:results-table2}RMSE for Interpolation Methods}
+\centering
+\begin{tabular}[t]{rrrrrr}
+\toprule
+\multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{No Intersection} \\
+\cmidrule(l{3pt}r{3pt}){1-2} \cmidrule(l{3pt}r{3pt}){3-4} \cmidrule(l{3pt}r{3pt}){5-6}
+$X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{noint}$ & $Y_{noint}$\\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Week 1}}\\
+\hspace{1em}3.156499 & 3.239215 & 1.526844 & 4.179299 & 3.092995 & 3.067393\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Week 2}}\\
+\hspace{1em}3.142291 & 3.061897 & 2.000556 & 1.398822 & 3.197890 & 3.150918\\
+\addlinespace[0.3em]
+\multicolumn{6}{l}{\textbf{Week 3}}\\
+\hspace{1em}3.178118 & 3.093726 & 1.026822 & 1.214958 & 3.190372 & 3.150259\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Next, we tested our spatio-temporal interpolation method on the ice
+movement dataset in order to see how it performs on real data. We did
+not predict on the already missing data in the dataset for validation
+purposes. For cross validation, we can create a model for an
+intersection and time. In a the intersection and time combination, 10\%
+of the known data were removed from the dataset. Next, we found all of
+the observed data in that intersection for t-1, t, and t+1 in order to
+obtain the spatio-temporal neighbors. Then, using the observed data, the
+model was fit and used to estimate the missing data points. This was
+then done for all intersection and time combinations for the three
+weeks. The total RMSE for each week can be found in
+\cref{tab:results-table2}. Additionally, linear interpolation and the
+model with no intersection was performed on the same missing data for
+comparison, like what was done for the simulated data. However, since
+linear interpolation is unable to estimate data without a point before
+or after (essentially the beginning or end of the week), it is not
+exactly a one-to-one comparison. Also, for the no intersection model,
+models were able to be created for each day for Week 2 and Week 3, but
+were only able to create a model for one day in Week 1 due to the
+log-likelihood failing to converge. So, the Week 1 RMSE value for this
+week is not useful for comparison. In \cref{tab:results-table2}, for the
+most part, linear interpolation looks to outperform the other methods,
+except for Y-values in Week 1.
+
+However, when looking at the trajectory plot in \cref{fig:trajectories},
+can see that some of the trajectories in the plot are more linear than
+others (ie. have different movements defined by the clusters). Based on
+our simulation study, our method may have some improvement over linear
+interpolation on curved data and less-sampled trajectories. Thus, the
+RMSE values are additionally broken out by cluster, as these are the
+groups of movement patterns in the data. These values can be found for
+each week in \cref{tab:results-clust1-actual},
+\cref{tab:results-clust2-actual}, and \cref{tab:results-clust3-actual}.
+Once again, linear interpolation generally outperforms our method, but
+there are two exceptions. For Week 1 and Week 2, linear interpolation
+performed the worst of the other two methods for Cluster 1. In
+\cref{fig:by-week-cluster-plot}, Cluster 1 for both of these weeks is at
+the top of the plot. When comparing this cluster location to the
+trajectory plot in \cref{fig:trajectories}, the top of the figure looks
+to be where the most curved movement happens with longer distance
+traveled over time. So linear interpolation may not work as well here.
+Further, \cref{fig:int-best-plots} and \cref{fig:lin-best-plots}, zoom
+in on examples where our intersection model method performs best and
+linear interpolation performs the best respectively. When comparing both
+figures, our method seems to perform better on longer trajectories, as
+observed points are more spread out along the trajectory.
+
+As previously stated, though the RMSE for the non-intersection model was
+lower than the intersection model in week 1, this number is only
+representing one day's worth of data. So for Cluster 1 in week 1, our
+proposed method seems to be performing the best. For week 2 cluster 1,
+there mixed results between the two model methods, as one performs
+better for x and the other for y. When comparing the two model-based
+approaches, find mixed results when compare their performance, but the
+intersection model performs better more often. These results, once
+again, shows that our method has some promise with non-linear and
+less-sampled data.
+
+\begin{table}
+
+\caption{\label{tab:results-clust1-actual}RMSE by Cluster for Week 1 for Interpolation Methods}
+\centering
+\begin{tabular}[t]{rrrrrrr}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{No Intersection} \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7}
+Cluster & $X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{noint}$ & $Y_{noint}$\\
+\midrule
+1 & 0.6279070 & 0.4651163 & 3.198509 & 13.0416159 & 2.515490 & 3.410473\\
+2 & 0.1711712 & 0.1909091 & 0.186626 & 0.3586513 & 4.257679 & 4.105569\\
+3 & 0.3716012 & 0.3154574 & 1.314808 & 3.0661913 & 2.162818 & 2.883046\\
+4 & 0.3116090 & 0.3299389 & 1.396271 & 2.4424844 & 2.459404 & 2.777074\\
+5 & 0.0634328 & 0.2603774 & 0.770609 & 3.1659150 & 3.895142 & 3.241075\\
+\addlinespace
+6 & 0.2432046 & 0.3261803 & 1.888726 & 5.6371115 & 2.597491 & 3.098273\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}
+
+\caption{\label{tab:results-clust2-actual}RMSE by Cluster for Week 2 for Interpolation Methods}
+\centering
+\begin{tabular}[t]{rrrrrrr}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{No Intersection} \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7}
+Cluster & $X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{noint}$ & $Y_{noint}$\\
+\midrule
+1 & 3.003332 & 2.934830 & 3.2398842 & 3.3166785 & 2.625197 & 3.043491\\
+2 & 2.943829 & 2.889240 & 2.5484750 & 1.0259089 & 2.889908 & 2.939434\\
+3 & 2.937204 & 2.901313 & 1.5772293 & 1.9941807 & 2.946309 & 3.030898\\
+4 & 3.255739 & 3.127827 & 1.4045887 & 0.5231723 & 3.452124 & 3.190633\\
+5 & 4.205982 & 4.159416 & 0.3144192 & 0.3723263 & 4.413450 & 4.202641\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}
+
+\caption{\label{tab:results-clust3-actual}RMSE by Cluster for Week 3 for Interpolation Methods}
+\centering
+\begin{tabular}[t]{rrrrrrr}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{No Intersection} \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7}
+Cluster & $X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{noint}$ & $Y_{noint}$\\
+\midrule
+1 & 2.848267 & 2.852569 & 2.0407810 & 2.6713539 & 2.700013 & 3.049005\\
+2 & 2.806052 & 2.951553 & 2.1528308 & 2.0588226 & 2.649236 & 2.852982\\
+3 & 3.657974 & 3.593269 & 0.1858682 & 0.4401472 & 3.759902 & 3.594164\\
+4 & 2.675125 & 2.777055 & 1.5252900 & 0.7179780 & 2.871803 & 2.919869\\
+5 & 3.162914 & 3.037071 & 0.2051635 & 0.4789511 & 3.079266 & 3.095375\\
+\addlinespace
+6 & 3.209643 & 3.010415 & 0.2811618 & 0.5534701 & 3.227123 & 3.005055\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The proportion of the prediction intervals containing the observed data,
+along with the average standard deviations are given for the ice data in
+\cref{tab:cp-table}. These values were found in the same way as the
+simulated data. The standard deviations are higher than what was seen
+with the simulated data, but the proportions are similar (ranging from
+25\%-31\%). Once again, this can be broken down by cluster in
+\cref{tab:cp-clust-actual}. However, none of the large proportions are
+as large as would b desired, but in cluster 1, week 1 the proportion for
+X is above 50\%, with the proportion for Y close to 50\%.
+
+\begin{table}
+
+\caption{\label{tab:cp-table}Proportion of Prediction interval containing observed and Average Standard Deviation for Ice Data}
+\centering
+\begin{tabular}[t]{lrrrr}
+\toprule
+Week & Proportion of X & Avg SD of X & Proportion of Y & Avg SD of Y\\
+\midrule
+1 & 0.2779244 & 0.8341885 & 0.3122212 & 0.9207825\\
+2 & 0.2631451 & 0.7538514 & 0.3041575 & 0.8136070\\
+3 & 0.2466216 & 0.7597185 & 0.2640766 & 0.7950100\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}
+
+\caption{\label{tab:cp-clust-actual}Proportion of Prediction interval containing observed by Cluster for Ice Data}
+\centering
+\begin{tabular}[t]{rrlrrrr}
+\toprule
+Cluster & $W1_{x}$ & $W2_{x}$ & $W3_{x}$ & $W1_{y}$ & $W2_{y}$ & $W3_{y}$\\
+\midrule
+1 & 0.6279 & 0.3873 & 0.3843 & 0.4651 & 0.3757 & 0.3983\\
+2 & 0.1712 & 0.2973 & 0.4367 & 0.1909 & 0.3456 & 0.3376\\
+3 & 0.3716 & 0.3022 & 0.1679 & 0.3155 & 0.3373 & 0.2039\\
+4 & 0.3116 & 0.2184 & 0.4327 & 0.3299 & 0.2674 & 0.3365\\
+5 & 0.0634 & 0.1268 & 0.2207 & 0.2604 & 0.1185 & 0.2409\\
+\addlinespace
+6 & 0.2432 & NA & 0.1587 & 0.3262 & NA & 0.2243\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Next, instead of a random hold-out of all of the data, we took a random
+hold-out of points along cluster borders. We are interested in points
+along the cluster border as those might be locations of irregular
+movement. Boundaries are defined in the code as points where some of its
+neighbors are from a different cluster. Otherwise the process remains
+the same as before. \cref{tab:border-cv-rmse} contains the RMSE values
+for our method and linear interpolation. The model with all the data (no
+intersection) is not used for comparison here as these models produced
+an error with issues in convergence of the log-likelihood. When just
+look at the weeks overall, our model only outperforms linear
+interpolation in Week 1 for y-values. Furthermore, this was broken out
+by cluster in \cref{tab:border-clust}. This shows similar results as the
+random hold-out, with our method outperforming linear interpolation in
+cluster 1 for Week 1 and 2. Additionally, in Week 1, our method performs
+best for y-values for all clusters expect for cluster 2. Once again, it
+should be noted that linear interpolation cannot estimate points if
+nothing before or after it, so we are working with less data in the RMSE
+calculation.
+
+As in prior sections, 30 conditional simulations were performed in order
+to calculate the uncertainty. Using the standard deviation found from
+these simulations we calculated an interval. Then the proportion of
+intervals that contain the true value are calculated
+(\cref{tab:cp-table-border}). The average standard deviation values are
+also given to give an idea of typical interval width. Once again, as in
+\cref{tab:cp-table}, these values are low, with most intervals not
+containing the true value. In \cref{tab:cp-table-border-clust}, these
+values are broken out by cluster. The values do seem slightly higher in
+the instances where our method performs best, but still low. Finally, in
+\cref{tab:cp-table-border-ou}, found if the true values tend to be over
+or under the interval. Our interval is an underestimate of the true
+values, but still a high percentage of our interval is still an
+overestimate.
+
+\begin{table}
+
+\caption{\label{tab:border-cv-rmse}RMSE for Interpolation Methods on Cluster Border Points}
+\centering
+\begin{tabular}[t]{rrrr}
+\toprule
+\multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} \\
+\cmidrule(l{3pt}r{3pt}){1-2} \cmidrule(l{3pt}r{3pt}){3-4}
+$X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$\\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{4}{l}{\textbf{Week 1}}\\
+\hspace{1em}3.215281 & 3.407760 & 1.6062169 & 4.494381\\
+\addlinespace[0.3em]
+\multicolumn{4}{l}{\textbf{Week 2}}\\
+\hspace{1em}3.296520 & 3.255547 & 2.0389810 & 1.832126\\
+\addlinespace[0.3em]
+\multicolumn{4}{l}{\textbf{Week 3}}\\
+\hspace{1em}3.031460 & 2.957910 & 0.9913019 & 1.240117\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}
+
+\caption{\label{tab:border-clust-tab}RMSE by Cluster for Cross Validation Along Cluster Borders}
+\centering
+\begin{tabular}[t]{rrrrrllllrrrr}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{4}{c}{Week 1} & \multicolumn{4}{c}{Week 2} & \multicolumn{4}{c}{Week 3} \\
+\cmidrule(l{3pt}r{3pt}){2-5} \cmidrule(l{3pt}r{3pt}){6-9} \cmidrule(l{3pt}r{3pt}){10-13}
+Cluster & $X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$\\
+\midrule
+1 & 2.38 & 3.90 & 2.35 & 8.33 & 2.81 & 3.04 & 3.82 & 5.19 & 2.69 & 2.86 & 1.880 & 2.62\\
+2 & 4.01 & 4.34 & 0.19 & 0.25 & 2.94 & 2.96 & 2.39 & 0.99 & 2.74 & 2.85 & 1.880 & 1.92\\
+3 & 2.79 & 3.13 & 1.14 & 3.88 & 2.94 & 3.07 & 1.46 & 1.97 & 3.49 & 3.31 & 0.220 & 0.43\\
+4 & 2.49 & 3.00 & 1.24 & 4.32 & 3.26 & 3.2 & 1.32 & 0.54 & 2.84 & 3.22 & 2.250 & 1.46\\
+5 & 4.16 & 3.87 & 0.62 & 4.55 & 4.14 & 3.88 & 0.43 & 0.34 & 2.84 & 2.83 & 0.220 & 0.49\\
+\addlinespace
+6 & 3.19 & 3.30 & 2.21 & 4.85 &  &  &  &  & 3.21 & 2.92 & 0.303 & 0.56\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}
+
+\caption{\label{tab:cp-table-border}Proportion of Prediction interval containing observed and Average Standard Deviation for Ice Data}
+\centering
+\begin{tabular}[t]{lrrrr}
+\toprule
+Week & Proportion of X & Avg SD of X & Proportion of Y & Avg SD of Y\\
+\midrule
+1 & 0.320 & 0.942 & 0.344 & 1.069\\
+2 & 0.267 & 0.808 & 0.267 & 0.871\\
+3 & 0.277 & 0.775 & 0.283 & 0.785\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}
+
+\caption{\label{tab:cp-table-border-clust}Proportion of Prediction interval containing observed by Cluster for Cluster Border}
+\centering
+\begin{tabular}[t]{rrrllrr}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Week 1} & \multicolumn{2}{c}{Week 2} & \multicolumn{2}{c}{Week 3} \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7}
+Cluster & $X_{s1}$ & $Y_{s1}$ & $X_{s2}$ & $Y_{s2}$ & $X_{s3}$ & $Y_{s3}$\\
+\midrule
+1 & 0.592 & 0.592 & 0.467 & 0.413 & 0.422 & 0.357\\
+2 & 0.270 & 0.288 & 0.28 & 0.278 & 0.471 & 0.418\\
+3 & 0.347 & 0.312 & 0.337 & 0.351 & 0.184 & 0.245\\
+4 & 0.482 & 0.301 & 0.26 & 0.251 & 0.491 & 0.309\\
+5 & 0.157 & 0.300 & 0.149 & 0.163 & 0.283 & 0.264\\
+\addlinespace
+6 & 0.273 & 0.396 &  &  & 0.177 & 0.254\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}
+
+\caption{\label{tab:cp-table-border-ou}Proportion of Interval Above/Under Actual Value for Border Values}
+\centering
+\begin{tabular}[t]{lrrrr}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{X} & \multicolumn{2}{c}{Y} \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5}
+Week & Above Interval & Under Interval & Above Interval & Under Interval\\
+\midrule
+1 & 0.294 & 0.386 & 0.304 & 0.352\\
+2 & 0.330 & 0.406 & 0.302 & 0.430\\
+3 & 0.352 & 0.371 & 0.358 & 0.358\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\hypertarget{discussion}{%
+\section{Discussion}\label{discussion}}
+
+Our Bounding Box clustering method was developed to group trajectories
+by their movement, and to compensate for missing data. This method was
+shown through simulations and actual data that the boundaries of the
+clusters determined by the trajectory movements provide a reasonable
+estimation of the location of cracks. However, a major drawback of this
+method is that since the k-means clustering approach is used, our method
+relies on a pre-defined number of clusters, which is typically unknown.
+Furthermore, with having a set number of clusters, there is a limit on
+how many cluster boundaries representing cracks that can be identified.
+Thus, not all possible leads will be identified. Our method seems
+suggest that other approaches to clustering may be useful to extend this
+method in order to identify higher resolution cracks. Also, our method
+provides information about how the ice sheet is moving, which may also
+be important when developing climate models.
+
+Through our simulations and the use of the ice movement data, we have
+demonstrated some situations where our interpolation method may be
+beneficial. First, it takes into account the nonstationarity of the
+data, which generally shows slight improvement over using all the data
+to develop the model. Instances where the intersection model under
+performs the other model may be due to lack of data to develop a better
+model at that intersection. Secondly, it showed improvements, in terms
+of RMSE, over linear interpolation for curved and not highly sampled
+data with the ice data. Additionally, our method is able to estimate
+missing locations on the first and last day of a dataset when linear
+interpolation is not able to. Another benefit of our method is that
+since a model is created, we are able to get an uncertainty measure with
+the predictions. Our method should eventually be tested against curved
+methods, like cubic splines, to see if it will outperform simpler,
+curved-based methods. Despite the benefits our method, linear
+interpolation outperformed our proposed method in most cases. So using
+the additional information about the movement does not provide any
+benefit if the trajectories follow a linear pattern and only interested
+in location estimation.
+
+An issue with our interpolation approach is that when creating the
+intersections, if an object is not located within a spatial-temporal
+intersection, it is removed from the data used to develop the models, as
+only developing models within intersections. Thus, we could be losing
+valuable information to obtain the estimates. Typically this only
+happens to gpids on the edges of the ice pack.
+
+When it comes to developing the models with the Vecchia Approximation,
+some other issues arise. The first is that when the temporal range is
+large, especially in comparison with the spatial range, the model is not
+able to be developed as the log-likelihood does not converge. Generally
+when this happens the last Fisher Scoring iteration before the error has
+an exceptionally large temporal range value. Additionally, the
+covariance parameters estimated by the model do not seem to make sense
+practically even when the model can be successfully fit because all the
+parameter values outside of the nugget are large, even though the
+variance and spatial range values are sometimes more reasonable for the
+simulated data. For example, the large temporal range means that the
+data is not changing over time, and that there is a strong dependence
+over multiple lifetime's worth of data, which is probably not realistic.
+Using the simulated data as an example, in Simulation 1 the Y values for
+cluster two were generated with \(\sigma^2\) = 80, \(\phi\) = 50,
+\(\tau\) = 10, \(c_0\)= 0. The values estimated for the model in
+intersection 3, time 3 were \(\sigma^2\) = 77.91, \(\phi\) = 458,
+\(\tau\) = 686,239.164, \(c_0\) = 0. In this scenario, the model is
+overestimating the spatial and temporal range parameters, with the
+temporal range being a much larger overestimate. This may be due to only
+working with a small amount of data that is not moving much over time.
+This is especially true when looking at the ice sheet data. With the
+simulated data, as more days were added to the datasets used to create
+the clusters and defines the intersections, the temporal range does
+slowly decrease. Also, \citet{guinness_gaussian_2021} points out that
+when the range parameter estimates are much larger than the maximum
+distance between points, which we see with our data, the likelihood
+function has a hard time jointly identifying the range parameters and
+variance, causing issues in the calculation of our model. With the
+simulation data, we tried setting a value for the covariance parameters
+and found that if set \(\phi\), then \(\tau\) is still large. On the
+other hand, if set \(\tau\), then \(\phi\) is closer to the true value.
+Showing that the temporal dependence is posing an issue, which may be
+due to lack of days and lack of movement over the days.
+
+Another potential source for error when using a space-time covariance
+function is that variation in time is needed. Otherwise, if we only have
+observed data for one day of the three days used to create the models,
+the model is unable to be developed. Another issue, that was mainly seen
+in the models without the intersection in Week 1, the location columns
+were sometimes considered too linearly dependent to form a model.
+Generally, taking a random subset of the data allowed a model to
+converge. Finally, sometimes the estimated model can be developed, but
+an error occurs in the prediction. This occurs when we only have one
+location to estimate, as the nearest neighbor approach is used when
+computing the conditional estimates of the prediction. Thus, we need at
+least two missing points to create an estimate.
+
+\hypertarget{conclusion}{%
+\section{Conclusion}\label{conclusion}}
+
+Sea ice plays a vital role in the Earth's energy balance, as when cracks
+form in the ice, warm air from the ocean is released into the
+atmosphere. In order to determine where these cracks may form using only
+the movement of the ice sheet, a bounding box is created around each
+tracked trajectory and the features of the bounding box are used as
+input into k-means. Once each gpid is assigned a cluster, a plot of the
+results is created where the cluster boundaries would be the location
+where ice cracks may form. This method seemed to identify similar cracks
+as other ice crack detection methods. Next, using the information from
+the clusters, created a model for interpolation from spatio-temporal
+neighbors of the missing points. While linear interpolation typically
+outperforms our method, we showed some benefit with nonlinear and not
+highly sampled data.
+
+In the future, we want to determine the number of clusters through
+something other than the silhouette statistic. For example,
+\citet{ossama_extended_2011} has a process for determining the number of
+unique directions, which may be a better estimate of k. Secondly, more
+work needs to be done in the univariate model development for the
+interpolation to facilitate convergence in a wider range of situations.
+Next, we would like to further investigate a bivariate interpolation
+model to estimate both x and y at the same time. Finally, at the moment
+our method is a two step process: find clusters and create model in each
+cluster. Eventually, we would like to turn this into a one step process,
+potentially using voronoi tessellations and a piecewise Gaussian
+Process.
+
 \bibliographystyle{agsm}
 \bibliography{bibliography.bib}
 

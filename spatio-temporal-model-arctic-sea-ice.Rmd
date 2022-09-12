@@ -2198,4 +2198,2190 @@ A benefit of using a model-based approach to interpolate missing locations is th
 # Results {#results}
 
 
-# Discussion and Conclusion {#discussion}
+```{r week1-clust, message=FALSE, warning = FALSE, cache = TRUE}
+
+Week1 <- filter(tmp, i %in% c(1:7))
+
+
+tmp_features_W1<- Week1 %>% 
+  tidyr::nest(data = -gpid) %>% 
+  mutate(summary = map(data, bbox_summary)) %>%
+  unnest(summary)
+
+names(tmp_features_W1) <- c("gpid", "data_1", "x_1", "y_1", "xmin_1", "xmax_1", "ymin_1", "ymax_1", "xbox_1", "ybox_1", "dx_1", "dy_1", "angle_1", "kmin_1", "kmax_1", "npts_1")
+
+
+data_scale_w1 = data.frame(scale(tmp_features_W1[,3:13]))
+names(data_scale_w1) <- c("x_s1", "y_s1", "xmin_s1", "xmax_s1", "ymin_s1", "ymax_s1", "xbox_s1", "ybox_s1", "dx_s1", "dy_s1", "angle_s1")
+tmp_features_s1= data.frame(tmp_features_W1, data_scale_w1)
+
+
+set.seed(4)
+km1= kmeans(select(tmp_features_s1, c(x_s1,y_s1,xbox_s1:angle_s1)), 6, nstart=25)
+cluster_K1 = as.factor(km1$cluster)
+
+tmp_features_km1 = data.frame(tmp_features_s1, cluster_K1)
+
+anim_plot_data1 <- Week1 %>%
+  left_join(select(tmp_features_km1, gpid, clust = cluster_K1)) %>%
+  mutate(imputed = F) %>%
+  complete(crossing(gpid, t), fill = list(imputed = T)) %>%
+  ungroup() %>%
+  arrange(gpid, t) %>%
+  group_by(gpid) %>%
+  fill(xmap, ymap, matches("clust"), .direction = "downup") %>%
+  arrange(gpid)
+
+
+```
+
+
+```{r week2-clust, message=FALSE, warning = FALSE, cache = TRUE}
+
+
+Week2 <- filter(tmp, i %in% c(7:14))
+
+
+tmp_features_W2<- Week2 %>% 
+  tidyr::nest(data = -gpid) %>% 
+  mutate(summary = map(data, bbox_summary)) %>%
+  unnest(summary)
+
+names(tmp_features_W2) <- c("gpid", "data_2", "x_2", "y_2", "xmin_2", "xmax_2", "ymin_2", "ymax_2", "xbox_2", "ybox_2", "dx_2", "dy_2", "angle_2", "kmin_2", "kmax_2", "npts_2")
+
+
+data_scale_w2 = data.frame(scale(tmp_features_W2[,3:13]))
+names(data_scale_w2) <- c("x_s2", "y_s2", "xmin_s2", "xmax_s2", "ymin_s2", "ymax_s2", "xbox_s2", "ybox_s2", "dx_s2", "dy_s2", "angle_s2")
+tmp_features_s2= data.frame(tmp_features_W2, data_scale_w2)
+tmp_features_W12 <- full_join(tmp_features_s1, tmp_features_s2, by = 'gpid')
+tmp_features_W12 <- tmp_features_W12[complete.cases(tmp_features_W12$x_2),] #Removing where we have Week 1 but not week 2
+tmp_features_W12[is.na(tmp_features_W12)] <- 0 #Didn't know what to do about Na's so a fix for now
+tmp_features_W12$npts <- tmp_features_W12$npts_1 + tmp_features_W12$npts_2
+
+set.seed(4)
+km2= kmeans(select(tmp_features_W12, c(xbox_s1, ybox_s1, angle_s1, dx_s1, dy_s1, x_s2, y_s2, xbox_s2:angle_s2)), 5, nstart=25)
+cluster_K2 = as.factor(km2$cluster)
+
+tmp_features_km2 = data.frame(tmp_features_W12, cluster_K2)
+
+
+anim_plot_data2 <- Week2 %>%
+  left_join(select(tmp_features_km2, gpid, clust = cluster_K2)) %>%
+  mutate(imputed = F) %>%
+  complete(crossing(gpid, t), fill = list(imputed = T)) %>%
+  ungroup() %>%
+  arrange(gpid, t) %>%
+  group_by(gpid) %>%
+  fill(xmap, ymap, matches("clust"), .direction = "downup") %>%
+  arrange(gpid)
+```
+
+
+```{r week3-clust, message=FALSE, warning = FALSE, cache = TRUE}
+
+
+Week3 <- filter(tmp, i %in% c(14:22)) 
+
+
+tmp_features_W3<- Week3 %>% 
+  tidyr::nest(data = -gpid) %>% 
+  mutate(summary = map(data, bbox_summary)) %>%
+  unnest(summary)
+
+
+names(tmp_features_W3) <- c("gpid", "data_3", "x_3", "y_3", "xmin_3", "xmax_3", "ymin_3", "ymax_3", "xbox_3", "ybox_3", "dx_3", "dy_3", "angle_3", "kmin_3", "kmax_3", "npts_3")
+
+
+data_scale_w3 = data.frame(scale(tmp_features_W3[,3:13]))
+names(data_scale_w3) <- c("x_s3", "y_s3", "xmin_s3", "xmax_s3", "ymin_s3", "ymax_s3", "xbox_s3", "ybox_s3", "dx_s3", "dy_s3", "angle_s3")
+tmp_features_s3= data.frame(tmp_features_W3, data_scale_w3)
+tmp_features_W23 <- full_join(tmp_features_s2, tmp_features_s3, by = 'gpid')
+tmp_features_W23 <- tmp_features_W23[complete.cases(tmp_features_W23$x_3),] #Removing where we have Week 2 but not week 3
+tmp_features_W23[is.na(tmp_features_W23)] <- 0 #Didn't know what to do about Na's so a fix for now
+tmp_features_W23$npts <- tmp_features_W23$npts_2 + tmp_features_W23$npts_3
+
+#Clustering
+
+set.seed(4)
+km3= kmeans(select(tmp_features_W23, c(xbox_s2:angle_s2, x_s3, y_s3, xbox_s3:angle_s3)), 6, nstart=25)
+cluster_K3 = as.factor(km3$cluster)
+
+tmp_features_km3 = data.frame(tmp_features_W23, cluster_K3)
+
+anim_plot_data3 <- Week3 %>%
+  left_join(select(tmp_features_km3, gpid, clust = cluster_K3)) %>%
+  mutate(imputed = F) %>%
+  complete(crossing(gpid, t), fill = list(imputed = T)) %>%
+  ungroup() %>%
+  arrange(gpid, t) %>%
+  group_by(gpid) %>%
+  fill(xmap, ymap, matches("clust"), .direction = "downup") %>%
+  arrange(gpid)
+
+
+```
+
+```{r polygon-week1, message=FALSE, warning = FALSE, cache = TRUE}
+
+#######################
+###Weekly Polygons 
+#######################
+
+###########
+###Week 1
+###########
+time_1_og <- lonely(anim_plot_data1,51)
+
+time1 <- filter(time_1_og, clust ==2 & xmap > -1950  & ymap < -270)
+time1$clust <- 3
+time2 <- subset(time_1_og, !(time_1_og$gpid%in%time1$gpid))
+time_1 <- rbind(time1, time2)
+
+time1 <- filter(time_1, clust ==6 & ymap < 170)
+time1$clust <- 3
+time2 <- subset(time_1, !(time_1$gpid%in%time1$gpid))
+time_1 <- rbind(time1, time2)
+
+time1 <- filter(time_1, ymap > 570 & xmap > -1910 & xmap < -1830)
+time1$clust <- 1
+time2 <- subset(time_1, !(time_1$gpid%in%time1$gpid))
+time_1 <- rbind(time1, time2)
+
+time_1$clust[time_1$gpid==81677] <- 2
+
+time_1$clust[time_1$gpid==85085] <- 1
+
+poly_clust <- function(og_frame, frame, a, b, c, d, f, h){
+  points <-st_as_sf(og_frame, coords = c("xmap", "ymap"))
+  q_smallest <- filter(frame, clust == a)
+  ###1###
+  coord_1 <- coordinates2(q_smallest,a)
+  y_1<- polygon_data2(coord_1)
+  polyg <- y_1$geometry
+  z <- st_intersects(polyg,points)
+  z_idex <- data.frame(z[1])
+  colnames(z_idex) <- "index"
+  df <- merge(z_idex, frame, by= "index")
+  df2 <- subset(frame,!(frame$gpid%in%df$gpid))
+  ###2###
+  clus2 <- subset(df2, clust==b)
+  coord_2 <- coordinates2(clus2,b)
+  y_2<- polygon_data2(coord_2)
+  polyg <- y_2$geometry
+  z <- st_intersects(polyg,points)
+  z_idex <- data.frame(z[1])
+  colnames(z_idex) <- "index"
+  df3 <- merge(z_idex, df2, by= "index")
+  df4 <- subset(df2,!(df2$gpid%in%df3$gpid))
+  ###3###
+  clus3 <- subset(df4, clust==c)
+  coord_3 <- coordinates2(clus3,c)
+  y_3<- polygon_data2(coord_3)
+  polyg <- y_3$geometry
+  z <- st_intersects(polyg,points)
+  z_idex <- data.frame(z[1])
+  colnames(z_idex) <- "index"
+  df5 <- merge(z_idex, df4, by= "index")
+  df6 <- subset(df4,!(df4$gpid%in%df5$gpid))
+  ###4###
+  clus4 <- subset(df6, clust==d)
+  coord_4 <- coordinates2(clus4,d)
+  y_4<- polygon_data2(coord_4)
+  polyg <- y_4$geometry
+  z <- st_intersects(polyg,points)
+  z_idex <- data.frame(z[1])
+  colnames(z_idex) <- "index"
+  df7 <- merge(z_idex, df6, by= "index")
+  df8 <- subset(df6,!(df6$gpid%in%df7$gpid))
+  ###5###
+  clus5 <- subset(df8, clust==f)
+  coord_5 <- coordinates2(clus5,f)
+  y_5<- polygon_data2(coord_5)
+  polyg <- y_5$geometry
+  z <- st_intersects(polyg,points)
+  z_idex <- data.frame(z[1])
+  colnames(z_idex) <- "index"
+  df9 <- merge(z_idex, df8, by= "index")
+  df10 <- subset(df8,!(df8$gpid%in%df9$gpid))
+  ###6###
+  clus8 <- filter(df10, ymap > 0)
+  coord_8 <- coordinates2(clus8,h)
+  y_8<- polygon_data2(coord_8)
+  polyg <- y_8$geometry
+  z <- st_intersects(polyg,points)
+  z_idex <- data.frame(z[1])
+  colnames(z_idex) <- "index"
+  df15<- merge(z_idex, df10, by= "index")
+  df16 <- subset(df10,!(df10$gpid%in%df15$gpid))
+  ##6_2##
+  clus9 <- filter(df10, ymap < 0)
+  coord_9 <- coordinates2(clus9,7)
+  y_9<- polygon_data2(coord_9)
+  polyg <- y_9$geometry
+  z <- st_intersects(polyg,points)
+  z_idex <- data.frame(z[1])
+  colnames(z_idex) <- "index"
+  df17<- merge(z_idex, df16, by= "index")
+  df18 <- subset(df16,!(df16$gpid%in%df17$gpid))
+  y = rbind(y_1, y_2, y_3, y_4, y_5,y_8,y_9)
+  return(y)
+}
+
+y1 <- poly_clust(time_1_og,time_1,1,6,4,3,5,2) 
+
+
+```
+
+```{r polygon-week2, message=FALSE, warning = FALSE, cache=TRUE}
+###########
+###Week 2
+###########
+
+time_8_og <- lonely(anim_plot_data2,58)
+
+time1 <- filter(time_8_og, clust ==4 & xmap > -1855  & ymap < -267)
+time1$clust <- 2
+time2 <- subset(time_8_og, !(time_8_og$gpid%in%time1$gpid))
+time_8 <- rbind(time1, time2)
+
+time1 <- filter(time_8, clust ==5 & xmap > -1855  & ymap < -267)
+time1$clust <- 2
+time2 <- subset(time_8, !(time_8$gpid%in%time1$gpid))
+time_8 <- rbind(time1, time2)
+
+time1 <- filter(time_8, clust ==5 & xmap > -1940  & ymap < -293)
+time1$clust <- 4
+time2 <- subset(time_8, !(time_8$gpid%in%time1$gpid))
+time_8 <- rbind(time1, time2)
+
+time1 <- filter(time_8, clust ==3 & xmap < -1639  & ymap < 325)
+time1$clust <- 4
+time2 <- subset(time_8, !(time_8$gpid%in%time1$gpid))
+time_8 <- rbind(time1, time2)
+
+time1 <- filter(time_8_og, clust ==3 & xmap < -1870  & ymap < 390)
+time1$clust <- 4
+time2 <- subset(time_8, !(time_8$gpid%in%time1$gpid))
+time_8 <- rbind(time1, time2)
+
+
+poly_clust <- function(og_frame, frame, a, b, c, d, f){
+  points <-st_as_sf(og_frame, coords = c("xmap", "ymap"))
+  q_smallest <- filter(frame, clust == a)
+  ###1###
+  coord_1 <- coordinates2(q_smallest,a)
+  y_1<- polygon_data2(coord_1)
+  polyg <- y_1$geometry
+  z <- st_intersects(polyg,points)
+  z_idex <- data.frame(z[1])
+  colnames(z_idex) <- "index"
+  df <- merge(z_idex, frame, by= "index")
+  df2 <- subset(frame,!(frame$gpid%in%df$gpid))
+  ###2###
+  clus2 <- subset(df2, clust==b)
+  coord_2 <- coordinates2(clus2,b)
+  y_2<- polygon_data2(coord_2)
+  polyg <- y_2$geometry
+  z <- st_intersects(polyg,points)
+  z_idex <- data.frame(z[1])
+  colnames(z_idex) <- "index"
+  df3 <- merge(z_idex, df2, by= "index")
+  df4 <- subset(df2,!(df2$gpid%in%df3$gpid))
+  ###3###
+  clus3 <- subset(df4, clust==c)
+  coord_3 <- coordinates2(clus3,c)
+  y_3<- polygon_data2(coord_3)
+  polyg <- y_3$geometry
+  z <- st_intersects(polyg,points)
+  z_idex <- data.frame(z[1])
+  colnames(z_idex) <- "index"
+  df5 <- merge(z_idex, df4, by= "index")
+  df6 <- subset(df4,!(df4$gpid%in%df5$gpid))
+  ###4###
+  clus4 <- subset(df6, clust==d)
+  coord_4 <- coordinates2(clus4,d)
+  y_4<- polygon_data2(coord_4)
+  polyg <- y_4$geometry
+  z <- st_intersects(polyg,points)
+  z_idex <- data.frame(z[1])
+  colnames(z_idex) <- "index"
+  df7 <- merge(z_idex, df6, by= "index")
+  df8 <- subset(df6,!(df6$gpid%in%df7$gpid))
+  ###5###
+  clus8 <- filter(df8, ymap > 0)
+  coord_8 <- coordinates2(clus8,f)
+  y_8<- polygon_data2(coord_8)
+  polyg <- y_8$geometry
+  z <- st_intersects(polyg,points)
+  z_idex <- data.frame(z[1])
+  colnames(z_idex) <- "index"
+  df15<- merge(z_idex, df8, by= "index")
+  df16 <- subset(df8,!(df8$gpid%in%df15$gpid))
+  ##5_2##
+  clus9 <- filter(df8, ymap < 0)
+  coord_9 <- coordinates2(clus9,6)
+  y_9<- polygon_data2(coord_9)
+  polyg <- y_9$geometry
+  z <- st_intersects(polyg,points)
+  z_idex <- data.frame(z[1])
+  colnames(z_idex) <- "index"
+  df17<- merge(z_idex, df16, by= "index")
+  df18 <- subset(df16,!(df16$gpid%in%df17$gpid))
+  y = rbind(y_1, y_2, y_3, y_4,y_8,y_9)
+  return(y)
+}
+
+
+y2 <- poly_clust(time_8_og,time_8,1,3,2,4,5) 
+
+
+```
+
+
+
+```{r polygon-week3, message=FALSE, warning = FALSE, cache = TRUE}
+###########
+###Week 3
+###########
+
+time_15_og <- lonely(anim_plot_data3,65)
+
+time1 <- filter(time_15_og, clust ==1 & ymap > 547 & xmap > -1530)
+time1$clust <- 2
+time2 <- subset(time_15_og, !(time_15_og$gpid%in%time1$gpid))
+time_15 <- rbind(time1, time2)
+
+time1 <- filter(time_15, clust ==5 & ymap > 400)
+time1$clust <- 3
+time2 <- subset(time_15, !(time_15$gpid%in%time1$gpid))
+time_15 <- rbind(time1, time2)
+
+time1 <- filter(time_15, clust ==5 & ymap > 184, xmap > -1800)
+time1$clust <- 6
+time2 <- subset(time_15, !(time_15$gpid%in%time1$gpid))
+time_15 <- rbind(time1, time2)
+
+time1 <- filter(time_15, clust ==5 & xmap < -2098)
+time1$clust <- 3
+time2 <- subset(time_15, !(time_15$gpid%in%time1$gpid))
+time_15 <- rbind(time1, time2)
+
+time1 <- filter(time_15, clust ==5 & ymap > 251)
+time1$clust <- 3
+time2 <- subset(time_15, !(time_15$gpid%in%time1$gpid))
+time_15 <- rbind(time1, time2)
+
+
+poly_clust <- function(og_frame, frame, a, b, c, d, f, h){
+  points <-st_as_sf(og_frame, coords = c("xmap", "ymap"))
+  q_smallest <- filter(frame, clust == a)
+  ###1###
+  coord_1 <- coordinates2(q_smallest,a)
+  y_1<- polygon_data2(coord_1)
+  polyg <- y_1$geometry
+  z <- st_intersects(polyg,points)
+  z_idex <- data.frame(z[1])
+  colnames(z_idex) <- "index"
+  df <- merge(z_idex, frame, by= "index")
+  df2 <- subset(frame,!(frame$gpid%in%df$gpid))
+  ###2###
+  clus2 <- subset(df2, clust==b)
+  coord_2 <- coordinates2(clus2,b)
+  y_2<- polygon_data2(coord_2)
+  polyg <- y_2$geometry
+  z <- st_intersects(polyg,points)
+  z_idex <- data.frame(z[1])
+  colnames(z_idex) <- "index"
+  df3 <- merge(z_idex, df2, by= "index")
+  df4 <- subset(df2,!(df2$gpid%in%df3$gpid))
+  ###3###
+  clus3 <- subset(df4, clust==c)
+  coord_3 <- coordinates2(clus3,c)
+  y_3<- polygon_data2(coord_3)
+  polyg <- y_3$geometry
+  z <- st_intersects(polyg,points)
+  z_idex <- data.frame(z[1])
+  colnames(z_idex) <- "index"
+  df5 <- merge(z_idex, df4, by= "index")
+  df6 <- subset(df4,!(df4$gpid%in%df5$gpid))
+  ###4###
+  clus4 <- subset(df6, clust==d)
+  coord_4 <- coordinates2(clus4,d)
+  y_4<- polygon_data2(coord_4)
+  polyg <- y_4$geometry
+  z <- st_intersects(polyg,points)
+  z_idex <- data.frame(z[1])
+  colnames(z_idex) <- "index"
+  df7 <- merge(z_idex, df6, by= "index")
+  df8 <- subset(df6,!(df6$gpid%in%df7$gpid))
+  ###5###
+  clus5 <- subset(df8, clust==f)
+  coord_5 <- coordinates2(clus5,f)
+  y_5<- polygon_data2(coord_5)
+  polyg <- y_5$geometry
+  z <- st_intersects(polyg,points)
+  z_idex <- data.frame(z[1])
+  colnames(z_idex) <- "index"
+  df9 <- merge(z_idex, df8, by= "index")
+  df10 <- subset(df8,!(df8$gpid%in%df9$gpid))
+  ###6###
+  clus8 <- filter(df10, clust == h)
+  coord_8 <- coordinates2(clus8,h)
+  y_8<- polygon_data2(coord_8)
+  polyg <- y_8$geometry
+  z <- st_intersects(polyg,points)
+  z_idex <- data.frame(z[1])
+  colnames(z_idex) <- "index"
+  df15<- merge(z_idex, df10, by= "index")
+  df16 <- subset(df10,!(df10$gpid%in%df15$gpid))
+  y = rbind(y_1, y_2, y_3, y_4, y_5,y_8)
+  return(y)
+}
+
+
+y3 <- poly_clust(time_15_og,time_15,4,2,1,6,5,3) 
+
+```
+
+
+```{r int-picture, fig.scap= "Example of finding intersections", fig.cap= "(a). Polygons of week 1 clusters (b). Polygons of week 2 clusters (c). Intersection polygons of the overlap of week 1 and week 2 polygons", message=FALSE, warning = FALSE}
+a1 <- ggplot() +
+  geom_sf(data = y1, aes(fill = Group.1), alpha = 0.3) + ggtitle ("(a). Week 1 Polygons")
+
+a2 <- ggplot() +
+  geom_sf(data = y2, aes(fill = Group.1), alpha = 0.3) + ggtitle ("(b). Week 2 Polygons")
+
+a3 <- int_plot(time_1_og,y1,y2)
+
+
+ggarrange(a1, a2, a3, ncol = 2, nrow = 2)
+```
+
+
+```{r get-int, message=FALSE, warning = FALSE}
+
+## Week 1
+m1 <- get_int(time_1_og,y1,y2)#2 Hidden
+m3 <- get_int2(time_1_og,y1,y2) #Poylgon Coordinates for Grid
+
+
+#Week 3
+m2 <- get_int(time_15_og,y2,y3) #4 Hidden
+m4 <- get_int2(time_15_og,y2,y3) #4 Hidden
+
+#Week 2 - Intersection of Week 1 and 3
+m5 <- get_int(time_8_og,y1,y3) 
+m6 <- get_int2(time_8_og,y1,y3)
+
+
+```
+
+
+```{r ex-result,  fig.cap= "Results of Clustering using Bounding Box Method for all the Data", cache=TRUE, message=FALSE, warning = FALSE}
+
+tmp_features<- tmp %>% 
+  tidyr::nest(data = -gpid) %>% 
+  mutate(summary = map(data, bbox_summary)) %>%
+  unnest(summary)
+#Standardize Variables
+data_scale = data.frame(scale(tmp_features[,3:13]))
+
+names(data_scale) <- c("x_s", "y_s", "xmin_s", "xmax_s", "ymin_s", "ymax_s", "xbox_s", "ybox_s", "dx_s", "dy_s", "angle_s")
+
+tmp_features_s= data.frame(tmp_features, data_scale)
+tmp_features_s = tmp_features_s[,-c(3:13)]
+
+km= kmeans(select(tmp_features_s, c(x_s,y_s,xbox_s:angle_s)), 5, nstart=25)
+cluster_K = as.factor(km$cluster)
+
+tmp_features_km = data.frame(tmp_features_s, cluster_K)
+
+anim_plot_data <- tmp %>%
+  left_join(select(tmp_features_km, gpid, clust = cluster_K)) %>%
+  mutate(imputed = F) %>%
+  complete(crossing(gpid, t), fill = list(imputed = T)) %>%
+  ungroup() %>%
+  arrange(gpid, t) %>%
+  group_by(gpid) %>%
+  fill(xmap, ymap, matches("clust"), .direction = "downup") %>%
+  arrange(gpid)
+
+anim_plot_data51 <- filter(anim_plot_data, t==72)
+
+anim_plot <- anim_plot_data51 %>%
+  ggplot(aes(x = xmap, y = ymap, frame = t, group = gpid, ids = gpid,
+             color = clust, fill = clust, shape = imputed)) + 
+  geom_point(size = 0.75) + 
+  scale_shape_manual("Imputed", values = c("FALSE" = 15, "TRUE" = 0)) + 
+  scale_color_viridis_d() + 
+  scale_fill_viridis_d() + ggtitle("Clustering using all data on last day")
+
+anim_plot
+```
+
+
+
+```{r all-week-comp, fig.cap = "Comparison of our method to results of a previous method, which find cracks using a kinematic algorithm", out.width="100%", fig.align = 'center'}
+
+knitr::include_graphics("images/all_weeks_comp_correct.png")
+
+```
+
+The simulation results showed some promise for our methods, so next the methods are applied on the ice motion dataset.
+
+
+## Clustering Using All Data
+
+First we used our spatio-temporal clustering method by creating bounding boxes around the full trajectory of each gpid. Once the bounding box features are created and standardized, the number of clusters were determined using the silhouette statistic. This silhouette statistic for the full trajectory data suggested five clusters to be appropriate. The results from the clustering algorithm are shown in \cref{fig:ex-result}. In \cref{fig:ex-result}, each of the colors represent one cluster; each of the squares represent a gpid. The locations of the gpids on this map are determined by its last observed location in the data set. We hypothesize that cracks in the sea ice will be found along the boundaries of the clusters as those gpids have different movements. In the middle of some of the clusters, there are some singular gpids whose cluster membership does not match its neighbors. These gpids in practicality will belong to the same clusters as its neighbors and a crack is not considered to have formed here. 
+
+To see how well our method is performing, we can compare it to other sea ice crack detection algorithms. One such method is by plotting the deformation data using a kinematic crack algorithm calculated using the RGPS data [@peterson_evaluating_2011]. \cref{fig:all-week-comp} gives a comparison of our bounding box clustering method and the kinematic crack algorithm using side-by-side graphs. It is important to note that this image does not represent the true ice cracks, just the cracks determined by this method. The larger cracks, which are represented by the yellow and dark blue lines are more certain. The graphs are aligned so that their axes match up for easier comparison. The lines given in the left figure are derived from the opening magnitude of the ice sheet. Most of the figure has a color around zero, denoting no opening, whereas potential large cracks are found with the dark blue or yellow. Many of our cluster boundaries match up with the cracks identified by the kinematic crack algorithm, though we are limited due to the number of clusters. For example, on the bottom left side of both plots, we see a line that goes down and to the right. At the bottom right of both plots, we see a line moving through the hole in the gpids. Additionally, towards the top of both figures, we see a curved boundary that starts at the top of the ice sheet and moves to the bottom left in a curved manner. 
+
+
+## Clusterings By Weeks
+
+Since trajectories can be long, it may also be useful to look at sub-trajectories, as we may lose information by clustering the whole trajectory, which may impact results. We split the data into three separate weeks. Through some testing of our methods, we found that by week was the smallest time period we could successfully cluster, as anything smaller led to large changes in the clusterings between each weeks (unstable). We would expect the weeks to have different clusterings, but would also expect there to be some continuity between them. The clusters by week can be found in \cref{fig:by-week-cluster-plot}, where can see some similarities in clusters over time. 
+
+With these weekly clusters we can also compare them similarly to \cref{fig:all-week-comp}, instead manipulating the days used to create the magnitudes by the proper weeks time frame. Additionally, we had a picture from Day 66 of our data set, which gives an image of recurring leads based on visible and infrared Advanced Very High Resolution Radiometer (AVHRR) data [@lead_pic_2009]. \cref{fig:week-comp}, includes grid lines to aid in comparison of the pictures, due to the aspect ratios not aligning perfectly. One major cracks stands out in both images. Our boundary between cluster 1 and 3 aligns until about (-1880,400), at this point our boundary curves in more steeply. Eventually, the upper section of the cluster boundary between clusters 5 and 6 continue the crack. Additionally, we can see some of the lighter cracks in our graph. For example, we can also see another curved boundary above the one just discussed, and can see one on the bottom left, similar to what was seen in \cref{fig:all-week-comp}.
+
+
+```{r by-week-cluster-plot, fig.cap= "Results of Clustering using Bounding Box Method by Week", cache=TRUE, message=FALSE, warning = FALSE}
+
+anim_plot1 <- anim_plot_data1 %>%
+  ggplot(aes(x = xmap, y = ymap, frame = t, group = gpid, ids = gpid,
+             color = clust, fill = clust)) + #, shape = imputed)) + 
+  geom_point() + 
+  #scale_shape_manual("Imputed", values = c("FALSE" = 15, "TRUE" = 0)) + 
+  scale_color_viridis_d() + 
+  scale_fill_viridis_d() + ggtitle("Week 1")
+
+
+anim_plot2 <- anim_plot_data2 %>%
+  ggplot(aes(x = xmap, y = ymap, frame = t, group = gpid, ids = gpid,
+             color = clust, fill = clust)) + #, shape = imputed)) + 
+  geom_point() + 
+ # scale_shape_manual("Imputed", values = c("FALSE" = 15, "TRUE" = 0)) + 
+  scale_color_viridis_d() + 
+  scale_fill_viridis_d() + ggtitle("Week 2")
+
+anim_plot3 <- anim_plot_data3 %>%
+  ggplot(aes(x = xmap, y = ymap, frame = t, group = gpid, ids = gpid,
+             color = clust, fill = clust)) + #, shape = imputed)) + 
+  geom_point() + 
+  #scale_shape_manual("Imputed", values = c("FALSE" = 15, "TRUE" = 0)) + 
+  scale_color_viridis_d() + 
+  scale_fill_viridis_d() + ggtitle("Week 3")
+
+
+ggarrange(anim_plot1, anim_plot2, anim_plot3, ncol = 2, nrow = 2)
+
+```
+
+
+```{r week-comp, fig.cap = "Comparison of our method to results of a previous method for Week 3", out.width="100%", fig.align = 'center'}
+
+knitr::include_graphics("images/week-comp.png")
+
+```
+
+## Univariate Interpolation
+
+```{r data-for-clust-plots, message=FALSE, warning = FALSE, cache=TRUE }
+apd1_nomiss <- filter(anim_plot_data1, imputed == FALSE)
+apd2_nomiss <- filter(anim_plot_data2, imputed == FALSE)
+apd3_nomiss <- filter(anim_plot_data3, imputed == FALSE)
+
+#Squiggly Plots Example
+
+apd1_nomiss_c1 <- filter(apd1_nomiss, clust == 1)
+apd2_nomiss_c1 <- filter(apd2_nomiss, clust == 1)
+
+tmp1 <-  apd1_nomiss_c1 %>% highlight_key(~gpid)
+ 
+p1 <- ggplot(tmp1, aes(x = xmap, y = ymap, group = gpid, 
+                 hoverinfo = NULL,
+                 color = factor(gpid %% 10))) + 
+  geom_path(arrow = arrow(length = unit(1, "mm")), alpha = .5) + 
+  scale_color_viridis_d() +
+  theme(legend.position="none") + ggtitle("a)")
+
+tmp2 <-  apd2_nomiss_c1 %>% highlight_key(~gpid)
+
+p2 <- ggplot(tmp2, aes(x = xmap, y = ymap, group = gpid, 
+                 hoverinfo = NULL,
+                 color = factor(gpid %% 10))) + 
+  geom_path(arrow = arrow(length = unit(1, "mm")), alpha = .5) + 
+  scale_color_viridis_d() +
+  theme(legend.position="none")+ ggtitle("b)")
+
+
+#Linear Plots Example
+
+apd3_nomiss_c3 <- filter(apd3_nomiss, clust == 3)
+apd1_nomiss_c4 <- filter(apd1_nomiss, clust == 4)
+
+tmp3 <-  apd3_nomiss_c3 %>% highlight_key(~gpid)
+
+p3 <- ggplot(tmp3, aes(x = xmap, y = ymap, group = gpid, 
+                 hoverinfo = NULL,
+                 color = factor(gpid %% 10))) + 
+  geom_path(arrow = arrow(length = unit(1, "mm")), alpha = .5) + 
+  scale_color_viridis_d() +
+  theme(legend.position="none")+ ggtitle("b)")
+
+tmp4 <-  apd1_nomiss_c4 %>% highlight_key(~gpid)
+
+p4 <- ggplot(tmp4, aes(x = xmap, y = ymap, group = gpid, 
+                 hoverinfo = NULL,
+                 color = factor(gpid %% 10))) + 
+  geom_path(arrow = arrow(length = unit(1, "mm")), alpha = .5) + 
+  scale_color_viridis_d() +
+  theme(legend.position="none")+ ggtitle("a)")
+
+
+```
+
+
+```{r int-best-plots, message=FALSE, warning = FALSE, cache=TRUE, fig.cap = "Trajectories for a) Week 1 Cluster 1 and b) Week 2 Cluster 2. These are instances where our method outperforms linear interpolation", fig.scap="Clusters for Intersection Model has lowest MSE"}
+
+ggarrange(p1, p2, ncol = 2)
+
+```
+
+
+```{r lin-best-plots, message=FALSE, warning = FALSE, cache=TRUE, fig.cap = "Trajectories for a) Week 1 Cluster 4 and b) Week 3 Cluster 3. These are instances linear interpolation outperforms our method", fig.scap="Clusters for Linear Interpolation has lowest MSE"}
+
+ggarrange(p4, p3, ncol = 2)
+
+```
+
+
+<!----------------- Intersection Method ----------------------->
+
+```{r int-functions}
+
+grid_tp <- function(frame, t, m){
+  time_og <- lonely(frame,t)
+  pts <- st_as_sf(time_og, coords = c("xmap", "ymap")) 
+  grid_50 <- st_make_grid(m, cellsize = c(10, 10)) %>% 
+    st_sf(grid_id = 1:length(.))
+  grid_lab <- st_centroid(grid_50) %>% cbind(st_coordinates(.))
+  pts_grd <- pts %>% st_join(grid_50, join = st_intersects) %>% as.data.frame
+  all_pts_grd <- left_join(pts_grd,grid_lab,by= "grid_id")
+  all_pts_grd2 <- all_pts_grd %>% distinct(gpid, .keep_all= TRUE)
+  return(all_pts_grd2)
+}
+
+known_data <- function(m, int, tp, grid, frame){ #Grid doesn't really matter as much (only when doing cross validation)
+  int1 <- filter(m, intersection == int)[,-c(2,3)]
+  int_t1 <- right_join(grid[,-5], int1, by = "gpid")
+  anim_t1 <- filter(frame, t == tp)
+  int_t1_2 <- inner_join(int_t1, anim_t1, by = "gpid")
+  final_int_t1 <- int_t1_2[,c(2,4,5,6,9,10, 13,14,17,18)]
+  t1_notimputed =  filter(final_int_t1, imputed == "FALSE")[,c(1,2,5,6,7,8,9)]
+  colnames(t1_notimputed) <- c("gpid", "gpid_id", "intersection", "obs_time", "xmap","ymap", "clust")
+  t1_notimputed <- t1_notimputed[complete.cases(t1_notimputed),]
+  return(t1_notimputed)
+}
+
+known_data_grid <- function(m, int, tp, grid, frame){ #Grid doesn't really matter as much (only when doing cross validation)
+  int1 <- filter(m, intersection == int)[,-c(2,3)]
+  int_t1 <- right_join(grid[,-5], int1, by = "gpid")
+  anim_t1 <- filter(frame, t == tp)
+  int_t1_2 <- inner_join(int_t1, anim_t1, by = "gpid")
+  final_int_t1 <- int_t1_2[,c(2,4,5,6,9,10, 13,14,17,18)]
+  t1_notimputed =  filter(final_int_t1, imputed == "FALSE")[,c(1,2,3,4,5,6,9)]
+  colnames(t1_notimputed) <- c("gpid", "gpid_id", "xmap","ymap", "intersection", "obs_time", "clust")
+  t1_notimputed <- t1_notimputed[complete.cases(t1_notimputed),]
+  return(t1_notimputed)
+}
+
+
+xmap_10CV <- function(m_new, m, int, tp, frame){
+  grid <- grid_tp(frame, tp , m)
+  obs1 <- known_data(m_new,int,tp-1,grid, frame)
+  obs2 <- known_data(m_new,int,tp,grid, frame)
+  obs3 <- known_data(m_new,int,tp+1,grid, frame)
+  obs4 <- known_data(m_new,int,tp+2,grid, frame)
+  set.seed(4)
+  rand_df <- obs2[sample(nrow(obs2), size=(round(0.9*nrow(obs2)))),]
+  if(nrow(obs3) ==0){obs <- rbind(obs1, rand_df, obs4)}else{obs <- rbind(obs1, rand_df, obs3)}
+  loc <- obs[,c("xmap","ymap", "obs_time")]
+  locs<-as.matrix(loc)
+  N <- nrow(locs)
+  ## convert them into matrix
+  X<- as.matrix( rep(1,nrow(locs)))
+  Y<- obs[,5]
+  fit <- fit_model(Y,locs, X, "exponential_spacetime", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,min(30,N-1)), silent = TRUE) #Silent option doesn't show the iterations. Maybe nice so get list of errors
+  predicted_locs <- known_data_grid(m_new,int,tp,grid, frame)
+  est_df <- subset(predicted_locs,!(predicted_locs$gpid%in%rand_df$gpid))
+  pred_loc <- as.matrix(est_df[ ,c("xmap","ymap", "obs_time")])
+  X_pred<- as.matrix( rep(1,nrow(pred_loc)))
+  ## for prediction
+  pred_grid<-predictions(fit,pred_loc, X_pred,covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+                         ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE)
+  preds <- data.frame(est_df$gpid,pred_grid)
+  return(preds)
+}
+
+ymap_10CV <- function(m_new, m, int, tp, frame){
+  grid <- grid_tp(frame, tp , m)
+  obs1 <- known_data(m_new,int,tp-1,grid, frame)
+  obs2 <- known_data(m_new,int,tp,grid, frame)
+  obs3 <- known_data(m_new,int,tp+1,grid, frame)
+  obs4 <- known_data(m_new,int,tp+2,grid, frame)
+  set.seed(4)
+  rand_df <- obs2[sample(nrow(obs2), size=(round(0.9*nrow(obs2)))),]
+  if(nrow(obs3) ==0){obs <- rbind(obs1, rand_df, obs4)}else{obs <- rbind(obs1, rand_df, obs3)}
+  loc <- obs[,c("xmap","ymap", "obs_time")]
+  locs<-as.matrix(loc)
+  N <- nrow(locs)
+  ## convert them into matrix
+  X<- as.matrix( rep(1,nrow(locs)))
+  Y<- obs[,6]
+  fit <- fit_model(Y,locs, X, "exponential_spacetime", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,min(30,N-1)), silent = TRUE) #Silent option doesn't show the iterations. Maybe nice so get list of errors
+  predicted_locs <- known_data_grid(m_new,int,tp,grid, frame)
+  est_df <- subset(predicted_locs,!(predicted_locs$gpid%in%rand_df$gpid))
+  pred_loc <- as.matrix(est_df[ ,c("xmap","ymap", "obs_time")])
+  X_pred<- as.matrix( rep(1,nrow(pred_loc)))
+  ## for prediction
+  pred_grid<-predictions(fit,pred_loc, X_pred,covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+                         ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE)
+  preds <- data.frame(est_df$gpid,pred_grid)
+  return(preds)
+}
+
+
+all_pred <- data.frame(NULL)
+pred_cv <- data.frame(NULL)
+
+#xmap
+all_cv_x <- function(int_df,int_list,df){
+  for (g in min(df$t):max(df$t)){
+    for (i in 1:max(int_df$intersection)){
+      tryCatch({
+        pred = xmap_10CV(int_df, int_list, i, g, df)
+        pred_df = data.frame(pred,i,g)
+        pred_cv = rbind.data.frame(pred_cv, pred_df)}, error=function(e){return(NA)})
+    }
+    all_pred <- rbind.data.frame(all_pred,pred_cv)
+  }
+  return(all_pred)
+}
+
+#ymap
+all_cv_y <- function(int_df,int_list,df){
+  for (g in min(df$t):max(df$t)){
+    for (i in 1:max(int_df$intersection)){
+      tryCatch({
+        pred = ymap_10CV(int_df, int_list, i, g, df)
+        pred_df = data.frame(pred,i,g)
+        pred_cv = rbind.data.frame(pred_cv, pred_df)}, error=function(e){return(NA)})
+    }
+    all_pred <- rbind.data.frame(all_pred,pred_cv)
+  }
+  return(all_pred)
+}
+
+
+##Get Interval
+
+xmap_10CV_pred <- function(m_new, m, int, tp, frame){
+  grid <- grid_tp(frame, tp , m)
+  obs1 <- known_data(m_new,int,tp-1,grid, frame)
+  obs2 <- known_data(m_new,int,tp,grid, frame)
+  obs3 <- known_data(m_new,int,tp+1,grid, frame)
+  obs4 <- known_data(m_new,int,tp+2,grid, frame)
+  set.seed(4)
+  rand_df <- obs2[sample(nrow(obs2), size=(round(0.9*nrow(obs2)))),]
+  if(nrow(obs3) ==0){obs <- rbind(obs1, rand_df, obs4)}else{obs <- rbind(obs1, rand_df, obs3)}
+  loc <- obs[,c("xmap","ymap", "obs_time")]
+  locs<-as.matrix(loc)
+  N <- nrow(locs)
+  ## convert them into matrix
+  X<- as.matrix( rep(1,nrow(locs)))
+  Y<- obs[,5]
+  fit <- fit_model(Y,locs, X, "exponential_spacetime", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,min(30,N-1)), silent = TRUE) #Silent option doesn't show the iterations. Maybe nice so get list of errors
+  predicted_locs <- known_data_grid(m_new,int,tp,grid, frame)
+  est_df <- subset(predicted_locs,!(predicted_locs$gpid%in%rand_df$gpid))
+  pred_loc <- as.matrix(est_df[ ,c("xmap","ymap", "obs_time")])
+  X_pred<- as.matrix( rep(1,nrow(pred_loc)))
+  ncondsim <- 30
+  sims <- cond_sim(fit = fit, locs_pred = pred_loc, X_pred = X_pred, covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+                   ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE, nsims = ncondsim)
+  ## for prediction
+  pred_grid<-predictions(fit,pred_loc, X_pred,covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+                         ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE)
+  preds <- data.frame(est_df$gpid,pred_grid)
+  b <- list(sims,preds)
+  return(b)
+}
+
+ymap_10CV_pred <- function(m_new, m, int, tp, frame){
+  grid <- grid_tp(frame, tp , m)
+  obs1 <- known_data(m_new,int,tp-1,grid, frame)
+  obs2 <- known_data(m_new,int,tp,grid, frame)
+  obs3 <- known_data(m_new,int,tp+1,grid, frame)
+  obs4 <- known_data(m_new,int,tp+2,grid, frame)
+  set.seed(4)
+  rand_df <- obs2[sample(nrow(obs2), size=(round(0.9*nrow(obs2)))),]
+  if(nrow(obs3) ==0){obs <- rbind(obs1, rand_df, obs4)}else{obs <- rbind(obs1, rand_df, obs3)}
+  loc <- obs[,c("xmap","ymap", "obs_time")]
+  locs<-as.matrix(loc)
+  N <- nrow(locs)
+  ## convert them into matrix
+  X<- as.matrix( rep(1,nrow(locs)))
+  Y<- obs[,6]
+  fit <- fit_model(Y,locs, X, "exponential_spacetime", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,min(30,N-1)), silent = TRUE) #Silent option doesn't show the iterations. Maybe nice so get list of errors
+  predicted_locs <- known_data_grid(m_new,int,tp,grid, frame)
+  est_df <- subset(predicted_locs,!(predicted_locs$gpid%in%rand_df$gpid))
+  pred_loc <- as.matrix(est_df[ ,c("xmap","ymap", "obs_time")])
+  X_pred<- as.matrix( rep(1,nrow(pred_loc)))
+  ncondsim <- 30
+  sims <- cond_sim(fit = fit, locs_pred = pred_loc, X_pred = X_pred, covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+                   ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE, nsims = ncondsim)
+  ## for prediction
+  pred_grid<-predictions(fit,pred_loc, X_pred,covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+                         ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE)
+  preds <- data.frame(est_df$gpid,pred_grid)
+  b <- list(sims,preds)
+  return(b)
+}
+
+sd_pred <- function(sim, pred_df){
+v <- NULL
+sum_squares <- rep(0,nrow(sim))
+for(j in 1:30){
+  v <- sim[,j] #fill in Known with estimated
+  sum_squares <- sum_squares + (pred_df$pred_grid - v)^2
+}
+pred_rmse <- sqrt(1/30*sum_squares)
+pred_df$sd <- pred_rmse
+pred_df$lc <- pred_df$pred_grid - pred_rmse
+pred_df$uc <- pred_df$pred_grid + pred_rmse
+return(pred_df)
+}
+
+
+all_cv_x_pred <- function(int_df,int_list,df){
+   for (p in min(df$t):max(df$t)){
+     for (q in 1:max(int_df$intersection)){
+      tryCatch({
+        pred = xmap_10CV_pred(int_df, int_list, q, p, df)
+        sd_df <- sd_pred(pred[[1]],pred[[2]])
+        df_p = data.frame(sd_df, q, p)
+        pred_cv = rbind.data.frame(pred_cv, df_p)}, error=function(e){return(NA)})
+    }
+    #all_pred <- rbind.data.frame(all_pred,pred_cv)
+  }
+  all_pred <- rbind.data.frame(all_pred,pred_cv)
+  return(all_pred)
+}
+
+all_cv_y_pred <- function(int_df,int_list,df){
+   for (p in min(df$t):max(df$t)){
+     for (q in 1:max(int_df$intersection)){
+      tryCatch({
+        pred = ymap_10CV_pred(int_df, int_list, q, p, df)
+        sd_df <- sd_pred(pred[[1]],pred[[2]])
+        df_p = data.frame(sd_df, q, p)
+        pred_cv = rbind.data.frame(pred_cv, df_p)}, error=function(e){return(NA)})
+    }
+    #all_pred <- rbind.data.frame(all_pred,pred_cv)
+  }
+  all_pred <- rbind.data.frame(all_pred,pred_cv)
+  return(all_pred)
+}
+
+
+```
+
+```{r week1-x-cv, cache=TRUE, message=FALSE, warning = FALSE}
+
+w1_xcv <- all_cv_x_pred(m1,m3,anim_plot_data1)
+```
+
+```{r week2-x-cv, cache=TRUE, message=FALSE, warning = FALSE}
+w2_xcv <- all_cv_x_pred(m5,m6,anim_plot_data2)
+```
+
+```{r week3-x-cv, cache=TRUE, message=FALSE, warning = FALSE}
+w3_xcv <- all_cv_x_pred(m2,m4,anim_plot_data3)
+```
+
+```{r week1-y-cv, cache=TRUE, message=FALSE, warning = FALSE}
+w1_ycv <- all_cv_y_pred(m1,m3,anim_plot_data1) #for some reason has less y values (weird)
+```
+
+```{r week2-y-cv, cache=TRUE, message=FALSE, warning = FALSE}
+w2_ycv <- all_cv_y_pred(m5,m6,anim_plot_data2)
+```
+
+```{r week3-y-cv, cache=TRUE, message=FALSE, warning = FALSE}
+w3_ycv <- all_cv_y_pred(m2,m4,anim_plot_data3)
+```
+
+
+```{r cv-error-functions}
+
+cv_error_x <- function(m_df,frame, pred_df){
+  int1 <- m_df[,-c(2:4)]
+  int_t1_2 <- right_join(int1, frame, by = "gpid")
+  final <- filter(int_t1_2, imputed =="FALSE")[,c(1,2,3,5,6,7)]
+  colnames(pred_df) <- c("gpid", "pred", "intersection", "t")
+  pred_df$pred <- round(pred_df$pred, 3)
+  all_data <- left_join(pred_df,final, by = c("gpid", "t", "intersection"))
+  all_data_distinct <- distinct(all_data)
+  error <- sum((all_data_distinct$pred-all_data_distinct$xmap)^2)/nrow(all_data_distinct)
+  return(error)
+}
+
+cv_error_y <- function(m_df,frame, pred_df){
+  int1 <- m_df[,-c(2:4)]
+  int_t1_2 <- right_join(int1, frame, by = "gpid")
+  final <- filter(int_t1_2, imputed == "FALSE")[,c(1,2,3,5,6,7)]
+  colnames(pred_df) <- c("gpid", "pred", "intersection", "t")
+  pred_df$pred <- round(pred_df$pred, 3)
+  all_data <- left_join(pred_df,final, by = c("gpid", "t", "intersection"))
+  all_data_distinct <- distinct(all_data)
+  error <- sum((all_data_distinct$pred-all_data_distinct$ymap)^2)/nrow(all_data_distinct)
+  return(error)
+}
+
+
+
+#Gives Dataframe with actual and predicted
+cv_df <- function(m_df,frame, pred_df){
+  int1 <- m_df[,-c(2:4)]
+  int_t1_2 <- right_join(int1, frame, by = "gpid")
+  final <- filter(int_t1_2, imputed == "FALSE")[,c(1,2,3,5,6,7,10)]
+  colnames(pred_df) <- c("gpid", "pred", "intersection", "t")
+  pred_df$pred <- round(pred_df$pred, 3)
+  all_data <- left_join(pred_df,final, by = c("gpid", "t", "intersection"))
+  all_data_distinct <- distinct(all_data)
+  #error <- sum((all_data_distinct$pred-all_data_distinct$xmap)^2)/nrow(all_data_distinct)
+  return(all_data_distinct)
+}
+
+cv_error_x_p <- function(m_df,frame, pred_df){
+  int1 <- m_df[,-c(2:4)]
+  int_t1_2 <- right_join(int1, frame, by = "gpid")
+  final <- filter(int_t1_2, imputed =="FALSE")[,c(1,2,3,5,6,7)]
+  colnames(pred_df) <- c("gpid", "pred", "sd", "low", "up", "intersection", "t")
+  pred_df$pred <- round(pred_df$pred, 3)
+  all_data <- left_join(pred_df,final, by = c("gpid", "t", "intersection"))
+  all_data_distinct <- distinct(all_data)
+  error <- sum((all_data_distinct$pred-all_data_distinct$xmap)^2)/nrow(all_data_distinct)
+  return(error)
+}
+
+cv_error_y_p <- function(m_df,frame, pred_df){
+  int1 <- m_df[,-c(2:4)]
+  int_t1_2 <- right_join(int1, frame, by = "gpid")
+  final <- filter(int_t1_2, imputed =="FALSE")[,c(1,2,3,5,6,7)]
+  colnames(pred_df) <- c("gpid", "pred", "sd", "low", "up", "intersection", "t")
+  pred_df$pred <- round(pred_df$pred, 3)
+  all_data <- left_join(pred_df,final, by = c("gpid", "t", "intersection"))
+  all_data_distinct <- distinct(all_data)
+  error <- sum((all_data_distinct$pred-all_data_distinct$ymap)^2)/nrow(all_data_distinct)
+  return(error)
+}
+
+cv_df_p <- function(m_df,frame, pred_df){
+  int1 <- m_df[,-c(2:4)]
+  int_t1_2 <- right_join(int1, frame, by = "gpid")
+  final <- filter(int_t1_2, imputed == "FALSE")[,c(1,2,3,5,6,7,10)]
+  colnames(pred_df) <- c("gpid", "pred", "sd", "low", "up", "intersection", "t")
+  pred_df$pred <- round(pred_df$pred, 3)
+  all_data <- left_join(pred_df,final, by = c("gpid", "t", "intersection"))
+  all_data_distinct <- distinct(all_data)
+  #error <- sum((all_data_distinct$pred-all_data_distinct$xmap)^2)/nrow(all_data_distinct)
+  return(all_data_distinct)
+}
+
+
+```
+
+
+
+
+
+```{r actual-int-error, message=FALSE, warning = FALSE}
+
+e_w1_x <- cv_error_x_p(m1, anim_plot_data1, w1_xcv) #99.56
+e_w2_x <- cv_error_x_p(m5, anim_plot_data2, w2_xcv) #27.43
+e_w3_x <- cv_error_x_p(m2, anim_plot_data3, w3_xcv) #65.61
+
+e_w1_y <- cv_error_y_p(m1, anim_plot_data1, w1_ycv) #115.96
+e_w2_y <- cv_error_y_p(m5, anim_plot_data2, w2_ycv) #68.64
+e_w3_y <- cv_error_y_p(m2, anim_plot_data3, w3_ycv) #97.1
+```
+
+<!----------------- Linear Interpolation ----------------------->
+
+```{r linear-int-actual-bigdf, message=FALSE, warning = FALSE}
+
+## Linear Interpolation
+
+anim_plot_data <- tmp %>%
+  mutate(imputed = F) %>%
+  complete(crossing(gpid, t), fill = list(imputed = T)) %>%
+  ungroup() %>%
+  arrange(gpid, t) %>%
+  group_by(gpid) %>%
+  arrange(gpid)
+
+anim_plot_data$missing <- "no"
+anim_plot_data$missing[is.na(anim_plot_data$xmap)] <- "yes"
+
+```
+
+
+```{r combine-df, message=FALSE, warning = FALSE, cache=TRUE}
+
+
+#### Trying to get a sense of where large differences come from
+e_w1_df_x <- cv_df_p(m1, anim_plot_data1,w1_xcv) 
+e_w1_df_xdiff <- data.frame(e_w1_df_x, diffx = e_w1_df_x$xmap-e_w1_df_x$pred)
+e_w2_df_x <- cv_df_p(m5, anim_plot_data2,w2_xcv) 
+e_w2_df_xdiff <- data.frame(e_w2_df_x, diffx = e_w2_df_x$xmap-e_w2_df_x$pred)
+e_w3_df_x <- cv_df_p(m2, anim_plot_data3,w3_xcv)
+e_w3_df_xdiff <- data.frame(e_w3_df_x, diffx = e_w3_df_x$xmap-e_w3_df_x$pred)
+
+e_w1_df_y <- cv_df_p(m1, anim_plot_data1,w1_ycv) 
+e_w1_df_ydiff <- data.frame(e_w1_df_y, diffy = e_w1_df_y$ymap-e_w1_df_y$pred)
+e_w2_df_y <- cv_df_p(m5, anim_plot_data2,w2_ycv)
+e_w2_df_ydiff <- data.frame(e_w2_df_y, diffy = e_w2_df_y$ymap-e_w2_df_y$pred)
+e_w3_df_y <- cv_df_p(m2, anim_plot_data3,w3_ycv)
+e_w3_df_ydiff <- data.frame(e_w3_df_y, diffy = e_w3_df_y$ymap-e_w3_df_y$pred)
+
+#Need to think this through a bit
+e_w1_df =  inner_join(e_w1_df_xdiff, e_w1_df_ydiff, by= c("gpid", "t"))[c(1:11,13:16)]
+e_w2_df =  inner_join(e_w2_df_xdiff, e_w2_df_ydiff, by= c("gpid", "t"))[c(1:11,13:16)]
+e_w3_df =  inner_join(e_w3_df_xdiff, e_w3_df_ydiff, by= c("gpid", "t"))[c(1:11,13:16)]
+```
+
+
+
+
+```{r linear-int-actual-w1, message=FALSE, warning = FALSE, cache=TRUE}
+
+anim_plot <- filter(anim_plot_data, t < 58)
+
+#combine cv_data sets to get actual data
+cv_data <- e_w1_df[c(1,7,9,10,11)]
+colnames(cv_data) <- c("gpid", "t","xmap2", "ymap2", "cluster")
+
+## need to get linear interpolations on cross validated data
+join1 <- full_join(cv_data, anim_plot, by = c("gpid", "t")) #df with og data and cv data set
+join_nocv <- filter(join1, is.na(xmap2)) #data not used in cv
+join_cv <- filter(join1, !is.na(xmap2)) #data used in cv
+
+join_cv$xmap<- NA #want data used in cv to be miss
+join_cv$ymap<- NA
+
+back_toget <- rbind(join_nocv, join_cv) #bring them back together so now have missing cv data in the dataset
+
+#but in order
+back_toget <- back_toget %>%
+  arrange(gpid, t)
+
+
+back_toget <- back_toget[-c(3,4,6,7,10,11)] #remove unnecessary columns
+
+#second missing variable to help denote if cv data or not
+back_toget$missing2 <- "no"
+back_toget$missing2[is.na(back_toget$xmap)] <- "yes"
+
+#linear interpolation
+lin <- back_toget %>% group_by(gpid) %>%
+  mutate(xmap =na.approx(xmap, na.rm = FALSE)) %>%
+  mutate(ymap =na.approx(ymap, na.rm = FALSE))
+
+#get data used in cv (not origingally missing, but missing now)
+miss <- filter(lin, missing == "no" & missing2 == "yes")
+colnames(miss) <- c("gpid", "t", "cluster" , "xmap_pred", "ymap_pred","imputed","missing", "missing2")
+miss_join <- left_join(cv_data, miss[,-3], by = c("gpid", "t"))#combine with actual values dataset
+
+miss_na <- filter(miss_join, !is.na(xmap_pred))#remove NAs if first day of week
+miss_na <- miss_na %>% arrange(gpid,t)
+miss_na1 <- miss_na %>% distinct(gpid,t, .keep_all= TRUE) #Remove duplicated data
+
+#MSE
+error_x_lin_actual_w1 <- sum((miss_na1$xmap2-miss_na1$xmap_pred)^2)/nrow(miss_na1) #4.735
+error_y_lin_actual_w1 <- sum((miss_na1$ymap2-miss_na1$ymap_pred)^2)/nrow(miss_na1) #8.91
+
+```
+
+
+```{r linear-int-actual-w2, message=FALSE, warning = FALSE, cache=TRUE}
+# 
+anim_plot <- filter(anim_plot_data, t > 57 & t < 65)
+
+#combine cv_data sets to get actual data
+cv_data <- e_w2_df[c(1,7,9,10,11)]
+colnames(cv_data) <- c("gpid", "t","xmap2", "ymap2", "cluster")
+
+## need to get linear interpolations on cross validated data
+join1 <- full_join(cv_data, anim_plot, by = c("gpid", "t")) #df with og data and cv data set
+join_nocv <- filter(join1, is.na(xmap2)) #data not used in cv
+join_cv <- filter(join1, !is.na(xmap2)) #data used in cv
+
+join_cv$xmap<- NA #want data used in cv to be miss
+join_cv$ymap<- NA
+
+back_toget <- rbind(join_nocv, join_cv) #bring them back together so now have missing cv data in the dataset
+
+#but in order
+back_toget <- back_toget %>%
+  arrange(gpid, t)
+
+back_toget <- back_toget[-c(3,4,6,7,10,11)] #remove unnecessary columns
+
+#second missing variable to help denote if cv data or not
+back_toget$missing2 <- "no"
+back_toget$missing2[is.na(back_toget$xmap)] <- "yes"
+
+#linear interpolation
+lin <- back_toget %>% group_by(gpid) %>%
+  mutate(xmap =na.approx(xmap, na.rm = FALSE)) %>%
+  mutate(ymap =na.approx(ymap, na.rm = FALSE))
+
+#get data used in cv (not origingally missing, but missing now)
+miss <- filter(lin, missing == "no" & missing2 == "yes")
+colnames(miss) <- c("gpid", "t", "cluster" , "xmap_pred", "ymap_pred","imputed","missing", "missing2")
+miss_join <- left_join(cv_data, miss[,-3], by = c("gpid", "t")) #combine with actual values dataset
+
+miss_na <- filter(miss_join, !is.na(xmap_pred)) #remove NAs if first day of week
+miss_na <- miss_na %>% arrange(gpid,t)
+miss_na2 <- miss_na %>% distinct(gpid,t, .keep_all= TRUE) #Remove duplicated data
+
+#MSE
+error_x_lin_actual_w2 <- sum((miss_na2$xmap2-miss_na2$xmap_pred)^2)/nrow(miss_na2) #4.735
+error_y_lin_actual_w2 <- sum((miss_na2$ymap2-miss_na2$ymap_pred)^2)/nrow(miss_na2) #8.91
+
+
+```
+
+```{r linear-int-actual-w3, message=FALSE, warning = FALSE, cache=TRUE}
+
+anim_plot <- filter(anim_plot_data, t > 64 & t < 73)
+
+#combine cv_data sets to get actual data
+cv_data <- e_w3_df[c(1,7,9,10,11)]
+colnames(cv_data) <- c("gpid", "t","xmap2", "ymap2", "cluster")
+
+## need to get linear interpolations on cross validated data
+join1 <- full_join(cv_data, anim_plot, by = c("gpid", "t")) #df with og data and cv data set
+join_nocv <- filter(join1, is.na(xmap2)) #data not used in cv
+join_cv <- filter(join1, !is.na(xmap2)) #data used in cv
+
+join_cv$xmap<- NA #want data used in cv to be miss
+join_cv$ymap<- NA
+
+back_toget <- rbind(join_nocv, join_cv) #bring them back together so now have missing cv data in the dataset
+
+#but in order
+back_toget <- back_toget %>%
+  arrange(gpid, t)
+
+back_toget <- back_toget[-c(3,4,6,7,10,11)] #remove unnecessary columns
+
+#second missing variable to help denote if cv data or not
+back_toget$missing2 <- "no"
+back_toget$missing2[is.na(back_toget$xmap)] <- "yes"
+
+#linear interpolation
+lin <- back_toget %>% group_by(gpid) %>%
+  mutate(xmap =na.approx(xmap, na.rm = FALSE)) %>%
+  mutate(ymap =na.approx(ymap, na.rm = FALSE))
+
+#get data used in cv (not origingally missing, but missing now)
+miss <- filter(lin, missing == "no" & missing2 == "yes")
+colnames(miss) <- c("gpid", "t", "cluster" , "xmap_pred", "ymap_pred","imputed","missing", "missing2")
+miss_join <- left_join(cv_data, miss[,-3], by = c("gpid", "t")) #combine with actual values dataset
+
+miss_na <- filter(miss_join, !is.na(xmap_pred)) #remove NAs if first day of week
+miss_na <- miss_na %>% arrange(gpid,t)
+miss_na3 <- miss_na %>% distinct(gpid,t, .keep_all= TRUE) #Remove duplicated data
+
+#MSE
+error_x_lin_actual_w3 <- sum((miss_na3$xmap2-miss_na3$xmap_pred)^2)/nrow(miss_na3) #4.735
+error_y_lin_actual_w3 <- sum((miss_na3$ymap2-miss_na3$ymap_pred)^2)/nrow(miss_na3) #8.91
+# 
+
+```
+
+<!----------------- No Intersection Model ----------------------->
+
+```{r no-int-actual-functions}
+
+polyg_noint <- function(df, tp){
+  feat_t1 <- filter(df, t == tp)
+  feat_t1_og <- rownames_to_column(feat_t1, "index")
+  points <- st_as_sf(feat_t1, coords = c("xmap", "ymap"))
+  coord <- feat_t1_og[,c(6,7)]
+  ConvexHull = chull(coord)
+  coord_1 <- data.frame(coord[ConvexHull,],1)
+  my.sf.point <- st_as_sf(x = coord_1, 
+                          coords = c("xmap", "ymap"))
+  polys = st_sf(
+    aggregate(
+      my.sf.point$geometry,
+      list(my.sf.point$X1),
+      function(g){
+        st_cast(st_combine(g),"POLYGON")
+      }
+    ))
+  #Should be final data frame needed
+  op <- st_cast(polys, "MULTIPOLYGON")
+  poly <- op$geometry #(p)- polygon of the whole dataset
+  return(poly)
+}
+
+grid_tp <- function(frame, t, m){
+  time_og <- lonely(frame,t)
+  pts <- st_as_sf(time_og, coords = c("xmap", "ymap")) 
+  grid_50 <- st_make_grid(m, cellsize = c(10, 10)) %>% 
+    st_sf(grid_id = 1:length(.))
+  grid_lab <- st_centroid(grid_50) %>% cbind(st_coordinates(.))
+  pts_grd <- pts %>% st_join(grid_50, join = st_intersects) %>% as.data.frame
+  all_pts_grd <- left_join(pts_grd,grid_lab,by= "grid_id")
+  all_pts_grd2 <- all_pts_grd %>% distinct(gpid, .keep_all= TRUE)
+  return(all_pts_grd2)
+}
+
+
+#Get Known Data
+
+known_all <- function(frame, tp, grid){
+  anim_t1 <- filter(frame, t == tp)
+  int_t1 <- inner_join(grid, anim_t1, by = "gpid")
+  final_int_t1 <- int_t1[,c(2,3,6,7,9,12,13,17)]
+  t_known <- filter(final_int_t1, imputed == FALSE)[,-c(3,4,8)]
+  colnames(t_known) <- c("gpid", "cluster", "obs_time", "xmap", "ymap")
+  t_known <- t_known[complete.cases(t_known),]
+  return(t_known)
+}
+
+#Get Unknown Grid Data
+#Get Known Data
+known_all_grid <- function(frame, tp, grid){
+  anim_t1 <- filter(frame, t == tp)
+  int_t1 <- inner_join(grid, anim_t1, by = "gpid")
+  final_int_t1 <- int_t1[,c(2,3,6,7,9,12,13,17)]
+  t_unknown <- filter(final_int_t1, imputed == FALSE)[,-c(6,7,8)]
+  colnames(t_unknown) <- c("gpid", "cluster", "xmap", "ymap", "obs_time" )
+  t_unknown <- t_unknown[complete.cases(t_unknown),]
+  return(t_unknown)
+}
+
+
+xmap_10CV_all <- function(tp, frame){
+  p <- polyg_noint(frame, tp)
+  grid <- grid_tp(frame, tp , p)
+  obs1 <- known_all(frame, tp-1, grid)
+  obs2 <- known_all(frame, tp, grid)
+  obs3 <- known_all(frame, tp+1, grid)
+  obs4 <- known_all(frame, tp+2, grid)
+  set.seed(4)
+  rand_df <- obs2[sample(nrow(obs2), size=(round(0.9*nrow(obs2)))),]
+  if(nrow(obs3) ==0){obs <- rbind(obs1, rand_df, obs4)}else{obs <- rbind(obs1, rand_df, obs3)}
+  loc <- obs[,c("xmap","ymap", "obs_time")]
+  locs<-as.matrix(loc)
+  N <- nrow(locs)
+  ## convert them into matrix
+  X<- as.matrix( rep(1,nrow(locs)))
+  Y<- obs[,4]
+  fit <- fit_model(Y,locs, X, "exponential_spacetime", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,min(N-1,30)), silent = TRUE) #Silent option doesn't show the iterations. Maybe nice so get list of errors
+  predicted_locs <- known_all_grid(frame, tp, grid)
+  est_df <- subset(predicted_locs,!predicted_locs$gpid%in%rand_df$gpid)
+  pred_loc <- as.matrix(est_df[ ,c("xmap","ymap", "obs_time")])
+  X_pred<- as.matrix( rep(1,nrow(pred_loc)))
+  ## for prediction
+  pred_grid<-predictions(fit,pred_loc, X_pred,covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+                         ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE)
+  preds <- data.frame(est_df$gpid,pred_grid)
+  return(preds)
+}
+
+ymap_10CV_all <- function(tp, frame){
+   p <- polyg_noint(frame, tp)
+  grid <- grid_tp(frame, tp , p)
+  obs1 <- known_all(frame, tp-1, grid)
+  obs2 <- known_all(frame, tp, grid)
+  obs3 <- known_all(frame, tp+1, grid)
+  obs4 <- known_all(frame, tp+2, grid)
+  set.seed(4)
+  rand_df <- obs2[sample(nrow(obs2), size=(round(0.9*nrow(obs2)))),]
+  if(nrow(obs3) ==0){obs <- rbind(obs1, rand_df, obs4)}else{obs <- rbind(obs1, rand_df, obs3)}
+  loc <- obs[,c("xmap","ymap", "obs_time")]
+  locs<-as.matrix(loc)
+  N <- nrow(locs)
+  ## convert them into matrix
+  X<- as.matrix( rep(1,nrow(locs)))
+  Y<- obs[,5]
+  fit <- fit_model(Y,locs, X, "exponential_spacetime", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,min(N-1,30)), silent = TRUE) #Silent option doesn't show the iterations. Maybe nice so get list of errors
+  predicted_locs <- known_all_grid(frame, tp, grid)
+  est_df <- subset(predicted_locs,!predicted_locs$gpid%in%rand_df$gpid)
+  pred_loc <- as.matrix(est_df[ ,c("xmap","ymap", "obs_time")])
+  X_pred<- as.matrix( rep(1,nrow(pred_loc)))
+  ## for prediction
+  pred_grid<-predictions(fit,pred_loc, X_pred,covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+                         ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE)
+  preds <- data.frame(est_df$gpid,pred_grid)
+  return(preds)
+}
+
+
+all_pred_noi <- data.frame(NULL)
+pred_cv_noi <- data.frame(NULL)
+
+
+#xmap
+all_cv_x_noint <- function(df){
+  for (g in min(df$t):max(df$t)){
+  #for (g in 51:52){
+      tryCatch({
+        pred = xmap_10CV_all(g, df)
+        pred_df = data.frame(pred,g)
+        pred_cv_noi = rbind.data.frame(pred_cv_noi, pred_df)}, error=function(e){return(NA)})
+  }
+  return(pred_cv_noi)
+}
+
+#ymap
+all_cv_y_noint <- function(df){
+  for (g in min(df$t):max(df$t)){
+    tryCatch({
+      pred = ymap_10CV_all(g, df)
+      pred_df = data.frame(pred,g)
+      pred_cv_noi = rbind.data.frame(pred_cv_noi, pred_df)}, error=function(e){return(NA)})
+  }
+  return(pred_cv_noi)
+}
+
+## Get Error
+cv_error_x_noi <- function(frame, pred_df){
+  final <- filter(frame, imputed =="FALSE")[,c(1,2,5,6,9)]
+  colnames(pred_df) <- c("gpid", "pred", "t")
+  pred_df$pred <- round(pred_df$pred, 3)
+  all_data <- left_join(pred_df,final, by = c("gpid", "t"))
+  all_data_distinct <- distinct(all_data)
+  error <- sum((all_data_distinct$pred-all_data_distinct$xmap)^2)/nrow(all_data_distinct)
+  return(error)
+}
+
+cv_error_y_noi <- function(frame, pred_df){
+  final <- filter(frame, imputed =="FALSE")[,c(1,2,5,6,9)]
+  colnames(pred_df) <- c("gpid", "pred", "t")
+  pred_df$pred <- round(pred_df$pred, 3)
+  all_data <- left_join(pred_df,final, by = c("gpid", "t"))
+  all_data_distinct <- distinct(all_data)
+  error <- sum((all_data_distinct$pred-all_data_distinct$ymap)^2)/nrow(all_data_distinct)
+  return(error)
+}
+
+#Gives Dataframe with actual and predicted
+cv_df_noi <- function(frame, pred_df){
+  final <- filter(frame, imputed =="FALSE")[,c(1,2,5,6,9)]
+  colnames(pred_df) <- c("gpid", "pred", "t")
+  pred_df$pred <- round(pred_df$pred, 3)
+  all_data <- left_join(pred_df,final, by = c("gpid", "t"))
+  all_data_distinct <- distinct(all_data)
+  return(all_data_distinct)
+}
+
+```
+
+
+```{r week1-x-cv-noint, cache=TRUE, message=FALSE, warning = FALSE}
+
+h1_x <- all_cv_x_noint(anim_plot_data1)
+
+```
+
+
+```{r week2-x-cv-noint, cache=TRUE, message=FALSE, warning = FALSE}
+
+h2_x <- all_cv_x_noint(anim_plot_data2)
+
+```
+
+```{r week3-x-cv-noint, cache=TRUE, message=FALSE, warning = FALSE}
+
+h3_x <- all_cv_x_noint(anim_plot_data3)
+
+```
+
+```{r w1-y-cv-noint, message=FALSE, warning = FALSE, cache=TRUE}
+
+h1y <-all_cv_y_noint(anim_plot_data1)
+
+
+```
+
+
+```{r w2-y-cv-noint, message=FALSE, warning = FALSE ,cache=TRUE}
+
+
+h2y <-all_cv_y_noint(anim_plot_data2)
+
+
+```
+
+
+```{r w3-y-cv-noint, message=FALSE, warning = FALSE, cache=TRUE}
+
+h3y <-all_cv_y_noint(anim_plot_data3)
+
+
+```
+
+
+
+```{r no-int-error-actual, cache=TRUE, message=FALSE, warning = FALSE}
+w1x <- cv_error_x_noi(anim_plot_data1,h1_x) #9.567 - 3.093
+w2x <- cv_error_x_noi(anim_plot_data2,h2_x) #10.227 - 3.198
+w3x <- cv_error_x_noi(anim_plot_data3,h3_x) #10.178 - 3.1903
+w1y <- cv_error_y_noi(anim_plot_data1,h1y) #9.409 - 3.067
+w2y <- cv_error_y_noi(anim_plot_data2,h2y) #9.928 - 3.151
+w3y <- cv_error_y_noi(anim_plot_data3,h3y) # 9.924 - 3.150238
+
+```
+
+
+
+```{r results-table2, message=FALSE, warning = FALSE}
+
+result_data2 <- data.frame(X1 = c(sqrt(e_w1_x), sqrt(e_w2_x), sqrt(e_w3_x)), Y1 = c(sqrt(e_w1_y), sqrt(e_w2_y), sqrt(e_w3_y)), X2 = c(sqrt(error_x_lin_actual_w1), sqrt(error_x_lin_actual_w2), sqrt(error_x_lin_actual_w3)), Y2 = c(sqrt(error_y_lin_actual_w1), sqrt(error_y_lin_actual_w2), sqrt(error_y_lin_actual_w3)), X3 = c(sqrt(w1x), sqrt(w2x), sqrt(w3x)), Y3 = c(sqrt(w1y), sqrt(w2y), sqrt(w3y)))
+#
+kableExtra::kable(result_data2, booktabs = TRUE, caption = "RMSE for Interpolation Methods",  col.names = c("$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{noint}$", "$Y_{noint}$"), escape = FALSE) %>% pack_rows(
+  index = (c("Week 1" = 1, "Week 2" = 1, "Week 3" = 1))
+) %>%
+  add_header_above(c("Intersection" = 2, "Linear" = 2, "No Intersection" = 2))
+
+
+```
+
+Next, we tested our spatio-temporal interpolation method on the ice movement dataset in order to see how it performs on real data. We did not predict on the already missing data in the dataset for validation purposes. For cross validation, we can create a model for an intersection and time. In a the intersection and time combination, 10% of the known data were removed from the dataset. Next, we found all of the observed data in that intersection for t-1, t, and t+1 in order to obtain the spatio-temporal neighbors. Then, using the observed data, the model was fit and used to estimate the missing data points. This was then done for all intersection and time combinations for the three weeks. The total RMSE for each week can be found in \cref{tab:results-table2}. Additionally, linear interpolation and the model with no intersection was performed on the same missing data for comparison, like what was done for the simulated data. However, since linear interpolation is unable to estimate data without a point before or after (essentially the beginning or end of the week), it is not exactly a one-to-one comparison. Also, for the no intersection model, models were able to be created for each day for Week 2 and Week 3, but were only able to create a model for one day in Week 1 due to the log-likelihood failing to converge. So, the Week 1 RMSE value for this week is not useful for comparison. In \cref{tab:results-table2}, for the most part, linear interpolation looks to outperform the other methods, except for Y-values in Week 1. 
+
+```{r cp_w1, message=FALSE, warning = FALSE, cache=TRUE}
+sd_mean_w1x <- mean(e_w1_df_x$sd)
+sd_mean_w1y <- mean(e_w1_df_y$sd)
+
+e_w1_df_x$low2 <- e_w1_df_x$pred - (2*e_w1_df_x$sd)
+e_w1_df_x$up2 <- e_w1_df_x$pred + (2*e_w1_df_x$sd)
+
+e_w1_df_y$low2 <- e_w1_df_y$pred - (2*e_w1_df_y$sd)
+e_w1_df_y$up2 <- e_w1_df_y$pred + (2*e_w1_df_y$sd)
+
+e_w1_df_x$inint2 <- 0
+e_w1_df_x$inint2[e_w1_df_x$low2 < e_w1_df_x$xmap & e_w1_df_x$xmap < e_w1_df_x$up2] <- 1
+
+e_w1_df_y$inint2 <- 0
+e_w1_df_y$inint2[e_w1_df_y$low2 < e_w1_df_y$ymap & e_w1_df_y$ymap < e_w1_df_y$up2] <- 1
+
+w1_cp_x2 <- sum(e_w1_df_x$inint2)/nrow(e_w1_df_x) #coverage probability - 0.32
+w1_cp_y2 <- sum(e_w1_df_y$inint2)/nrow(e_w1_df_y) #coverage probability - 0.344
+
+
+```
+
+
+```{r cp_w2, message=FALSE, warning = FALSE, cache=TRUE}
+
+sd_mean_w2x <- mean(e_w2_df_x$sd)
+sd_mean_w2y <- mean(e_w2_df_y$sd)
+
+e_w2_df_x$low2 <- e_w2_df_x$pred - (2*e_w2_df_x$sd)
+e_w2_df_x$up2 <- e_w2_df_x$pred + (2*e_w2_df_x$sd)
+
+e_w2_df_y$low2 <- e_w2_df_y$pred - (2*e_w2_df_y$sd)
+e_w2_df_y$up2 <- e_w2_df_y$pred + (2*e_w2_df_y$sd)
+
+e_w2_df_x$inint2 <- 0
+e_w2_df_x$inint2[e_w2_df_x$low2 < e_w2_df_x$xmap & e_w2_df_x$xmap < e_w2_df_x$up2] <- 1
+
+e_w2_df_y$inint2 <- 0
+e_w2_df_y$inint2[e_w2_df_y$low2 < e_w2_df_y$ymap & e_w2_df_y$ymap < e_w2_df_y$up2] <- 1
+
+w2_cp_x2 <- sum(e_w2_df_x$inint2)/nrow(e_w2_df_x) #coverage probability - 0.267
+w2_cp_y2 <- sum(e_w2_df_y$inint2)/nrow(e_w2_df_y) #coverage probability - 0.267
+
+
+```
+
+
+```{r cp_w3, message=FALSE, warning = FALSE, cache=TRUE}
+
+sd_mean_w3x <- mean(e_w3_df_x$sd)
+sd_mean_w3y <- mean(e_w3_df_y$sd)
+
+e_w3_df_x$low2 <- e_w3_df_x$pred - (2*e_w3_df_x$sd)
+e_w3_df_x$up2 <- e_w3_df_x$pred + (2*e_w3_df_x$sd)
+
+e_w3_df_y$low2 <- e_w3_df_y$pred - (2*e_w3_df_y$sd)
+e_w3_df_y$up2 <- e_w3_df_y$pred + (2*e_w3_df_y$sd)
+
+e_w3_df_x$inint2 <- 0
+e_w3_df_x$inint2[e_w3_df_x$low2 < e_w3_df_x$xmap & e_w3_df_x$xmap < e_w3_df_x$up2] <- 1
+
+e_w3_df_y$inint2 <- 0
+e_w3_df_y$inint2[e_w3_df_y$low2 < e_w3_df_y$ymap & e_w3_df_y$ymap < e_w3_df_y$up2] <- 1
+
+w3_cp_x2 <- sum(e_w3_df_x$inint2)/nrow(e_w3_df_x) #coverage probability - 0.277
+w3_cp_y2 <- sum(e_w3_df_y$inint2)/nrow(e_w3_df_y) #coverage probability - 0.283
+
+```
+
+
+
+
+
+However, when looking at the trajectory plot in \cref{fig:trajectories}, can see that some of the trajectories in the plot are more linear than others (ie. have different movements defined by the clusters). Based on our simulation study, our method may have some improvement over linear interpolation on curved data and less-sampled trajectories. Thus, the RMSE values are additionally broken out by cluster, as these are the groups of movement patterns in the data. These values can be found for each week in \cref{tab:results-clust1-actual}, \cref{tab:results-clust2-actual}, and \cref{tab:results-clust3-actual}. Once again, linear interpolation generally outperforms our method, but there are two exceptions. For Week 1 and Week 2, linear interpolation performed the worst of the other two methods for Cluster 1. In \cref{fig:by-week-cluster-plot}, Cluster 1 for both of these weeks is at the top of the plot. When comparing this cluster location to the trajectory plot in \cref{fig:trajectories}, the top of the figure looks to be where the most curved movement happens with longer distance traveled over time. So linear interpolation may not work as well here. Further, \cref{fig:int-best-plots} and \cref{fig:lin-best-plots}, zoom in on examples where our intersection model method performs best and linear interpolation performs the best respectively. When comparing both figures, our method seems to perform better on longer trajectories, as observed points are more spread out along the trajectory. 
+
+As previously stated, though the RMSE for the non-intersection model was lower than the intersection model in week 1, this number is only representing one day's worth of data. So for Cluster 1 in week 1, our proposed method seems to be performing the best. For week 2 cluster 1, there mixed results between the two model methods, as one performs better for x and the other for y. When comparing the two model-based approaches, find mixed results when compare their performance, but the intersection model performs better more often. These results, once again, shows that our method has some promise with non-linear and less-sampled data. 
+
+
+
+
+```{r actual-by-clust-int, message=FALSE, warning = FALSE}
+
+c_w1_x <- e_w1_df_x %>% group_by(clust) %>% summarise(x = sqrt((sum((pred-xmap)^2)/n())))
+c_w1_y <- e_w1_df_y %>% group_by(clust) %>% summarise(y = sqrt((sum((pred-ymap)^2)/n())))
+c_w2_x <- e_w2_df_x %>% group_by(clust) %>% summarise(x = sqrt((sum((pred-xmap)^2)/n())))
+c_w2_y <- e_w2_df_y %>% group_by(clust) %>% summarise(y = sqrt((sum((pred-ymap)^2)/n())))
+c_w3_x <- e_w3_df_x %>% group_by(clust) %>% summarise(x = sqrt((sum((pred-xmap)^2)/n())))
+c_w3_y <- e_w3_df_y %>% group_by(clust) %>% summarise(y = sqrt((sum((pred-ymap)^2)/n())))
+
+
+```
+
+```{r cp-by-clust-int, message=FALSE, warning = FALSE, cache=TRUE}
+
+c_w1_x2 <- e_w1_df_x %>% group_by(clust) %>% summarise(cp = sum((inint2)/n()))
+c_w1_y2 <- e_w1_df_y %>% group_by(clust) %>% summarise(cp = sum((inint2)/n()))
+c_w2_x2 <- e_w2_df_x %>% group_by(clust) %>% summarise(cp = sum((inint2)/n()))
+c_w2_y2 <- e_w2_df_y %>% group_by(clust) %>% summarise(cp = sum((inint2)/n()))
+c_w3_x2 <- e_w3_df_x %>% group_by(clust) %>% summarise(cp = sum((inint2)/n()))
+c_w3_y2 <- e_w3_df_y %>% group_by(clust) %>% summarise(cp = sum((inint2)/n()))
+
+```
+
+
+```{r lin-actual-by-clust, message=FALSE, warning = FALSE}
+lin_w1_x <- miss_na1 %>% group_by(cluster) %>% summarise(x = sqrt((sum((xmap_pred-xmap2)^2)/n())))
+lin_w1_y <- miss_na1 %>% group_by(cluster) %>% summarise(y = sqrt((sum((ymap_pred-ymap2)^2)/n())))
+lin_w2_x <- miss_na2 %>% group_by(cluster) %>% summarise(x = sqrt((sum((xmap_pred-xmap2)^2)/n())))
+lin_w2_y <- miss_na2 %>% group_by(cluster) %>% summarise(y = sqrt((sum((ymap_pred-ymap2)^2)/n())))
+lin_w3_x <- miss_na3 %>% group_by(cluster) %>% summarise(x = sqrt((sum((xmap_pred-xmap2)^2)/n())))
+lin_w3_y <- miss_na3 %>% group_by(cluster) %>% summarise(y = sqrt((sum((ymap_pred-ymap2)^2)/n())))
+
+```
+
+
+```{r noint-actual-by-clust, message=FALSE, warning=FALSE}
+w1x_df <- cv_df_noi(anim_plot_data1, h1_x)
+w2x_df <- cv_df_noi(anim_plot_data2, h2_x)
+w3x_df <- cv_df_noi(anim_plot_data3, h3_x)
+
+w1y_df <- cv_df_noi(anim_plot_data1, h1y)
+w2y_df <- cv_df_noi(anim_plot_data2, h2y)
+w3y_df <- cv_df_noi(anim_plot_data3, h3y)
+
+
+c_w1_x_noi <- w1x_df %>% group_by(clust) %>% summarise(x = sqrt((sum((pred-xmap)^2)/n())))
+c_w2_x_noi <- w2x_df %>% group_by(clust) %>% summarise(x = sqrt((sum((pred-xmap)^2)/n())))
+c_w3_x_noi <- w3x_df %>% group_by(clust) %>% summarise(x = sqrt((sum((pred-xmap)^2)/n())))
+
+
+c_w1_y_noi <- w1y_df %>% group_by(clust) %>% summarise(x = sqrt((sum((pred-ymap)^2)/n())))
+c_w2_y_noi <- w2y_df %>% group_by(clust) %>% summarise(x = sqrt((sum((pred-ymap)^2)/n())))
+c_w3_y_noi <- w3y_df %>% group_by(clust) %>% summarise(x = sqrt((sum((pred-ymap)^2)/n())))
+
+
+```
+
+
+```{r results-clust1-actual, message=FALSE, warning = FALSE}
+
+result_cluster1_ice <- data.frame(Cluster = c(1,2,3,4,5,6), X1 = c(c_w1_x2[,2]), Y1 = c(c_w1_y2[,2]), X2 <- c(lin_w1_x[,2]), Y2 <- c(lin_w1_y[,2]), X3 = c(c_w1_x_noi[,2]), Y3 = c(c_w1_y_noi[,2]))
+
+#
+kableExtra::kable(result_cluster1_ice, booktabs = TRUE, caption = "RMSE by Cluster for Week 1 for Interpolation Methods", col.names = c("Cluster", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{noint}$", "$Y_{noint}$"), escape = FALSE) %>%
+  add_header_above(c(" ", "Intersection" = 2, "Linear" = 2, "No Intersection" = 2))
+
+
+
+```
+
+
+```{r results-clust2-actual, message=FALSE, warning = FALSE}
+
+result_cluster2_ice <- data.frame(Cluster = c(1,2,3,4,5), X1 = c(c_w2_x[,2]), Y1 = c(c_w2_y[,2]), X2 <- c(lin_w2_x[,2]), Y2 <- c(lin_w2_y[,2]), X3 = c(c_w2_x_noi[,2]), Y3 = c(c_w2_y_noi[,2]))
+#
+kableExtra::kable(result_cluster2_ice, booktabs = TRUE, caption = "RMSE by Cluster for Week 2 for Interpolation Methods", col.names = c("Cluster", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{noint}$", "$Y_{noint}$"), escape = FALSE) %>%
+  add_header_above(c(" ", "Intersection" = 2, "Linear" = 2, "No Intersection" = 2))
+
+
+```
+
+
+```{r results-clust3-actual, message=FALSE, warning = FALSE, cache=TRUE}
+
+result_cluster3_ice <- data.frame(Cluster = c(1,2,3,4,5,6), X1 = c(c_w3_x[,2]), Y1 = c(c_w3_y[,2]), X2 <- c(lin_w3_x[,2]), Y2 <- c(lin_w3_y[,2]), X3 = c(c_w3_x_noi[,2]), Y3 = c(c_w3_y_noi[,2]))
+#
+kableExtra::kable(result_cluster3_ice, booktabs = TRUE, caption = "RMSE by Cluster for Week 3 for Interpolation Methods", col.names = c("Cluster", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{noint}$", "$Y_{noint}$"), escape = FALSE) %>%
+  add_header_above(c(" ", "Intersection" = 2, "Linear" = 2, "No Intersection" = 2))
+
+
+```
+
+
+The proportion of the prediction intervals containing the observed data, along with the average standard deviations are given for the ice data in \cref{tab:cp-table}. These values were found in the same way as the simulated data. The standard deviations are higher than what was seen with the simulated data, but the proportions are similar (ranging from 25%-31%). Once again, this can be broken down by cluster in \cref{tab:cp-clust-actual}. However, none of the large proportions are as large as would b desired, but in cluster 1, week 1 the proportion for X is above 50%, with the proportion for Y close to 50%. 
+
+```{r cp-table, message=FALSE, warning = FALSE}
+
+cp_data <- data.frame(week = c("1", "2", "3"), cov_probx = c(w1_cp_x2, w2_cp_x2, w3_cp_x2), sdx = c(sd_mean_w1x, sd_mean_w2x, sd_mean_w3x), cov_proby = c(w1_cp_y2, w2_cp_y2, w3_cp_y2), sdx = c(sd_mean_w1y, sd_mean_w2y, sd_mean_w3y))
+
+kableExtra::kable(cp_data, booktabs = TRUE, col.names = c("Week", "Proportion of X", "Avg SD of X", "Proportion of Y", "Avg SD of Y"), caption = "Proportion of Prediction interval containing observed and Average Standard Deviation for Ice Data")
+
+
+```
+
+
+
+```{r cp-clust-actual, message=FALSE, warning = FALSE, cache=TRUE}
+
+cp_by_clust_act <- data.frame(Cluster = c(1,2,3,4,5,6), w1x = c(round(c_w1_x2[,2],4)), w2x = rbind(round(c_w2_x2[,2],4), "NA"), w3x = c(round(c_w3_x2[,2],4)), w1y = c(round(c_w1_y2[,2],4)), w2y = rbind(round(c_w2_y2[,2],4), NA), w3y = c(round(c_w3_y2[,2],4)))
+#
+kableExtra::kable(cp_by_clust_act , booktabs = TRUE, caption = "Proportion of Prediction interval containing observed by Cluster for Ice Data", col.names = c("Cluster", "$W1_{x}$", "$W2_{x}$", "$W3_{x}$", "$W1_{y}$", "$W2_{y}$", "$W3_{y}$"), escape = FALSE)
+
+
+```
+
+<!----------------- Cross Validation Along Borders ----------------------->
+
+```{r border-cv-functions}
+##-------------------- Functions Needed -------------------------##
+
+known_data_border <- function(m, int, tp, grid, frame){ #Grid doesn't really matter as much (only when doing cross validation)
+  anim_p <- filter(frame, t == tp)[,c(1,2,4,5,6,9)]
+  anim_p <- anim_p %>% group_by(gpid) %>% summarise(xmap_m = mean(xmap),ymap_m = mean(ymap),clust_m = mean(as.numeric(clust))) #Averaging to deal with mult observations at a t value
+  colnames(anim_p) <- c("gpid", "xmap", "ymap", "clust")
+  n = n_distinct(anim_p$gpid)
+  test=get.knn(anim_p[,c(2,3)], k=10)
+  df_new<- rownames_to_column(anim_p, "index")
+  df_new <- data.frame(df_new,test[1])
+  df_new1<- vlookup(df_new$nn.index.1,df_new,5,1)
+  df_new2<- vlookup(df_new$nn.index.2,df_new,5,1)
+  df_new3<- vlookup(df_new$nn.index.3,df_new,5,1)
+  df_new4<- vlookup(df_new$nn.index.4,df_new,5,1)
+  df_new5<- vlookup(df_new$nn.index.5,df_new,5,1)
+  df_new6<- vlookup(df_new$nn.index.6,df_new,5,1)
+  df_new7<- vlookup(df_new$nn.index.7,df_new,5,1)
+  df_new8<- vlookup(df_new$nn.index.8,df_new,5,1)
+  df_new9<- vlookup(df_new$nn.index.9,df_new,5,1)
+  df_new10<- vlookup(df_new$nn.index.10,df_new,5,1)
+  df_new <- data.frame(df_new, df_new1, df_new2, df_new3, df_new4, df_new5, df_new6, df_new7, df_new8, df_new9, df_new10)
+  for (i in 1:n){
+    x = quantile(as.matrix(df_new[i,16:25]))[2]
+    df_new$border[i] <- "no"
+    df_new$border[i][x != df_new$clust[i]] <- "yes"
+  }
+  df_new <- df_new[,-c(6:25, 27:36)]
+  
+
+  int1 <- filter(m, intersection == int)[,-c(2,3)]
+  int_t1 <- right_join(grid[,-5], int1, by = "gpid")
+  anim_t1 <- filter(frame, t == tp)
+  int_t1_2 <- inner_join(int_t1, anim_t1, by = "gpid")
+  final_int_t1 <- int_t1_2[,c(2,4,5,6,9,10, 13,14,17,18)]
+  t1_notimputed =  filter(final_int_t1, imputed == "FALSE")[,c(1,2,5,6,7,8,9)]
+  colnames(t1_notimputed) <- c("gpid", "gpid_id", "intersection", "obs_time", "xmap","ymap", "clust")
+  t1_notimputed <- t1_notimputed[complete.cases(t1_notimputed),]
+  h <- inner_join(t1_notimputed, df_new[,c(2,6)], by = "gpid")
+  return(h)
+}
+
+xmap_10CV_pred_border <- function(m_new, m, int, tp, frame){
+  grid <- grid_tp(frame, tp , m)
+  obs1 <- known_data_border(m_new,int,tp-1,grid, frame)
+  obs2 <- known_data_border(m_new,int,tp,grid, frame)
+  obs3 <- known_data_border(m_new,int,tp+1,grid, frame)
+  obs4 <- known_data_border(m_new,int,tp+2,grid, frame)
+  bord_df <- filter(obs2, border == "no")
+  set.seed(4)
+  rand_df <- bord_df[sample(nrow(bord_df), size=(round(0.9*nrow(bord_df)))),]
+  if(nrow(obs3) ==0){obs <- rbind(obs1, rand_df, obs4)}else{obs <- rbind(obs1, rand_df, obs3)}
+  loc <- obs[,c("xmap","ymap", "obs_time")]
+  locs<-as.matrix(loc)
+  N <- nrow(locs)
+  ## convert them into matrix
+  X<- as.matrix( rep(1,nrow(locs)))
+  Y<- obs[,5]
+  fit <- fit_model(Y,locs, X, "exponential_spacetime", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,min(30,N-1)), silent = TRUE) #Silent option doesn't show the iterations. Maybe nice so get list of errors
+  predicted_locs <- known_data_grid(m_new,int,tp,grid, frame)
+  est_df <- subset(predicted_locs,!(predicted_locs$gpid%in%rand_df$gpid))
+  pred_loc <- as.matrix(est_df[ ,c("xmap","ymap", "obs_time")])
+  X_pred<- as.matrix( rep(1,nrow(pred_loc)))
+  ncondsim <- 30
+  sims <- cond_sim(fit = fit, locs_pred = pred_loc, X_pred = X_pred, covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+                   ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE, nsims = ncondsim)
+  ## for prediction
+  pred_grid<-predictions(fit,pred_loc, X_pred,covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+                         ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE)
+  preds <- data.frame(est_df$gpid,pred_grid)
+  b <- list(sims,preds)
+  return(b)
+}
+
+ymap_10CV_pred_border <- function(m_new, m, int, tp, frame){
+  grid <- grid_tp(frame, tp , m)
+  obs1 <- known_data_border(m_new,int,tp-1,grid, frame)
+  obs2 <- known_data_border(m_new,int,tp,grid, frame)
+  obs3 <- known_data_border(m_new,int,tp+1,grid, frame)
+  obs4 <- known_data_border(m_new,int,tp+2,grid, frame)
+  bord_df <- filter(obs2, border == "no")
+  set.seed(4)
+  rand_df <- bord_df[sample(nrow(bord_df), size=(round(0.9*nrow(bord_df)))),]
+  if(nrow(obs3) ==0){obs <- rbind(obs1, rand_df, obs4)}else{obs <- rbind(obs1, rand_df, obs3)}
+  loc <- obs[,c("xmap","ymap", "obs_time")]
+  locs<-as.matrix(loc)
+  N <- nrow(locs)
+  ## convert them into matrix
+  X<- as.matrix( rep(1,nrow(locs)))
+  Y<- obs[,6]
+  fit <- fit_model(Y,locs, X, "exponential_spacetime", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,min(30,N-1)), silent = TRUE) #Silent option doesn't show the iterations. Maybe nice so get list of errors
+  predicted_locs <- known_data_grid(m_new,int,tp,grid, frame)
+  est_df <- subset(predicted_locs,!(predicted_locs$gpid%in%rand_df$gpid))
+  pred_loc <- as.matrix(est_df[ ,c("xmap","ymap", "obs_time")])
+  X_pred<- as.matrix( rep(1,nrow(pred_loc)))
+  ncondsim <- 30
+  sims <- cond_sim(fit = fit, locs_pred = pred_loc, X_pred = X_pred, covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+                   ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE, nsims = ncondsim)
+  ## for prediction
+  pred_grid<-predictions(fit,pred_loc, X_pred,covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+                         ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE)
+  preds <- data.frame(est_df$gpid,pred_grid)
+  b <- list(sims,preds)
+  return(b)
+}
+
+all_cv_x_pred_border <- function(int_df,int_list,df){
+  for (p in min(df$t):max(df$t)){
+    for (q in 1:max(int_df$intersection)){
+  # for (p in 66:67){
+  #   for (q in 1:6){
+      tryCatch({
+        pred = xmap_10CV_pred_border(int_df, int_list, q, p, df)
+        sd_df <- sd_pred(pred[[1]],pred[[2]])
+        df_p = data.frame(sd_df, q, p)
+        pred_cv = rbind.data.frame(pred_cv, df_p)}, error=function(e){return(NA)})
+    }
+    #all_pred <- rbind.data.frame(all_pred,pred_cv)
+  }
+  all_pred <- rbind.data.frame(all_pred,pred_cv)
+  return(all_pred)
+}
+
+all_cv_y_pred_border <- function(int_df,int_list,df){
+  for (p in min(df$t):max(df$t)){
+    for (q in 1:max(int_df$intersection)){
+  # for (p in 66:67){
+  #   for (q in 1:6){
+      tryCatch({
+        pred = ymap_10CV_pred_border(int_df, int_list, q, p, df)
+        sd_df <- sd_pred(pred[[1]],pred[[2]])
+        df_p = data.frame(sd_df, q, p)
+        pred_cv = rbind.data.frame(pred_cv, df_p)}, error=function(e){return(NA)})
+    }
+    #all_pred <- rbind.data.frame(all_pred,pred_cv)
+  }
+  all_pred <- rbind.data.frame(all_pred,pred_cv)
+  return(all_pred)
+}
+
+
+cv_error_x_p <- function(m_df,frame, pred_df){
+  int1 <- m_df[,-c(2:4)]
+  int_t1_2 <- right_join(int1, frame, by = "gpid")
+  final <- filter(int_t1_2, imputed =="FALSE")[,c(1,2,3,6,7)]
+  colnames(pred_df) <- c("gpid", "pred", "sd", "low", "up", "intersection", "t")
+  pred_df$pred <- round(pred_df$pred, 3)
+  all_data <- left_join(pred_df,final, by = c("gpid", "t", "intersection"))
+  all_data_distinct <- distinct(all_data, gpid, t, .keep_all = TRUE)
+  error <- sum((all_data_distinct$pred-all_data_distinct$xmap)^2)/nrow(all_data_distinct)
+  return(error)
+}
+
+cv_error_y_p <- function(m_df,frame, pred_df){
+  int1 <- m_df[,-c(2:4)]
+  int_t1_2 <- right_join(int1, frame, by = "gpid")
+  final <- filter(int_t1_2, imputed =="FALSE")[,c(1,2,3,6,7)]
+  colnames(pred_df) <- c("gpid", "pred", "sd", "low", "up", "intersection", "t")
+  pred_df$pred <- round(pred_df$pred, 3)
+  all_data <- left_join(pred_df,final, by = c("gpid", "t", "intersection"))
+  all_data_distinct <- distinct(all_data, gpid, t, .keep_all = TRUE)
+  error <- sum((all_data_distinct$pred-all_data_distinct$ymap)^2)/nrow(all_data_distinct)
+  return(error)
+}
+
+cv_df_p <- function(m_df,frame, pred_df){
+  int1 <- m_df[,-c(2:4)]
+  int_t1_2 <- right_join(int1, frame, by = "gpid")
+  final <- filter(int_t1_2, imputed =="FALSE")[,c(1,2,3,6,7,10)]
+  colnames(pred_df) <- c("gpid", "pred", "sd", "low", "up", "intersection", "t")
+  pred_df$pred <- round(pred_df$pred, 3)
+  all_data <- left_join(pred_df,final, by = c("gpid", "t", "intersection"))
+  all_data_distinct <- distinct(all_data, gpid, t, .keep_all = TRUE)
+  return(all_data_distinct)
+}
+
+```
+
+
+```{r pred-week1x-cv, cache=TRUE, message=FALSE, warning = FALSE}
+w1_xcvb <- all_cv_x_pred_border(m1,m3,anim_plot_data1)
+
+```
+
+```{r pred-week2x-cv, cache=TRUE, message=FALSE, warning = FALSE}
+w2_xcvb <- all_cv_x_pred_border(m5,m6,anim_plot_data2)
+
+```
+
+```{r pred-week3x-cv, cache=TRUE, message=FALSE, warning = FALSE}
+w3_xcvb <- all_cv_x_pred_border(m2,m4,anim_plot_data3)
+
+```
+
+```{r pred-week1y-cv, cache=TRUE, message=FALSE, warning = FALSE}
+w1_ycvb <- all_cv_y_pred_border(m1,m3,anim_plot_data1)
+```
+
+```{r pred-week2y-cv, cache=TRUE, message=FALSE, warning = FALSE}
+w2_ycvb <- all_cv_y_pred_border(m5,m6,anim_plot_data2)
+```
+
+```{r pred-week3y-cv, cache=TRUE, message=FALSE, warning = FALSE}
+w3_ycvb <- all_cv_y_pred_border(m2,m4,anim_plot_data3)
+```
+
+```{r error-border-cv, cache=TRUE, message=FALSE, warning = FALSE}
+e_w1_x <- cv_error_x_p(m1, anim_plot_data1, w1_xcvb) #10.338
+e_w1_y <- cv_error_y_p(m1, anim_plot_data1, w1_ycvb) #11.613
+
+e_w2_x <- cv_error_x_p(m5, anim_plot_data2, w2_xcvb) #12.526
+e_w2_y <- cv_error_y_p(m5, anim_plot_data2, w2_ycvb) #10.599
+
+e_w3_x <- cv_error_x_p(m2, anim_plot_data3, w3_xcvb) #9.19
+e_w3_y <- cv_error_y_p(m2, anim_plot_data3, w3_ycvb) #8.749
+```
+
+```{r lin-border-w1, cache=TRUE, message=FALSE, warning = FALSE}
+
+e_w1_x <- cv_error_x_p(m1, anim_plot_data1, w1_xcvb) #10.338
+e_w1_y <- cv_error_y_p(m1, anim_plot_data1, w1_ycvb) #11.613
+
+anim_plot_data <- tmp %>%
+  mutate(imputed = F) %>%
+  complete(crossing(gpid, t), fill = list(imputed = T)) %>%
+  ungroup() %>%
+  arrange(gpid, t) %>%
+  group_by(gpid) %>%
+  arrange(gpid)
+
+anim_plot_data$missing <- "no"
+anim_plot_data$missing[is.na(anim_plot_data$xmap)] <- "yes"
+
+
+
+e_w1_df_x <- cv_df_p(m1, anim_plot_data1,w1_xcvb)
+e_w1_df_y <- cv_df_p(m1, anim_plot_data1,w1_ycvb)
+
+
+#Need to think this through a bit
+
+e_w1_df =  inner_join(e_w1_df_x, e_w1_df_y, by= c("gpid", "t"))[c(1:14)]
+
+anim_plot <- filter(anim_plot_data, t < 58)
+
+#combine cv_data sets to get actual data
+cv_data <- e_w1_df[c(1,7,8,9,10)]
+colnames(cv_data) <- c("gpid", "t","xmap2", "ymap2", "cluster")
+
+## need to get linear interpolations on cross validated data
+join1 <- full_join(cv_data, anim_plot, by = c("gpid", "t")) #df with og data and cv data set
+join_nocv <- filter(join1, is.na(xmap2)) #data not used in cv
+join_cv <- filter(join1, !is.na(xmap2)) #data used in cv
+
+join_cv$xmap<- NA #want data used in cv to be miss
+join_cv$ymap<- NA
+
+back_toget <- rbind(join_nocv, join_cv) #bring them back together so now have missing cv data in the dataset
+
+#but in order
+back_toget <- back_toget %>%
+  arrange(gpid, t)
+
+back_toget <- back_toget[-c(3,4,6,7,10,11)] #remove unnecessary columns
+
+#second missing variable to help denote if cv data or not
+back_toget$missing2 <- "no"
+back_toget$missing2[is.na(back_toget$xmap)] <- "yes"
+
+#linear interpolation
+lin <- back_toget %>% group_by(gpid) %>%
+  mutate(xmap =na.approx(xmap, na.rm = FALSE)) %>%
+  mutate(ymap =na.approx(ymap, na.rm = FALSE))
+
+#get data used in cv (not origingally missing, but missing now)
+miss <- filter(lin, missing == "no" & missing2 == "yes")
+colnames(miss) <- c("gpid", "t", "cluster" , "xmap_pred", "ymap_pred","imputed","missing", "missing2")
+miss_join <- left_join(cv_data, miss[,-3], by = c("gpid", "t"))#combine with actual values dataset
+
+miss_na <- filter(miss_join, !is.na(xmap_pred))#remove NAs if first day of week
+miss_na <- miss_na %>% arrange(gpid,t)
+miss_na1 <- miss_na %>% distinct(gpid,t, .keep_all= TRUE) #Remove duplicated data
+
+#MSE
+error_x_lin_actual_w1 <- sum((miss_na1$xmap2-miss_na1$xmap_pred)^2)/nrow(miss_na1) #2.375
+error_y_lin_actual_w1 <- sum((miss_na1$ymap2-miss_na1$ymap_pred)^2)/nrow(miss_na1) #20.199
+
+```
+
+
+```{r lin-border-w2, cache=TRUE, message=FALSE, warning = FALSE}
+
+e_w2_x <- cv_error_x_p(m5, anim_plot_data2, w2_xcvb) #12.526
+e_w2_y <- cv_error_y_p(m5, anim_plot_data2, w2_ycvb) #10.599
+
+anim_plot_data <- tmp %>%
+  mutate(imputed = F) %>%
+  complete(crossing(gpid, t), fill = list(imputed = T)) %>%
+  ungroup() %>%
+  arrange(gpid, t) %>%
+  group_by(gpid) %>%
+  arrange(gpid)
+
+anim_plot_data$missing <- "no"
+anim_plot_data$missing[is.na(anim_plot_data$xmap)] <- "yes"
+
+
+
+e_w2_df_x <- cv_df_p(m5, anim_plot_data2,w2_xcvb)
+e_w2_df_y <- cv_df_p(m5, anim_plot_data2,w2_ycvb)
+
+
+#Need to think this through a bit
+
+e_w2_df =  inner_join(e_w2_df_x, e_w2_df_y, by= c("gpid", "t"))[c(1:14)]
+
+anim_plot <- filter(anim_plot_data, t > 57 & t < 65)
+
+#combine cv_data sets to get actual data
+cv_data <- e_w2_df[c(1,7,8,9,10)]
+colnames(cv_data) <- c("gpid", "t","xmap2", "ymap2", "cluster")
+
+## need to get linear interpolations on cross validated data
+join1 <- full_join(cv_data, anim_plot, by = c("gpid", "t")) #df with og data and cv data set
+join_nocv <- filter(join1, is.na(xmap2)) #data not used in cv
+join_cv <- filter(join1, !is.na(xmap2)) #data used in cv
+
+join_cv$xmap<- NA #want data used in cv to be miss
+join_cv$ymap<- NA
+
+back_toget <- rbind(join_nocv, join_cv) #bring them back together so now have missing cv data in the dataset
+
+#but in order
+back_toget <- back_toget %>%
+  arrange(gpid, t)
+
+back_toget <- back_toget[-c(3,4,6,7,10,11)] #remove unnecessary columns
+
+#second missing variable to help denote if cv data or not
+back_toget$missing2 <- "no"
+back_toget$missing2[is.na(back_toget$xmap)] <- "yes"
+
+#linear interpolation
+lin <- back_toget %>% group_by(gpid) %>%
+  mutate(xmap =na.approx(xmap, na.rm = FALSE)) %>%
+  mutate(ymap =na.approx(ymap, na.rm = FALSE))
+
+#get data used in cv (not origingally missing, but missing now)
+miss <- filter(lin, missing == "no" & missing2 == "yes")
+colnames(miss) <- c("gpid", "t", "cluster" , "xmap_pred", "ymap_pred","imputed","missing", "missing2")
+miss_join <- left_join(cv_data, miss[,-3], by = c("gpid", "t")) #combine with actual values dataset
+
+miss_na <- filter(miss_join, !is.na(xmap_pred)) #remove NAs if first day of week
+miss_na <- miss_na %>% arrange(gpid,t)
+miss_na2 <- miss_na %>% distinct(gpid,t, .keep_all= TRUE) #Remove duplicated data
+
+#MSE
+error_x_lin_actual_w2 <- sum((miss_na2$xmap2-miss_na2$xmap_pred)^2)/nrow(miss_na2) #4.157
+error_y_lin_actual_w2 <- sum((miss_na2$ymap2-miss_na2$ymap_pred)^2)/nrow(miss_na2) #3.357
+```
+
+
+```{r lin-border-w3, cache=TRUE, message=FALSE, warning = FALSE}
+e_w3_x <- cv_error_x_p(m2, anim_plot_data3, w3_xcvb) #9.19
+e_w3_y <- cv_error_y_p(m2, anim_plot_data3, w3_ycvb) #8.749
+
+anim_plot_data <- tmp %>%
+  mutate(imputed = F) %>%
+  complete(crossing(gpid, t), fill = list(imputed = T)) %>%
+  ungroup() %>%
+  arrange(gpid, t) %>%
+  group_by(gpid) %>%
+  arrange(gpid)
+
+anim_plot_data$missing <- "no"
+anim_plot_data$missing[is.na(anim_plot_data$xmap)] <- "yes"
+
+
+
+e_w3_df_x <- cv_df_p(m2, anim_plot_data3,w3_xcvb)
+e_w3_df_y <- cv_df_p(m2, anim_plot_data3,w3_ycvb)
+
+
+#Need to think this through a bit
+
+e_w3_df =  inner_join(e_w3_df_x, e_w3_df_y, by= c("gpid", "t"))[c(1:14)]
+
+anim_plot <- filter(anim_plot_data, t > 64 & t < 73)
+
+#combine cv_data sets to get actual data
+cv_data <- e_w3_df[c(1,7,8,9,10)]
+colnames(cv_data) <- c("gpid", "t","xmap2", "ymap2", "cluster")
+
+## need to get linear interpolations on cross validated data
+join1 <- full_join(cv_data, anim_plot, by = c("gpid", "t")) #df with og data and cv data set
+join_nocv <- filter(join1, is.na(xmap2)) #data not used in cv
+join_cv <- filter(join1, !is.na(xmap2)) #data used in cv
+
+join_cv$xmap<- NA #want data used in cv to be miss
+join_cv$ymap<- NA
+
+back_toget <- rbind(join_nocv, join_cv) #bring them back together so now have missing cv data in the dataset
+
+#but in order
+back_toget <- back_toget %>%
+  arrange(gpid, t)
+
+back_toget <- back_toget[-c(3,4,6,7,10,11)]  #remove unnecessary columns
+
+#second missing variable to help denote if cv data or not
+back_toget$missing2 <- "no"
+back_toget$missing2[is.na(back_toget$xmap)] <- "yes"
+
+#linear interpolation
+lin <- back_toget %>% group_by(gpid) %>%
+  mutate(xmap =na.approx(xmap, na.rm = FALSE)) %>%
+  mutate(ymap =na.approx(ymap, na.rm = FALSE))
+
+#get data used in cv (not origingally missing, but missing now)
+miss <- filter(lin, missing == "no" & missing2 == "yes")
+colnames(miss) <- c("gpid", "t", "cluster" , "xmap_pred", "ymap_pred","imputed","missing", "missing2")
+miss_join <- left_join(cv_data, miss[,-3], by = c("gpid", "t")) #combine with actual values dataset
+
+miss_na <- filter(miss_join, !is.na(xmap_pred)) #remove NAs if first day of week
+miss_na <- miss_na %>% arrange(gpid,t)
+miss_na3 <- miss_na %>% distinct(gpid,t, .keep_all= TRUE) #Remove duplicated data
+
+#MSE
+error_x_lin_actual_w3 <- sum((miss_na3$xmap2-miss_na3$xmap_pred)^2)/nrow(miss_na3) #0.98
+error_y_lin_actual_w3 <- sum((miss_na3$ymap2-miss_na3$ymap_pred)^2)/nrow(miss_na3) #1.54
+```
+
+```{r border-clust}
+################ By Cluster #####################
+
+c_w1_xb <- e_w1_df_x %>% group_by(clust) %>% summarise(x = sqrt((sum((pred-xmap)^2)/n())))
+c_w1_yb <- e_w1_df_y %>% group_by(clust) %>% summarise(y = sqrt((sum((pred-ymap)^2)/n())))
+c_w2_xb <- e_w2_df_x %>% group_by(clust) %>% summarise(x = sqrt((sum((pred-xmap)^2)/n())))
+c_w2_yb <- e_w2_df_y %>% group_by(clust) %>% summarise(y = sqrt((sum((pred-ymap)^2)/n())))
+c_w3_xb <- e_w3_df_x %>% group_by(clust) %>% summarise(x = sqrt((sum((pred-xmap)^2)/n())))
+c_w3_yb <- e_w3_df_y %>% group_by(clust) %>% summarise(y = sqrt((sum((pred-ymap)^2)/n())))
+
+
+lin_w1_x <- miss_na1 %>% group_by(cluster) %>% summarise(x = sqrt((sum((xmap_pred-xmap2)^2)/n())))
+lin_w1_y <- miss_na1 %>% group_by(cluster) %>% summarise(y = sqrt((sum((ymap_pred-ymap2)^2)/n())))
+lin_w2_x <- miss_na2 %>% group_by(cluster) %>% summarise(x = sqrt((sum((xmap_pred-xmap2)^2)/n())))
+lin_w2_y <- miss_na2 %>% group_by(cluster) %>% summarise(y = sqrt((sum((ymap_pred-ymap2)^2)/n())))
+lin_w3_x <- miss_na3 %>% group_by(cluster) %>% summarise(x = sqrt((sum((xmap_pred-xmap2)^2)/n())))
+lin_w3_y <- miss_na3 %>% group_by(cluster) %>% summarise(y = sqrt((sum((ymap_pred-ymap2)^2)/n())))
+
+```
+
+
+
+Next, instead of a random hold-out of all of the data, we took a random hold-out of points along cluster borders. We are interested in points along the cluster border as those might be locations of irregular movement. Boundaries are defined in the code as points where some of its neighbors are from a different cluster. Otherwise the process remains the same as before. \cref{tab:border-cv-rmse} contains the RMSE values for our method and linear interpolation. The model with all the data (no intersection) is not used for comparison here as these models produced an error with issues in convergence of the log-likelihood. When just look at the weeks overall, our model only outperforms linear interpolation in Week 1 for y-values. Furthermore, this was broken out by cluster in \cref{tab:border-clust}. This shows similar results as the random hold-out, with our method outperforming linear interpolation in cluster 1 for Week 1 and 2. Additionally, in Week 1, our method performs best for y-values for all clusters expect for cluster 2. Once again, it should be noted that linear interpolation cannot estimate points if nothing before or after it, so we are working with less data in the RMSE calculation.
+
+As in prior sections, 30 conditional simulations were performed in order to calculate the uncertainty. Using the standard deviation found from these simulations we calculated an interval. Then the proportion of intervals that contain the true value are calculated (\cref{tab:cp-table-border}). The average standard deviation values are also given to give an idea of typical interval width. Once again, as in \cref{tab:cp-table}, these values are low, with most intervals not containing the true value. In \cref{tab:cp-table-border-clust}, these values are broken out by cluster. The values do seem slightly higher in the instances where our method performs best, but still low. Finally, in \cref{tab:cp-table-border-ou}, found if the true values tend to be over or under the interval. Our interval is an underestimate of the true values, but still a high percentage of our interval is still an overestimate. 
+
+```{r border-cv-rmse, message=FALSE, warning = FALSE, cache=TRUE}
+
+ice_border <- data.frame(X1 = c(sqrt(e_w1_x), sqrt(e_w2_x), sqrt(e_w3_x)), Y1 = c(sqrt(e_w1_y), sqrt(e_w2_y), sqrt(e_w3_y)), X2 = c(sqrt(error_x_lin_actual_w1), sqrt(error_x_lin_actual_w2), sqrt(error_x_lin_actual_w3)), Y2 = c(sqrt(error_y_lin_actual_w1), sqrt(error_y_lin_actual_w2), sqrt(error_y_lin_actual_w3)))
+#
+kableExtra::kable(ice_border, booktabs = TRUE, caption = "RMSE for Interpolation Methods on Cluster Border Points",  col.names = c("$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$"), escape = FALSE) %>% pack_rows(
+  index = (c("Week 1" = 1, "Week 2" = 1, "Week 3" = 1))
+) %>% add_header_above(c("Intersection" = 2, "Linear" = 2))
+```
+
+
+```{r border-clust-tab, message=FALSE, warning = FALSE, cache = TRUE}
+
+ice_border_clust <- data.frame(Cluster = c(1,2,3,4,5,6), X1 = c(2.38, 4.01, 2.79, 2.49, 4.16,3.19), Y1 = c(3.90, 4.34, 3.13, 3.00, 3.87, 3.30), X2 <- c(2.35, 0.19, 1.14, 1.24, 0.62, 2.21), Y2 <- c(8.33, 0.25, 3.88, 4.32, 4.55, 4.85), X3 = c(2.81, 2.94, 2.94, 3.26, 4.14," "), Y3 = c(3.04, 2.96, 3.07, 3.20, 3.88," "), X4 = c(3.82, 2.39, 1.46, 1.32, 0.43," "), Y4 = c(5.19, 0.99, 1.97, 0.54, 0.34, " "), X5 = c(2.69, 2.74, 3.49, 2.84, 2.84, 3.21), Y5 = c(2.86, 2.85, 3.31, 3.22, 2.83, 2.92), X6 = c(1.88, 1.88, 0.22, 2.25, 0.22, 0.303), Y6 = c(2.62, 1.92, 0.43, 1.46, 0.49, 0.56))
+#
+kableExtra::kable(ice_border_clust, booktabs = TRUE, caption = "RMSE by Cluster for Cross Validation Along Cluster Borders", col.names = c("Cluster", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$"), escape = FALSE) %>%
+  add_header_above(c(" ", "Week 1" = 4, "Week 2" = 4, "Week 3" = 4))
+
+
+```
+
+```{r cp-table-border, message=FALSE, warning = FALSE, cache=TRUE}
+
+cp_data_border <- data.frame(week = c("1", "2", "3"), cov_probx = c(0.32, 0.267, 0.277), sdx = c(0.942, 0.808, 0.775), cov_proby = c(0.344, 0.267, 0.283), sdy = c(1.069, 0.871, 0.785))
+
+kableExtra::kable(cp_data_border, booktabs = TRUE, col.names = c("Week", "Proportion of X", "Avg SD of X", "Proportion of Y", "Avg SD of Y"), caption = "Proportion of Prediction interval containing observed and Average Standard Deviation for Ice Data") 
+```
+
+
+```{r cp-table-border-clust, message=FALSE, warning=FALSE, cache=TRUE}
+
+cp_by_clust_sim <- data.frame(Cluster = c(1,2,3,4,5,6), w1x = c(0.592, 0.27, 0.347, 0.482, 0.157, 0.273), w1y = c(0.592, 0.288, 0.312, 0.301, 0.3, 0.396), w2x = c(0.467, 0.28, 0.337, 0.26, 0.149, " "), w2y = c(0.413, 0.278, 0.351, 0.251, 0.163, " "), w3x = c(0.422, 0.471, 0.184, 0.491, 0.283, 0.177),  w3y = c(0.357, 0.418, 0.245, 0.309, 0.264, 0.254))
+#
+kableExtra::kable(cp_by_clust_sim , booktabs = TRUE, caption = "Proportion of Prediction interval containing observed by Cluster for Cluster Border", col.names = c("Cluster", "$X_{s1}$", "$Y_{s1}$", "$X_{s2}$", "$Y_{s2}$", "$X_{s3}$", "$Y_{s3}$"), escape = FALSE) %>% 
+  add_header_above(c(" ", "Week 1" = 2, "Week 2" = 2, "Week 3" = 2))
+
+```
+
+
+```{r cp-table-border-ou, message=FALSE, warning = FALSE}
+
+cp_simdata2 <- data.frame(sim = c("1", "2", "3"), overx = c(0.294, 0.33, 0.352), underx = c(0.386, 0.406 , 0.371), overy = c(0.304, 0.302, 0.358), undery = c(0.352, 0.43, 0.358))
+
+kableExtra::kable(cp_simdata2, booktabs = TRUE, col.names = c("Week", "Above Interval", "Under Interval", "Above Interval", "Under Interval"), caption = "Proportion of Interval Above/Under Actual Value for Border Values") %>% add_header_above(c(" ", "X" = 2, "Y" = 2))
+
+```
+
+
+# Discussion {#discussion}
+
+
+Our Bounding Box clustering method was developed to group trajectories by their movement, and to compensate for missing data. This method was shown through simulations and actual data that the boundaries of the clusters determined by the trajectory movements provide a reasonable estimation of the location of cracks. However, a major drawback of this method is that since the k-means clustering approach is used, our method relies on a pre-defined number of clusters, which is typically unknown. Furthermore, with having a set number of clusters, there is a limit on how many cluster boundaries representing cracks that can be identified. Thus, not all possible leads will be identified. Our method seems suggest that other approaches to clustering may be useful to extend this method in order to identify higher resolution cracks. Also, our method provides information about how the ice sheet is moving, which may also be important when developing climate models.  
+
+Through our simulations and the use of the ice movement data, we have demonstrated some situations where our interpolation method may be beneficial. First, it takes into account the nonstationarity of the data, which generally shows slight improvement over using all the data to develop the model. Instances where the intersection model under performs the other model may be due to lack of data to develop a better model at that intersection. Secondly, it showed improvements, in terms of RMSE, over linear interpolation for curved and not highly sampled data with the ice data. Additionally, our method is able to estimate missing locations on the first and last day of a dataset when linear interpolation is not able to. Another benefit of our method is that since a model is created, we are able to get an uncertainty measure with the predictions. Our method should eventually be tested against curved methods, like cubic splines, to see if it will outperform simpler, curved-based methods. Despite the benefits our method, linear interpolation outperformed our proposed method in most cases. So using the additional information about the movement does not provide any benefit if the trajectories follow a linear pattern and only interested in location estimation. 
+
+An issue with our interpolation approach is that when creating the intersections, if an object is not located within a spatial-temporal intersection, it is removed from the data used to develop the models, as only developing models within intersections. Thus, we could be losing valuable information to obtain the estimates. Typically this only happens to gpids on the edges of the ice pack. 
+
+When it comes to developing the models with the Vecchia Approximation, some other issues arise. The first is that when the temporal range is large, especially in comparison with the spatial range, the model is not able to be developed as the log-likelihood does not converge. Generally when this happens the last Fisher Scoring iteration before the error has an exceptionally large temporal range value. Additionally, the covariance parameters estimated by the model do not seem to make sense practically even when the model can be successfully fit because all the parameter values outside of the nugget are large, even though the variance and spatial range values are sometimes more reasonable for the simulated data. For example, the large temporal range means that the data is not changing over time, and that there is a strong dependence over multiple lifetime's worth of data, which is probably not realistic. Using the simulated data as an example, in Simulation 1 the Y values for cluster two were generated with $\sigma^2$ = 80, $\phi$ = 50, $\tau$ = 10, $c_0$= 0. The values estimated for the model in intersection 3, time 3 were $\sigma^2$ = 77.91, $\phi$ = 458, $\tau$ = 686,239.164, $c_0$ = 0. In this scenario, the model is overestimating the spatial and temporal range parameters, with the temporal range being a much larger overestimate. This may be due to only working with a small amount of data that is not moving much over time. This is especially true when looking at the ice sheet data. With the simulated data, as more days were added to the datasets used to create the clusters and defines the intersections, the temporal range does slowly decrease. Also, @guinness_gaussian_2021 points out that when the range parameter estimates are much larger than the maximum distance between points, which we see with our data, the likelihood function has a hard time jointly identifying the range parameters and variance, causing issues in the calculation of our model. With the simulation data, we tried setting a value for the covariance parameters and found that if set $\phi$, then $\tau$ is still large. On the other hand, if set $\tau$, then $\phi$ is closer to the true value. Showing that the temporal dependence is posing an issue, which may be due to lack of days and lack of movement over the days. 
+
+Another potential source for error when using a space-time covariance function is that variation in time is needed. Otherwise, if we only have observed data for one day of the three days used to create the models, the model is unable to be developed. Another issue, that was mainly seen in the models without the intersection in Week 1, the location columns were sometimes considered too linearly dependent to form a model. Generally, taking a random subset of the data allowed a model to converge. Finally, sometimes the estimated model can be developed, but an error occurs in the prediction. This occurs when we only have one location to estimate, as the nearest neighbor approach is used when computing the conditional estimates of the prediction. Thus, we need at least two missing points to create an estimate.  
+
+# Conclusion {#conclusion}
+
+Sea ice plays a vital role in the Earth's energy balance, as when cracks form in the ice, warm air from the ocean is released into the atmosphere. In order to determine where these cracks may form using only the movement of the ice sheet, a bounding box is created around each tracked trajectory and the features of the bounding box are used as input into k-means. Once each gpid is assigned a cluster, a plot of the results is created where the cluster boundaries would be the location where ice cracks may form. This method seemed to identify similar cracks as other ice crack detection methods. Next, using the information from the clusters, created a model for interpolation from spatio-temporal neighbors of the missing points. While linear interpolation typically outperforms our method, we showed some benefit with nonlinear and not highly sampled data. 
+
+In the future, we want to determine the number of clusters through something other than the silhouette statistic. For example, @ossama_extended_2011 has a process for determining the number of unique directions, which may be a better estimate of k. Secondly, more work needs to be done in the univariate model development for the interpolation to facilitate convergence in a wider range of situations. Next, we would like to further investigate a bivariate interpolation model to estimate both x and y at the same time. Finally, at the moment our method is a two step process: find clusters and create model in each cluster. Eventually, we would like to turn this into a one step process, potentially using voronoi tessellations and a piecewise Gaussian Process. 
