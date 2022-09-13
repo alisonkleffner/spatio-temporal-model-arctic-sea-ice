@@ -749,45 +749,20 @@ tmp <- map2_df(dat_time, 1:length(dat_time), function(x, y) mutate(x, i = y))
 
 # Introduction
 
-Sea ice is frozen sea water in the Arctic Ocean that generally occurs as an ice pack which can drift over the oceans surface. Understanding ice dynamics plays an vital role in climate models as it acts as a barrier between the colder atmosphere and the warmer ocean. Therefore, sea ice plays a role in the Earth's energy balance. Cracks in the ice can form due to dynamic processes, which includes wind, ocean currents, and tides [@hutter_leads_2019]. When a narrow linear crack, or lead, forms in the sea ice, it allows for heat from the ocean to be transferred to the atmosphere [@schreyer_elastic_2006]. Only small amounts of the ice cover in the winter are occupied by leads (1-2%), but leads account for half of the heat flux between the ocean and the atmosphere [@badgley_1961]. Additionally, leads are understood to be sources of global methane emissions, which makes them a possible force for greenhouse gasses [@kort_atmos_2012]. Hence, it is important to be able to determine where these leads may form in order to accurately account for their impact in climate models.
+Sea ice is frozen sea water in the Arctic Ocean that generally occurs as an ice pack which can drift over the ocean surface. When it is stationary, it acts as an insulator between the warm ocean and the cooler atmosphere [@peterson_evaluating_2011]. However, sea ice is constantly changing and moving due to dynamic thermodynamic and dynamic processes [@hutter_leads_2019]. These processes, which include wind and ocean currents, can cause cracks in the ice to form, as in order to move, the ice is continuously breaking up and refreezing [@peterson_evaluating_2011, @hoffman_detection_2019]. When a crack forms in the sea ice it provides a significant source of heat and moisture into the atmosphere, which reduces the overall sea ice concentration and warms the regional atmospheric boundary layer [@key_detectability_1993, @reiser_new_2020]. Additionally, the formation of cracks also has an affect on atmosphere and ocean chemical exchanges, which includes carbon dioxide and mercury [@hoffman_detection_2019]. Thus, the state of the sea ice, including crack characteristics, provides important information for weather prediction, climate models, and ocean models [@reiser_new_2020]. When cracks form, this may be an indicator of climate change, and may also be a driver of climate change due to the release of warmer air [@peterson_evaluating_2011].
 
-Previous methods to determine lead locations involve the use of deformation calculations and thermal information from satellite images. Drawbacks of satellite images include being low in resolution and are affected by atmospheric conditions, like clouds [@key_detectability_1993]. Thus, results may be impacted by errors due to inaccurate data. For example, errors in deformation calculations may lead to incorrect locations of ice cracks [@bouillon_producing_2015]. Our approach to discover cracks uses the idea that sea ice is not stationary, as ocean currents and atmospheric winds drive its movement [@peterson_evaluating_2011]. Hence, using only data on the movement of an ice sheet, we hope to determine the location of sea ice cracks through the clustering of similar movements in the sea ice. We hypothesize that cracks will form at the location of the boundaries between clusters, as this is the boundary between different movements in the ice sheet. 
+## Previous Crack Detection Methods
 
-An additional complication is that satellite data is often missing in chunks because the satellite may not pass over a certain region on a day. Thus, in order to have complete gridded data, we also developed an interpolation method that uses information given by our clusters to estimate missing regions. 
+Previous methods to determine the location of ice cracks generally either involve the use of thermal infrared satellite data or the calculation of ice deformation using movement. Thermal methods tend to use thermal channels from the Advanced Very High Resolution Radiometer (AVHRR), as the surface temperatures between a crack and the surrounding sea ice are different [@key_detectability_1993]. Using thermal channels from the AVHRR is highly dependent on clear skies as clouds can also give a higher temperature and may be mistaken for a crack. Methods have been suggested to reduce the impact of clouds. For example, @willmes_pan-arctic_2015 uses Moderate Resolution Imagery Spectroradtiometer (MODIS), which is only supposed to select only clear sky pixels in an image. A fuzzy cloud artifact filter was also introduced to remove any remaining clouds, however there is a trade-off between parameterization and error rates. Also, @rohrs_algorithm_2012 suggested using passive microwave data as clouds are transparent. However, microwave data lacks wide spatial coverage and has coarse resolution making detecting narrow leads impossible [@hoffman_detection_2019].
+
+Deformation methods to locate ice cracks is determined by the motion of points. Points are initially assigned to a vertex of a grid cell on an ice sheet, which is tracked over time using satellite images. Then the deformation of the ice is calculated within each grid cell, where areas of high deformation may be denoted as cracks [@peterson_evaluating_2011]. These methods can provide additional information about a crack, such as size and deformation. However, satellite images typically only track each cell vertex in three day intervals, thus do not have a complete set of space-time observations to calculate deformation. Additionally, the error in the deformation calculations may be strongly underestimated as the grid cells move, they may become distorted which affects deformation calculations [@bouillon_producing_2015].
+
+Our proposed method for ice sheet crack detection also wants to use the movement of the ice sheet. However, the movement of the ice sheet is not consistent, as the underlying process will cause the ice sheet to move differently depending on the location resulting in cracks [@peterson_evaluating_2011]. Thus, we aim to determine crack location by finding clusters of similar movement, where the boundaries between the clusters being the location of cracks. Additinoally, using the information gained from clustering, we developed a non-stationary spatio-temporal interpolation method to estimate missing points along a trajectory. Within a cluster, all trajectories move in a similar fashion, so would expect a missing point to move similarily to observed points in the cluster at that time. Hence, we can then crate a completely gridded dataset that can be used to calculate deformation. 
 
 ## Data
 
+Data on the movement of the ice sheet comes from NASA's RADARSTAT Geophysical Processing System (RGPS). RGPS data is useful as it is independent of cloud coverage and has broad spatial coverage. Trajectories of around 30,000 points are tracked by RGPS using sequential synthetic aperture radar (SAR) images on the Arctic sea ice [@lindsay_radarstat_2003]. To track these points, an initial grid is created at the start of the study period where each cell dimension is 10 km on a side [@kwok_seasonal_2002]. The vertex of each cell is assigned an identifier $g$. In each SAR image, the points is found again using area-based and feature-based tracking [@peterson_evaluating_2011]. The trajectories of each identifier $g$ form a set of all trajectories $\mathcal{G} =\left\{g_1,...,g_n\right\}$, where $g_j = \left\{s_{jt}: t \in \mathcal{T}_j\right\}$. The location of $g_j$ is represented as $s_{jt} = (x_{jt}, y_{jt})$ or a set of latitudes and longitudes. Most $g_j$ are tracked in three day intervals, however sampling can be irregular [@peterson_evaluating_2011]. Thus, $\mathcal{T}_j \subset \left\{1,...,T\right\}$, which  is a collection of time points where identifier $g_j$ is observed. We are working with a smaller dataset than the overall, hence n = 8811 and $T$=22. This is due to keeping the creation of our methods computationally feasible.  
 
-Motion data of the ice sheet comes from the RADARSTAT Geophysical Processing System (RGPS). In general, this data is collected through the use of RADARSTAT synthetic aperture radar (SAR) images obtained by satellites. The SAR images are then processed and produce estimates of items, like sea ice motion [@lindsay_radarsat_2003]. In order to track movement, an initial grid is created at the start of the study period, where each cell dimension is 10 km on a side [@kwok_seasonal_2002]. The vertices of each cell are assigned an identifier. These points will be referred to as gpids ($g$) moving forward. The trajectory of the sea ice is then found by tracking these gpids in sequential radar images [@kwok_seasonal_2002]. Typically the tracking continues until the melting season begins. The set of trajectories of all the gpids may be formally represented as $\mathcal{T}$ = ($g_1, ..., g_n$), where $g_{k}$ = <$s_{1,j},...,s_{t,j}>$ and \textbf{$s_{i,j}$} = $(x_{i,j}, y_{i,j})$. In other words, in a set of n gpid trajectories each $g_k$ is the trajectory of a gpid, k, for days i = 1,...,t, with t being the last day, and k = 1,...,n. Additionally, if considering the time period as a day, a gpid may have more than one observation for a day as the satellite may have passed over the region at multiple times.  Thus, our notation includes j to account for a day potentially having multiple observations. We developed our methods using 22 days worth of data (t=22) where a difference of one integer means those observations are one day apart. We are using a small data set in order to see if methodology can be developed where not a lot of data is used in order for computational feasibility.
-
-```{r clustering-at-51, fig.cap= "Plot of gpids at t=1. Missing data is represented by unfilled boxes, and is show to be missing in chunks instead of at random points", message=FALSE, warning = FALSE, cache=TRUE}
-
-colnames(tmp) <- c("gpid", "k", "obs_time", "xmap", "ymap", "location", "t", "i")
-
-
-anim_plot_data <- tmp %>%
-  mutate(imputed = F) %>%
-  complete(crossing(gpid, t), fill = list(imputed = T)) %>%
-  ungroup() %>%
-  arrange(gpid, t) %>%
-  group_by(gpid) %>%
-  fill(xmap, ymap, matches("clust"), .direction = "downup") %>%
-  arrange(gpid)
-
-anim_plot_data51 <- filter(anim_plot_data, t==51)
-
-anim_plot <- anim_plot_data51 %>%
-  ggplot(aes(x = xmap, y = ymap, frame = t, group = gpid, ids = gpid, shape = imputed)) + 
-  geom_point() + 
-  scale_shape_manual("Imputed", values = c("FALSE" = 15, "TRUE" = 0)) + 
-  scale_color_viridis_d() + 
-  scale_fill_viridis_d() 
-
-anim_plot
-
-
-
-```
 
 
 ```{r trajectories, fig.cap = "Plot of gpid trajectories over time to show movement and direction of movement of each gpid", cache=TRUE, message=FALSE, warning = FALSE}
@@ -806,16 +781,11 @@ colnames(tmp) <- c("gpid", "k", "obs_time", "xmap", "ymap", "location", "t", "i"
 ```
 
 
-## Challenges
-
-Determining the locations of sea ice cracks is challenging with the given data for multiple reasons. First, we want to develop our methods only using motion data of the ice sheet. That is, using only the location of gpids at different time points. Secondly, due to obtaining the data through sequential satellite images, data may be missing because the satellite may not have passed over part of the sea ice at a given time resulting in chunks of missing data. \cref{fig:clustering-at-51} shows a plot of the ice sheet on the first day in the data. Each box is a gpid and the unfilled boxes (imputed = TRUE) are gpids that are unobserved at that time. The location of the unfilled boxes in the plot is its closest known location. In this image, there is a large patch of data missing in the middle of the region, which makes it difficult to know what is happening in those areas as there may not be a neighbor we can infer from. Additionally, the missing data creates gpid trajectories of different lengths, which are not allowed in many standard trajectory distance functions. The third challenge is that the gpids were created on a grid, disqualifying the use of many popular spatio-temporal data mining methods based on the density of observations as point density will be consistent across the domain. 
-
-
 ## Nonstationary Spatio-Temporal Methods
 
 ###  Method Motivation
 
-Since we want to detect cracks only using movement data, it is important to first see what the movement looks like. Thus, in order to visualize the movement of each gpid over the time frame, a plot of the trajectory of each gpid was created and is shown in \cref{fig:trajectories}. Each observed gpid location is connected with an arrow to indicate movement direction. The colors are used to distinguish individual trajectories but, otherwise they do not have a special meaning. This figure shows that groups of gpids appear to move with similar patterns. For instance, at the top of \cref{fig:trajectories}, a group of gpids seem to be traveling upwards, while in the middle a group is traveling from right to left. Visualizing these movements led to the idea of clustering similar trajectories. Trajectories can be summarized by a bounding box that represents its movement over time. This allows for the creation of features that can be used in clustering algorithms and it circumnavigates the missing data issue since trajectories do not need to be the same length. After the boundary box features are created, the gpid trajectories can then be grouped together with others that have similar features using a clustering algorithm. The idea is that sea ice cracks may form on the border between clusters, as gpids in different clusters have different movements, which may cause them to move apart. 
+Since we want to detect cracks only using movement data, it is first important to visualize the movement. Thus, a plot of the trajectory of each $g_j$ is found in \cref{fig:trajectories}. Each line is a trajectory, $g_j$, where only its known locations are plotted and connected. An arrow is also given in order to indicate the direction of the movement. The coloring of each $g_j$ does not have a special meaning, they are just used to distinguish individual trajectories. This figure shows that groups of trajectories appear to move with similar patterns. For instance, a the top of \cref{fig:trajectories}, a group of trajectories are traveling upwards, while in the middle a group is traveling from right to left. Visualizing the movement led to the idea of clustering similar trajectories. Each trajectory can be summarized by a bounding box that represents it's movement over time. This allows for the creation of features that can be used in a clustering algorithm, and it circumnavigates the missing data issue. After the bounding box features are created, the trajectories can be grouped with other that have similar features. The idea is that ice cracks may form on the boundary between groups, as these groups are moving differently.  
 
 
 # Methods {#methods}
@@ -824,22 +794,13 @@ Since we want to detect cracks only using movement data, it is important to firs
 
 ### Bounding Box Features
 
-The bounding box created around each gpid trajectory, which represent its movement, is made up of a number of different features. Bounding boxes can be created around a whole trajectory, or for smaller sub-trajectories, like a week. Sub-trajectories may provide more information while ensuring adequate data is available for the clustering process. A balance between ensuring data completeness and capturing sufficient movement is essential. An example of the points used to calculate the features of a trajectory may be found in \cref{fig:bb-pic}. Features of the bounding box includes the length of x traveled and the length of y traveled between the maximum and minimum location ($x_{max} - x_{min}$ and $y_{max} - y_{min}$), representing the total distance traveled. However, the maximum and minimum locations may not always correspond to the first and last days of the time frame. Hence, the difference in x and y from the latest observation to the earliest observation in a time period ($x_{1} - x_{0}$ and $y_{1} - y_{0})$ was also found. The change from latest to earliest observation is then used to calculate the angle of change in order to find the direction of movement of the trajectory. Further, since the focus is on the cluster boundaries, we must ensure the clusters are continguous, meaning clusters are not co-located across multiple geographic locations. To ensure some geographic continuity, we also include the average x and y value for each gpid. Finally, creating clusters for subtrajectories, for instance by week, can also be accomplished using a bounding box. However, previous week features can also be included as inputs into the clustering algorithm. This may be done in order for there to be some consistency between consecutive time frames, as previous movement may impact current movement. After all of the different features were calculated, the values were then standardized to give each feature similar weight in the clustering process. 
+The bounding box that is created around each trajectory is made up of a number of features that represent it's movement. Features of the bounding box includes the length traveled between the minimum and maximum location of a coordinate, representing the total distance traveled. However, the maximum and minimum locations may not always correspond to the first and last day of the time frame. Hence, the difference in each coordinate from the latest observation to the earliest observation in the time frame was also found. The change from latest of earliest observation is then used to calculate the angle of change to find the direction of movement of the trajectory. Further, since the focus is on the cluster boundaries, we must ensure the clusters are contiguous, meaning clusters are not co-located across multiple geographic locations. To ensure some geographic continuity, we also include the average coordinate values for each trajectory. 
 
+A bounding box can be created around a whole trajectory, or for smaller trajectories. Sub-trajectories may provide more information while ensuring adequate data is available for the clustering process. A balance between ensuring data completeness and capturing sufficient movement is essential. If creating a bounding box for a sub-trajectory, for instance by week, previous week features may be included as inputs into the clustering algorithm. This may be done to ensure some consistency between consecutive time frames, as previous movement may imapct current movement. After all of the differernt features are calculated, the values are then standardized to give each feature similar weight in the clustering process.   
 
 ### K-Means
 
-We used k-means clustering, which partitions n observations into k clusters with k being a pre-specified number. The goal of this clustering method is to minimize the squared Euclidean distance between an observation and the centroid vector of a cluster. The centroid vectors are found by averaging the features of each cluster member. K-means clustering is an iterative procedure:
-
-1. The k clusters are given initial vectors. 
-2. The Euclidean distance between the $i^{th}$ observation and $k^{th}$ initial vector is obtained, and the observations are assigned to the cluster in which they have the smallest distance. 
-3. After all observations are allocated, the centroid vector for each cluster is then calculated by averaging each feature.
-4. Observations are moved to a different cluster when appropriate (ie. has minimum Euclidean distance to a different cluster's centroid vector).
-5. The centroid vector of the clusters is recalculated. 
-
-These steps are repeated until observations are no longer moving between clusters [@steinley_kmeans_2006]. 
-
-A drawback of k-means is that the number of clusters must be known and specified prior to clustering. We determine the number of clusters using the Silhouette statistic, which compares within cluster distances to between cluster differences. The silhouette width is defined as $$s(i) = \frac{b(i) - a(i)}{max(a(i), b(i))} \quad (1)$$ where i is an observation and i $\in$ n. The value a(i) is the average distance between i and the other observations in the same cluster, and b(i) is the minimum average distance between i and the observations in other clusters. Silhouette width ranges from -1 to 1, with -1 meaning it was misclustered and 1 meaning it is well-clustered. The desired number of clusters is then determined by the largest average silhouette width [@kodinariya_2013]. Ice movement is a dynamic process, so if clustering subtrajectories, like weeks, then would expect that each week may have a different number of clusters. Thus, when clustering by week, the silhouette statistic will be calculated separately for each week. 
+To cluster the trajectories we used k-means clustering, which partitions $n$ observations into $k$ clusters, with $k$ being a pre-specified number. The goal of this method is to minimize the squared Euclidean distance between an observation and the centroid vector of a cluster [@steinley_kmeans_2006]. This method requires each observation to be in a cluster, which is beneficial as we want to know what group each trajectory is more similar to. However, a drawback of k-means is that the number of clusters must be known and specified prior to clustering. We determine the number of clusters using the silhouette statistics, which compares within cluster distances to between cluster distances [@kodinariya_2013]. Ice movement is a dynamic process, so if clustering sub-trajectories, like weeks, then we would expect that each week may have a different number of clusters. Thus, when clustering by week, the silhouette statistic will be calculated separately for each week.  
 
 
 ## Spatio-Temporal Interpolation
@@ -4332,7 +4293,7 @@ kableExtra::kable(ice_border, booktabs = TRUE, caption = "RMSE for Interpolation
 
 ```{r border-clust-tab, message=FALSE, warning = FALSE, cache = TRUE}
 
-ice_border_clust <- data.frame(Cluster = c(1,2,3,4,5,6), X1 = c(2.38, 4.01, 2.79, 2.49, 4.16,3.19), Y1 = c(3.90, 4.34, 3.13, 3.00, 3.87, 3.30), X2 <- c(2.35, 0.19, 1.14, 1.24, 0.62, 2.21), Y2 <- c(8.33, 0.25, 3.88, 4.32, 4.55, 4.85), X3 = c(2.81, 2.94, 2.94, 3.26, 4.14," "), Y3 = c(3.04, 2.96, 3.07, 3.20, 3.88," "), X4 = c(3.82, 2.39, 1.46, 1.32, 0.43," "), Y4 = c(5.19, 0.99, 1.97, 0.54, 0.34, " "), X5 = c(2.69, 2.74, 3.49, 2.84, 2.84, 3.21), Y5 = c(2.86, 2.85, 3.31, 3.22, 2.83, 2.92), X6 = c(1.88, 1.88, 0.22, 2.25, 0.22, 0.303), Y6 = c(2.62, 1.92, 0.43, 1.46, 0.49, 0.56))
+ice_border_clust <- data.frame(Cluster = c(1,2,3,4,5,6), X1 = round(c_w1_xb[,2],3), Y1 = round(c_w1_yb[,2],3), X2 <- round(lin_w1_x[,2],3), Y2 <- round(lin_w1_y[,2],3), X3 = round(c_w2_xb[,2],3) %>% add_row(x = NA), Y3 = round(c_w2_yb[,2],3) %>% add_row(y = NA), X4 = round(lin_w2_x[,2],3) %>% add_row(x = NA), Y4 = round(lin_w2_y[,2],3) %>% add_row(y = NA), X5 = round(c_w3_xb[,2],3), Y5 = round(c_w3_yb[,2],3), X6 = round(lin_w3_x[,2],3), Y6 = round(lin_w3_y[,2],3))
 #
 kableExtra::kable(ice_border_clust, booktabs = TRUE, caption = "RMSE by Cluster for Cross Validation Along Cluster Borders", col.names = c("Cluster", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$"), escape = FALSE) %>%
   add_header_above(c(" ", "Week 1" = 4, "Week 2" = 4, "Week 3" = 4))
@@ -4357,14 +4318,6 @@ kableExtra::kable(cp_by_clust_sim , booktabs = TRUE, caption = "Proportion of Pr
 
 ```
 
-
-```{r cp-table-border-ou, message=FALSE, warning = FALSE}
-
-cp_simdata2 <- data.frame(sim = c("1", "2", "3"), overx = c(0.294, 0.33, 0.352), underx = c(0.386, 0.406 , 0.371), overy = c(0.304, 0.302, 0.358), undery = c(0.352, 0.43, 0.358))
-
-kableExtra::kable(cp_simdata2, booktabs = TRUE, col.names = c("Week", "Above Interval", "Under Interval", "Above Interval", "Under Interval"), caption = "Proportion of Interval Above/Under Actual Value for Border Values") %>% add_header_above(c(" ", "X" = 2, "Y" = 2))
-
-```
 
 
 # Discussion {#discussion}
