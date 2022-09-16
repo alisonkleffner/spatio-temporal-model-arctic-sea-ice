@@ -488,7 +488,7 @@ found in \cref{tab:parms-table}. Thus, \(U_{d,c}(s,t)\) gives the
 displacement, or movement, for each point on the underlying grid for
 each day.
 
-After the underling process is created, a coarse grid representing the
+After the underlying process is created, a coarse grid representing the
 observed data is created in a similar fashion to the ice data given by
 satellite. This is a smaller grid that is encompassed by the underlying
 process. Furthermore, since it is coarser, it is made up of fewer
@@ -583,46 +583,40 @@ Cluster & $\sigma^{2}_{x}$ & $\phi_{x,s}$ & $\tau_{x}$ & $Nugget_x$ & $\mu_x$ & 
 \caption{Clusterings of Observed Data on Final Day of Data Set}\label{fig:all-clus}
 \end{figure}
 
-Now, our proposed spatio-temporal clustering method, using a bounding
+Now our proposed spatio-temporal clustering method, using a bounding
 box, is performed on each of the simulated datasets. Since the true
-number of clusters is two, two is used as the k input in the k-means
+number of clusters is two, two is used as the \(k\) input in the k-means
 clustering algorithm. The results are shown at two different time
-points. First, the k-means determined clusters is visualized on the
-initial grid to visualize how well our method performed when can see the
-true clusterings (see \cref{fig:plot-og-clus}). The cut-off for the
-initial assigned cluster groupings is given by the red-dashed line. In
-this figure, a majority of the points seem to be clustered correctly,
-however, there are a number of missclassified points in each of the
-simulations. In Simulation 1, most of the missclassifications seem to be
-along the border, but do seem to increase from left to right. Most of
-cluster 2 is clustered correctly in Simulation 2, with the majority of
-missclassifications in cluster 1 happening along the edges and boundary.
-Similarly, in Simulation 3 most of the missclassifications are near the
-border, with a handful along the right edge in cluster 2. If there is a
-missclassified point that is surrounded by points correctly classified,
-this would be considered a part of the same cluster of its neighbors.
-This is due to the desire to have contiguous clusters and we are also
-primarily interested in the cluster boundaries. In the future, a
-post-processing filter to address these anomalies can be developed.
+points. First, the k-means determined clusters are plotted on the
+initial grid to visualize how well our method performs when we can see
+the true clusterings (see \cref{fig:plot-og-clus}). The cut-off for the
+initially assigned cluster groupings is given by the red-dashed line. In
+this figure, a majority of points seemed to be clustered correctly,
+however, there are a number of misclassified points in each simulation.
+In Simulation 1, most of the misclassifications happen along the border,
+but seem to increase from left to right. Most of cluster 2 is clustered
+correctly in Simulation 2, with the majority of the misclassification in
+cluster 1 happening along the edges and boundary. Similarly, in
+Simulation 3 most of the misclassifications are near the border, with a
+handful along the right edge of cluster 2.
 
-The second time point where the clusters are visualized is on the last
-day of the week in order to see if the clusters determined by the
-bounding box can distinguish movement over time. In \cref{fig:all-clus},
-there are distinguishable boundaries between clusters for each of the
-simulations. Simulation 3 has a little overlap along the boundary, but
-can still distinguish between the two clusters. Thus, by clustering
-using the movement features of a trajectory, we are able to distinguish
-the differences in the movement patterns of the data, where the cluster
-boundaries to define the boundaries between the movement patterns. Some
-of the missclassifications on the original grid may be due to the fact
-that the value for the underlying process that was added to get the new
-location was determined by the closest grid cell of the underlying
-process by Euclidean distance. If the point eventually becomes closer to
-the other cluster, meaning that cluster's underlying process values are
-being added to cause the movement, it will eventually start to move like
-it. So if it spends more time moving like cluster 1 than cluster 2, as
-an example, it will be most likely be classified as cluster 1, even if
-that was not what it was initially assigned.
+The clusters are also visualized on the last day of the week to see if
+the clusters determined by the bounding box can distinguish movement
+over time. In \cref{fig:all-clus}, there are distinguishable boundaries
+between clusters for each of the simulations. Simulation 3 has a little
+overlap along the boundary, but can still distinguish two continguous
+clusters. Thus, by clustering using the movement features of a
+trajectory, we are able to distinguish the different movement patterns
+of the data with a clearly defined boundary. Some of the
+misclassifications on the original grid may be due to the value of the
+underlying process that was added to get the new location. This value
+was determined by the closest grid cell of the underlying process by
+Euclidean distance. If the point eventually becomes closer to the other
+cluster, meaning that cluster's underlying process values are being
+added to cause the movement, it will eventually start to move like it.
+So, if it spends more time moving like cluster 1 than cluster 2, as an
+example, it will most likely be classified as cluster 1, even if that
+was not its initial cluster assignment.
 
 \hypertarget{interpolation-method}{%
 \subsection{Interpolation Method}\label{interpolation-method}}
