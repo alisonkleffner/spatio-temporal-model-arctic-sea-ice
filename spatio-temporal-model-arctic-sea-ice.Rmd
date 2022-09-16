@@ -807,7 +807,7 @@ To cluster the trajectories we used k-means clustering, which partitions $n$ obs
 
 ### Finding Spatio-Temporal Neighbors
 
-```{r int-plot, fig.cap= "(a). Polygons of week 1 clusters (b). Polygons of week 2 clusters (c). Intersection polygons of the overlap of week 1 and week 2 polygons", message=FALSE, warning = FALSE, out.width="60%"}
+```{r int-plot, fig.cap= "(a). Polygons of week 1 clusters (b). Polygons of week 2 clusters (c). Intersection polygons of the overlap of week 1 and week 2 polygons", message=FALSE, warning = FALSE, out.width="70%"}
 
 knitr::include_graphics("images/int-one.png")
 
@@ -827,22 +827,16 @@ To use this interpolation method, a spatial grid encompassing the ice sheet is c
 
 ### Univariate Interpolation
   
-Once the grid was created for initial location estimates of missing data, a univariate model was developed for both x and y. These models were creating using the GpGp package in R, which uses the Vecchia's Approximation for a Gaussian Process [@gpgp_pkg]. @vecchia1988estimation developed this approximation for a Gaussian Process, as generally likelihood methods for the covariance parameter estimates of the Gaussian Process are computationally unfeasible. This method approximates the Gaussian Process by writing the joint density as a product of conditional distributions, where only a subset of the data is used to create these conditional distributions. The subset chosen greatly affects the approximation and is formed by neighbors of the observation. Ordering the the observations by one of the coordinates determines these neighbors. In @guinness_permutation_2018, updates to the ordering process were developed. A maximum minimum based ordering is used to sort the data based on sequentially picking the next point that has the maximum minimum distance to all previously selected points. Then the number of neighbors used for the subset can be defined and found from this ordering. Additionally, @guinness_permutation_2018 introduces a grouping method where groups are determined by partitioning observations into blocks, and each block's input to the likelihood can be computed at the same time. These updates were shown to further increase the accuracy of these models and lower computation time. Further, @guinness_gaussian_2021, provides an efficient method for applying Fisher's scoring to maximize the log-likelihood by developing a single pass algorithm to compute the Fisher's Information and the gradient of the Vecchia Approximation. Once again, this was done to help lower computation time. The updates made in @guinness_permutation_2018 and @guinness_gaussian_2021 are implemented in the GpGp package. 
+Once the grid was created for initial location estimates of the missing data, a univariate model was developed for both coordinates. These models were created using the \texttt{GpGp} package in R, which uses the Vecchia's Approximation for a Gaussian Process [@gpgp_pkg]. Generally, likelihood methods for the covariance parameter estimates of a Gaussian Process are computationally unfeasible. Hence, @vecchia1988estimation developed an approximation where the joint density of the Gaussian Process is written as a product of conditional distributions that use only a subset of the data. The subset chosen greatly affects the approximation and is formed by neighbors of the observation. Within the \texttt{GpGp} package, updates to this approximation are also made. A new ordering method to find neighbors was introduced, which sorted the data by sequentially picking the next point that has the maximum minimum distance to all previously selected points [@guinness_permutation_2018]. Additionally, @guinness_permutation_2018 introduces a grouping method, where data is partitioned into blocks and each block's input to the likelihood can be computed at the same time. Further @guinness_gaussian_2019 provides an efficient method for applying Fisher scoring to maximize the log-likelihood. These updates were shown to further increase the accuracy of the models and lowers computation time.      
 
-In order to fit the model, we need to define:
+To fit the model, we need to define:
 
- + Y = x or y. Dimension interested in (univariate response)
- + loc = The matrix of x, y, and time (t) of known data. Made of locations at the desired time (t), the day before (t-1), and the day after (t+1). 
- + X = Is a matrix of 1's the length of the number of observed data, also known as the design matrix.
- + m_seq = A sequence of values for number of neighbors in each subset. Our models used a sequence of 10 to min(N-1, 30). Includes N-1 in case we have a small number of observations, the model does not try to create subset in which it needs more neighbors than there are observations. 
+ + $Y$ = $x$ or $y$ (univariate response vector of the coordinates. 
+ + loc = The matrix of $x$, $y$, and time ($t$) of known data. Made of locations at the desired time ($t$), the day before ($t-1$), and the day after ($t+1$). 
+ + $X$ = design matrix (single column of ones)
+ + Sequence of values for number of neighbors. 
 
-We specified the covariance function as the exponential space-time covariance function, as defined by the GpGp package documentation [@gpgp_pkg]. It is defined as $$C(\theta) = \sigma^2e^{-||D^{-1}(x-y)||}. \quad (2)$$ where $$D = \left(\begin{array}{ccccc} 
-\phi + c_0 & \\
- & \phi + c_0\\
- &  & \ddots\\
- &  &  & \phi + c_0 \\
- &  &  &  &  \tau+c_0
-\end{array}\right). $$ The parameters in the covariance function are of $\sigma^2$ (variance), $\phi$ (spatial range), $\tau$ (temporal range), and $c_0$ (nugget). The spatial and temporal ranges are smoothness parameters that relate to dependence over space and time respectively. The nugget parameter is the measurement error. The output is the maximum Vecchia likelihood estimates for the mean and covariance parameters. The model created by these estimates can be used to predict the unobserved locations at the time (t). The initial grid estimates of the x and y values are used as the starting locations in the prediction function and shifted based on the estimated model parameters. Predictions for x or y (depending on the Y specified in the fitted model) are made by finding the conditional expectation of the model developed.  
+We specified the covariance function as the exponential space-time covariance function. It is defined as $$\Sigma_{\theta}(s;t) = \Sigma^{(s)}_{\theta}*\Sigma^{(t)}_{\theta}$$ where $\Sigma^{(s)}_{\theta} = \sigma^2\exp\left\{||x-y||/\phi\right\}$ and $\Sigma^{(t)}_{\theta} = \sigma^2\exp\left\{-|t|/\tau\right\}$. The parameters in the covariance function are $\sigma^2$ (variance), $\phi$ (spatial range), and $tau$ (temporal range). The spatial and temporal ranges are smoothness parameters that relate to dependence over space and time respectively. The output is the maximum Vecchia likelihood estimates for the covariance parameters. The model created by these estimates can be used to predict the unobserved locations at the time ($t$). The initial grid estimates of the coordinates are used as the starting locations in the prediction function and shifted based on the estimated model parameters. Predictions for the coordinate are made by finding the conditional expectation of the model developed.  
 
 
 # Simulation Study {#simulation}
