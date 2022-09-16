@@ -284,7 +284,7 @@ movement is essential. If creating a bounding box for a sub-trajectory,
 for instance by week, previous week features may be included as inputs
 into the clustering algorithm. This may be done to ensure some
 consistency between consecutive time frames, as previous movement may
-imapct current movement. After all of the differernt features are
+imapct current movement. After all of the different features are
 calculated, the values are then standardized to give each feature
 similar weight in the clustering process.
 
@@ -315,82 +315,85 @@ Interpolation}\label{spatio-temporal-interpolation}}
 \subsubsection{Finding Spatio-Temporal
 Neighbors}\label{finding-spatio-temporal-neighbors}}
 
-Next, as seen previously, due to the data collection method, the data is
-susceptible to be missing in chunks. Hence, want to be able to
-interpolate these missing data points in order to have completely
-gridded data. This can be challenging due to the lack of close
-neighbors, as all the data around a point may also be missing.
-Additionally, some interpolation methods are not available due to the
-nonstationarity of the data, as the ice is moving in patches, with the
-patches determined by our clustering method.
+\begin{figure}[tbp]
 
-Our proposed method for interpolating missing gpid locations involves
-finding and using the spatial-temporal neighbors of the missing gpid.
-The clusters determined by our bounding box method can be used to
-identify these spatio-temporal neighbors. Creating the clusters is
-determined by similar movements, so can use the information given to us
-by these clusters in order to interpolate. Meaning, if we know how
-points move in a cluster at a specific time, we can assume a missing
-gpid in that same cluster would move similarly. In this method, new
-clusters are created for each week. The idea is that the intersection of
-one week's clusters with the week before and week after would create
-groups. Each member of a group is then a spatio-temporal neighbor of the
-other members as they are in a similar geographic region over time.
+{\centering \includegraphics[width=0.8\linewidth,]{images/int-one} 
 
-The first step in order to find these intersections is to create
-polygons for each of the clusters for each week. A polygon is created by
-finding the boundary coordinates of each of the clusters. In a
-sequential manner, a polygon is created around each cluster, generally
-starting with one on the top edge of the ice sheet followed by
-neighboring clusters until there is a polygon for each cluster. After
-each polygon is created, then all of the gpids that are located within
-this polygon are then removed from the data set, even if the gpid was
-assigned to a different cluster. This was done to reduce the amount of
-polygon overlapping. Additionally, if a gpid is classified to a
-different cluster than all of its neighbors, most likely that gpid
-should actually be classified like its neighbors. For Week 1 and Week 2,
-one of the clusters is distinctly split into two non-connected locations
-(see \cref{fig:by-week-cluster-plot}). For this particular cluster, a
-different polygon was created for each of the two different locations
-and considered separately.
+}
+
+\caption{(a). Polygons of week 1 clusters (b). Polygons of week 2 clusters (c). Intersection polygons of the overlap of week 1 and week 2 polygons}\label{fig:int-plot}
+\end{figure}
+
+Due to the data collection method, the data is susceptible to be missing
+in chunks due to the path of the satellite. Hence, we want to be able to
+interpolate these missing points to have completely gridded data. This
+can be challenging due to the lack of close neighbors, as all the data
+round a point may also be missing. Additionally, some interpolation
+methods are not available due to the non-stationarity of the data, as
+the ice is moving in patches.
+
+Our proposed method for interpolation missing locations involves finding
+and using spatio-temporal neighbors of the missing identifier. The
+clusters determined by the bounding box features can also be used to
+identify these spatio-temporal neighbors. Creation of the clusters is
+determined by similar movements, so we can use the information given to
+us by these clusters to interpolate. Meaning, if we know how points move
+in a cluster at a specific time, we can assume a missing identifier in
+the same cluster would move similarly. In this method, new clusters are
+created for each week. The idea is that the intersection of one week's
+clusters with the week before and week after would create groups. Each
+member of a group is then a spatio-temporal neighbor of the other
+members as they are in a similar geographic location over time.
+
+The first step in finding these intersections is to create polygons for
+each cluster. A polygon is created by finding the boundary coordinates
+of each of the clusters. In a sequential manner, a polygon is created
+around each cluster, generally starting with one on the top edge of the
+ice sheet followed by neighboring clusters until there is a polygon for
+each cluster. After each polygon is created, then all of the \(g_j\)
+located within this polygon are removed from the dataset, even if the
+\(g_j\) was assigned to a different cluster. This was done to reduce the
+amount of polygon overlapping. Additionally, if a \(g_j\) is classified
+to a different cluster than all of it's neighbors, most likely that
+\(g_j\) should actually be classified like it's neighbors.
 
 Once we create the polygons for each week, we can find the intersection
 of polygons for different weeks to define spatio-temporal neighbors. The
-coordinates of the overlapping polygons create an intersection, where
-these coordinates also form a polygon. Gpids are then assigned to an
+coordinates of the overlapping polygon create an intersection, where the
+coordinates also form a polygon. Each \(g_j\) is then assigned to an
 intersection based on which intersection coordinates contains its first
 observed location of the week. All of the points within that
-intersection are considered to be spatio-temporal neighbors, since they
+intersection are considered to be spatio-temporal neighbors since they
 are located in a similar geographic region over time. For example, if we
-want to interpolate missing data in Week 1, would first need to find its
+want to interpolate missing data in week 1, would first find its
 spatio-temporal neighbors. Since it is the first week, there is no
-previous week information, so we can only use Week 2 to find neighbors.
+previous week information, so we can only use week 2 to find neighbors.
 Next, we identify the coordinates for the intersecting polygons for
-these two weeks. Then, the gpids located in each intersecting polygon
-are found and assigned to that intersection. Gpids located in the same
-intersection polygon are spatio-temporal neighbors and will be used to
-create a model for interpolation in each of the intersecting polygons.
-\cref{fig:int-picture} shows this process with (a) and (b) showing the
-polygons of the clusters for Week 1 and Week 2 respectively, and (c)
-showing the intersections of the polygons. Some of the intersection
-polygons are not shown due to their being duplicate intersections
-(caused by overlapping polygons), but each gpid is only assigned to one
-intersection. If a gpid is not found in an intersection, it is then
-removed from the data during this process, which is a potential area for
-improvement. Week 3 spatio-temporal neighbors can be found using a
-similar process, using just Week 2, as this was the last week in the
-data set. Creating the intersecting polygons for Week 2 involved the
-intersection of it's polygons from both Week 1 and Week 3.
+these two weeks. Then, the \(g_j\) located in each intersecting polygon
+are spatio-temporal neighbors and will be used to create a model for
+interpolation in each of the intersecting polygons. \cref{fig:int-plot}
+shows this process with (a) and (b) showing the polygons of the clusters
+for week 1 and week 2 respectively, and (c) showing the intersections of
+the polygons. Some of the intersection polygons are now shown due to
+duplicate intersections (caused by overlapping polygons), but each
+\(g_j\) is only assigned to one intersection. If a \(g_j\) is not found
+in an intersection, it is then removed from the data during this
+process, which is a potential area for improvement. Spatio-temporal
+neighbors for week 3 are found using a similar process, with just week
+2, as this was the last week in the dataset. Creating the intersecting
+polygons for week 2 involved the intersection of it's polygons from both
+week 1 and week 3.
 
-In order to use this interpolation method, a spatial grid encompassing
-the ice sheet is created at each time. The grid is used in our created
-model as an estimation of the initial locations of the missing gpids,
-where the model will adjust this location using it's known neighbors.
-The size of our grid cells is 10 km by 10 km, which allows for a maximum
-of four gpids to be located in the cell. Additionally, this is the size
-of the initial grid used to track the gpids \citep{kwok_seasonal_2002}.
-The centroid of the gpids was used to estimate each grid cell, so each
-of the gpids located in that cell would have the same initial estimate.
+To use this interpolation method, a spatial grid encompassing the ice
+sheet is created for each day. The grid is used in our model as an
+estimation of the initial locations of missing \(g_j\), where the model
+will adjust this location using its known neighbors. This size of our
+grid cells was chosen for a maximum of four \(g_j\) to be located in a
+cell, matching with the initial grid used to track the trajectories. The
+centroid of the cell was used to estimate each \(g_j\), so each of the
+\(g_j\) located in that cell would have the same initial estimate. We do
+not want to use these as the final estimate of our missing locations as
+it does not take into account movement.
 
 \hypertarget{univariate-interpolation}{%
 \subsubsection{Univariate
@@ -762,23 +765,6 @@ Simulation & Proportion of X & Avg SD of X & Proportion of Y & Avg SD of Y\\
 
 \begin{table}
 
-\caption{\label{tab:cp-table-over-under}Proportion of Interval Above/Under Actual Value}
-\centering
-\begin{tabular}[t]{lrrrr}
-\toprule
-\multicolumn{1}{c}{Simulation} & \multicolumn{2}{c}{X} & \multicolumn{2}{c}{Y} \\
-\cmidrule(l{3pt}r{3pt}){1-1} \cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5}
-Simulation & Above Interval & Under Interval & Above Interval & Under Interval\\
-\midrule
-1 & 0.351 & 0.368 & 0.3421 & 0.281\\
-2 & 0.313 & 0.500 & 0.5310 & 0.219\\
-3 & 0.250 & 0.458 & 0.2710 & 0.354\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}
-
 \caption{\label{tab:cp-sim-table}Proportion of Prediction interval containing observed by Cluster for Simulated Data}
 \centering
 \begin{tabular}[t]{rrrrrrr}
@@ -823,15 +809,6 @@ identical for x.
 
 \hypertarget{results}{%
 \section{Results}\label{results}}
-
-\begin{figure}[tbp]
-
-{\centering \includegraphics[width=\linewidth,]{spatio-temporal-model-arctic-sea-ice_files/figure-latex/int-picture-1} 
-
-}
-
-\caption[Example of finding intersections]{(a). Polygons of week 1 clusters (b). Polygons of week 2 clusters (c). Intersection polygons of the overlap of week 1 and week 2 polygons}\label{fig:int-picture}
-\end{figure}
 
 \begin{figure}[tbp]
 
@@ -953,16 +930,7 @@ left, similar to what was seen in \cref{fig:all-week-comp}.
 
 }
 
-\caption[Clusters for Intersection Model has lowest MSE]{Trajectories for a) Week 1 Cluster 1 and b) Week 2 Cluster 2. These are instances where our method outperforms linear interpolation}\label{fig:int-best-plots}
-\end{figure}
-
-\begin{figure}[tbp]
-
-{\centering \includegraphics[width=\linewidth,]{spatio-temporal-model-arctic-sea-ice_files/figure-latex/lin-best-plots-1} 
-
-}
-
-\caption[Clusters for Linear Interpolation has lowest MSE]{Trajectories for a) Week 1 Cluster 4 and b) Week 3 Cluster 3. These are instances linear interpolation outperforms our method}\label{fig:lin-best-plots}
+\caption{Trajectories for a) Week 2 Cluster 1, where our method peforms best and b) Week 2 Cluster 5, where linear interpolation performs best. These are instances where our method outperforms linear interpolation}\label{fig:int-best-plots}
 \end{figure}
 
 \begin{table}

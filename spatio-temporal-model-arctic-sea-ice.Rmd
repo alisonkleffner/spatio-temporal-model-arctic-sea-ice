@@ -765,7 +765,7 @@ Data on the movement of the ice sheet comes from NASA's RADARSTAT Geophysical Pr
 
 
 
-```{r trajectories, fig.cap = "Plot of gpid trajectories over time to show movement and direction of movement of each gpid", cache=TRUE, message=FALSE, warning = FALSE}
+```{r trajectories, fig.cap = "Plot of gpid trajectories over time to show movement and direction of movement of each gpid", cache=TRUE, message=FALSE, warning = FALSE, fig.height = 5, fig.width = 9}
 colnames(tmp) <- c("gpid", "k", "obs_time", "x", "y", "location", "t", "i") #Why did I do this?
 
 tmp2 <- tmp %>% highlight_key(~gpid)
@@ -796,7 +796,7 @@ Since we want to detect cracks only using movement data, it is first important t
 
 The bounding box that is created around each trajectory is made up of a number of features that represent it's movement. Features of the bounding box includes the length traveled between the minimum and maximum location of a coordinate, representing the total distance traveled. However, the maximum and minimum locations may not always correspond to the first and last day of the time frame. Hence, the difference in each coordinate from the latest observation to the earliest observation in the time frame was also found. The change from latest of earliest observation is then used to calculate the angle of change to find the direction of movement of the trajectory. Further, since the focus is on the cluster boundaries, we must ensure the clusters are contiguous, meaning clusters are not co-located across multiple geographic locations. To ensure some geographic continuity, we also include the average coordinate values for each trajectory. 
 
-A bounding box can be created around a whole trajectory, or for smaller trajectories. Sub-trajectories may provide more information while ensuring adequate data is available for the clustering process. A balance between ensuring data completeness and capturing sufficient movement is essential. If creating a bounding box for a sub-trajectory, for instance by week, previous week features may be included as inputs into the clustering algorithm. This may be done to ensure some consistency between consecutive time frames, as previous movement may imapct current movement. After all of the differernt features are calculated, the values are then standardized to give each feature similar weight in the clustering process.   
+A bounding box can be created around a whole trajectory, or for smaller trajectories. Sub-trajectories may provide more information while ensuring adequate data is available for the clustering process. A balance between ensuring data completeness and capturing sufficient movement is essential. If creating a bounding box for a sub-trajectory, for instance by week, previous week features may be included as inputs into the clustering algorithm. This may be done to ensure some consistency between consecutive time frames, as previous movement may imapct current movement. After all of the different features are calculated, the values are then standardized to give each feature similar weight in the clustering process.   
 
 ### K-Means
 
@@ -807,16 +807,23 @@ To cluster the trajectories we used k-means clustering, which partitions $n$ obs
 
 ### Finding Spatio-Temporal Neighbors
 
-Next, as seen previously, due to the data collection method, the data is susceptible to be missing in chunks. Hence, want to be able to interpolate these missing data points in order to have completely gridded data. This can be challenging due to the lack of close neighbors, as all the data around a point may also be missing. Additionally, some interpolation methods are not available due to the nonstationarity of the data, as the ice is moving in patches, with the patches determined by our clustering method. 
+```{r int-plot, fig.cap= "(a). Polygons of week 1 clusters (b). Polygons of week 2 clusters (c). Intersection polygons of the overlap of week 1 and week 2 polygons", message=FALSE, warning = FALSE, out.width="60%"}
 
-Our proposed method for interpolating missing gpid locations involves finding and using the spatial-temporal neighbors of the missing gpid. The clusters determined by our bounding box method can be used to identify these spatio-temporal neighbors. Creating the clusters is determined by similar movements, so can use the information given to us by these clusters in order to interpolate. Meaning, if we know how points move in a cluster at a specific time, we can assume a missing gpid in that same cluster would move similarly. In this method, new clusters are created for each week. The idea is that the intersection of one week's clusters with the week before and week after would create groups. Each member of a group is then a spatio-temporal neighbor of the other members as they are in a similar geographic region over time.  
-  
-The first step in order to find these intersections is to create polygons for each of the clusters for each week. A polygon is created by finding the boundary coordinates of each of the clusters. In a sequential manner, a polygon is created around each cluster, generally starting with one on the top edge of the ice sheet followed by neighboring clusters until there is a polygon for each cluster. After each polygon is created, then all of the gpids that are located within this polygon are then removed from the data set, even if the gpid was assigned to a different cluster. This was done to reduce the amount of polygon overlapping. Additionally, if a gpid is classified to a different cluster than all of its neighbors, most likely that gpid should actually be classified like its neighbors. For Week 1 and Week 2, one of the clusters is distinctly split into two non-connected locations (see \cref{fig:by-week-cluster-plot}). For this particular cluster, a different polygon was created for each of the two different locations and considered separately.
+knitr::include_graphics("images/int-one.png")
 
+```
+
+
+Due to the data collection method, the data is susceptible to be missing in chunks due to the path of the satellite. Hence, we want to be able to interpolate these missing points to have completely gridded data. This can be challenging due to the lack of close neighbors, as all the data round a point may also be missing. Additionally, some interpolation methods are not available due to the non-stationarity of the data, as the ice is moving in patches. 
+
+Our proposed method for interpolation missing locations involves finding and using spatio-temporal neighbors of the missing identifier. The clusters determined by the bounding box features can also be used to identify these spatio-temporal neighbors. Creation of the clusters is determined by similar movements, so we can use the information given to us by these clusters to interpolate. Meaning, if we know how points move in a cluster at a specific time, we can assume a missing identifier in the same cluster would move similarly. In this method, new clusters are created for each week. The idea is that the intersection of one week's clusters with the week before and week after would create groups. Each member of a group is then a spatio-temporal neighbor of the other members as they are in a similar geographic location over time.   
   
-Once we create the polygons for each week, we can find the intersection of polygons for different weeks to define spatio-temporal neighbors. The coordinates of the overlapping polygons create an intersection, where these coordinates also form a polygon. Gpids are then assigned to an intersection based on which intersection coordinates contains its first observed location of the week. All of the points within that intersection are considered to be spatio-temporal neighbors, since they are located in a similar geographic region over time. For example, if we want to interpolate missing data in Week 1, would first need to find its spatio-temporal neighbors. Since it is the first week, there is no previous week information, so we can only use Week 2 to find neighbors. Next, we identify the coordinates for the intersecting polygons for these two weeks. Then, the gpids located in each intersecting polygon are found and assigned to that intersection. Gpids located in the same intersection polygon are spatio-temporal neighbors and will be used to create a model for interpolation in each of the intersecting polygons. \cref{fig:int-picture} shows this process with (a) and (b) showing the polygons of the clusters for Week 1 and Week 2 respectively, and (c) showing the intersections of the polygons. Some of the intersection polygons are not shown due to their being duplicate intersections (caused by overlapping polygons), but each gpid is only assigned to one intersection. If a gpid is not found in an intersection, it is then removed from the data during this process, which is a potential area for improvement. Week 3 spatio-temporal neighbors can be found using a similar process, using just Week 2, as this was the last week in the data set. Creating the intersecting polygons for Week 2 involved the intersection of it's polygons from both Week 1 and Week 3. 
+The first step in finding these intersections is to create polygons for each cluster. A polygon is created by finding the boundary coordinates of each of the clusters. In a sequential manner, a polygon is created around each cluster, generally starting with one on the top edge of the ice sheet followed by neighboring clusters until there is a polygon for each cluster. After each polygon is created, then all of the $g_j$ located within this polygon are removed from the dataset, even if the $g_j$ was assigned to a different cluster. This was done to reduce the amount of polygon overlapping. Additionally, if a $g_j$ is classified to a different cluster than all of it's neighbors, most likely that $g_j$ should actually be classified like it's neighbors. 
   
-In order to use this interpolation method, a spatial grid encompassing the ice sheet is created at each time. The grid is used in our created model as an estimation of the initial locations of the missing gpids, where the model will adjust this location using it's known neighbors. The size of our grid cells is 10 km by 10 km, which allows for a maximum of four gpids to be located in the cell. Additionally, this is the size of the initial grid used to track the gpids [@kwok_seasonal_2002]. The centroid of the gpids was used to estimate each grid cell, so each of the gpids located in that cell would have the same initial estimate.  
+Once we create the polygons for each week, we can find the intersection of polygons for different weeks to define spatio-temporal neighbors. The coordinates of the overlapping polygon create an intersection, where the coordinates also form a polygon. Each $g_j$ is then assigned to an intersection based on which intersection coordinates contains its first observed location of the week. All of the points within that intersection are considered to be spatio-temporal neighbors since they are located in a similar geographic region over time. For example, if we want to interpolate missing data in week 1, would first find its spatio-temporal neighbors. Since it is the first week, there is no previous week information, so we can only use week 2 to find neighbors. Next, we identify the coordinates for the intersecting polygons for these two weeks. Then, the $g_j$ located in each intersecting polygon are spatio-temporal neighbors and will be used to create a model for interpolation in each of the intersecting polygons. \cref{fig:int-plot} shows this process with (a) and (b) showing the polygons of the clusters for week 1 and week 2 respectively, and (c) showing the intersections of the polygons. Some of the intersection polygons are now shown due to duplicate intersections (caused by overlapping polygons), but each $g_j$ is only assigned to one intersection. If a $g_j$ is not found in an intersection, it is then removed from the data during this process, which is a potential area for improvement. Spatio-temporal neighbors for week 3 are found using a similar process, with just week 2, as this was the last week in the dataset. Creating the intersecting polygons for week 2 involved the intersection of it's polygons from both week 1 and week 3.  
+  
+To use this interpolation method, a spatial grid encompassing the ice sheet is created for each day. The grid is used in our model as an estimation of the initial locations of missing $g_j$, where the model will adjust this location using its known neighbors. This size of our grid cells was chosen for a maximum of four $g_j$ to be located in a cell, matching with the initial grid used to track the trajectories. The centroid of the cell was used to estimate each $g_j$, so each of the $g_j$ located in that cell would have the same initial estimate. We do not want to use these as the final estimate of our missing locations as it does not take into account movement. 
+
 
 ### Univariate Interpolation
   
@@ -884,7 +891,7 @@ og <- data.frame(gpid = 1:nrow(og_grid), xmap = og_grid[,1], ymap = og_grid[,2],
 ```
 
 
-```{r grids-combined, message=FALSE, warning = FALSE, fig.scap = "Simulation Grids", fig.cap = "Underlying Process Grid and Observed Grid together, where the true cluster is also given.", cache=TRUE}
+```{r grids-combined, message=FALSE, warning = FALSE, fig.scap = "Simulation Grids", fig.cap = "Underlying Process Grid and Observed Grid together, where the true cluster is also given.", cache=TRUE, fig.height = 5, fig.width = 9, fig.align = 'center'}
 
 og_combine <- og[,-1]
 og_combine$cluster <- 1
@@ -1280,7 +1287,7 @@ final_t3_2$simulation <- 3
 
 ```
 
-```{r traj-wrap, fig.cap="Trajectory Plots for each Simulated Data Set ", cache = TRUE, message=FALSE, warning = FALSE}
+```{r traj-wrap, fig.cap="Trajectory Plots for each Simulated Data Set ", cache = TRUE, message=FALSE, warning = FALSE, fig.height=5, fig.width=9}
 
 final_traj <- rbind(final_t1_2, final_t2_2, final_t3_2)
 
@@ -1438,7 +1445,7 @@ feat_data_3 <- og %>%
 
 ```
 
-```{r plot-og-clus,  fig.cap= "Clusterings of Observed Data on Original Grid", message=FALSE, warning = FALSE}
+```{r plot-og-clus,  fig.cap= "Clusterings of Observed Data on Original Grid", message=FALSE, warning = FALSE, fig.height = 5, fig.width = 9, fig.align = 'center'}
 
 feat_data_1$sim <- 1
 feat_data_2$sim <- 2
@@ -1460,7 +1467,7 @@ f3 %>%
 
 
 
-```{r all-clus, fig.cap= "Clusterings of Observed Data on Final Day of Data Set", message=FALSE, warning = FALSE}
+```{r all-clus, fig.cap= "Clusterings of Observed Data on Final Day of Data Set", message=FALSE, warning = FALSE, fig.height = 5, fig.width = 9, fig.align = 'center'}
 
 feat_data1_1$sim <- 1
 feat_data1_2$sim <- 2
@@ -2116,17 +2123,6 @@ kableExtra::kable(cp_simdata, booktabs = TRUE, col.names = c("Simulation", "Prop
 
 ```
 
-```{r cp-table-over-under, message=FALSE, warning = FALSE}
-
-cp_simdata2 <- data.frame(sim = c("1", "2", "3"), overx = c(0.351, 0.313, 0.25), underx = c(0.368, 0.5 , 0.458), overy = c(0.3421, 0.531, 0.271), undery = c(0.281, 0.219, 0.354))
-
-kableExtra::kable(cp_simdata2, booktabs = TRUE, col.names = c("Simulation", "Above Interval", "Under Interval", "Above Interval", "Under Interval"), caption = "Proportion of Interval Above/Under Actual Value")%>% 
-  add_header_above(c("Simulation", "X" = 2, "Y" = 2)) 
-
-
-```
-
-
 
 ```{r cp-clust-sim, message=FALSE, warning=FALSE, cache=TRUE}
 
@@ -2605,20 +2601,6 @@ y3 <- poly_clust(time_15_og,time_15,4,2,1,6,5,3)
 ```
 
 
-```{r int-picture, fig.scap= "Example of finding intersections", fig.cap= "(a). Polygons of week 1 clusters (b). Polygons of week 2 clusters (c). Intersection polygons of the overlap of week 1 and week 2 polygons", message=FALSE, warning = FALSE}
-a1 <- ggplot() +
-  geom_sf(data = y1, aes(fill = Group.1), alpha = 0.3) + ggtitle ("(a). Week 1 Polygons")
-
-a2 <- ggplot() +
-  geom_sf(data = y2, aes(fill = Group.1), alpha = 0.3) + ggtitle ("(b). Week 2 Polygons")
-
-a3 <- int_plot(time_1_og,y1,y2)
-
-
-ggarrange(a1, a2, a3, ncol = 2, nrow = 2)
-```
-
-
 ```{r get-int, message=FALSE, warning = FALSE}
 
 ## Week 1
@@ -2705,35 +2687,54 @@ Since trajectories can be long, it may also be useful to look at sub-trajectorie
 With these weekly clusters we can also compare them similarly to \cref{fig:all-week-comp}, instead manipulating the days used to create the magnitudes by the proper weeks time frame. Additionally, we had a picture from Day 66 of our data set, which gives an image of recurring leads based on visible and infrared Advanced Very High Resolution Radiometer (AVHRR) data [@lead_pic_2009]. \cref{fig:week-comp}, includes grid lines to aid in comparison of the pictures, due to the aspect ratios not aligning perfectly. One major cracks stands out in both images. Our boundary between cluster 1 and 3 aligns until about (-1880,400), at this point our boundary curves in more steeply. Eventually, the upper section of the cluster boundary between clusters 5 and 6 continue the crack. Additionally, we can see some of the lighter cracks in our graph. For example, we can also see another curved boundary above the one just discussed, and can see one on the bottom left, similar to what was seen in \cref{fig:all-week-comp}.
 
 
-```{r by-week-cluster-plot, fig.cap= "Results of Clustering using Bounding Box Method by Week", cache=TRUE, message=FALSE, warning = FALSE}
+```{r by-week-cluster-plot, fig.cap= "Results of Clustering using Bounding Box Method by Week", cache=TRUE, message=FALSE, warning = FALSE, fig.height = 5, fig.width = 9}
 
-anim_plot1 <- anim_plot_data1 %>%
+# anim_plot1 <- anim_plot_data1 %>%
+#   ggplot(aes(x = xmap, y = ymap, frame = t, group = gpid, ids = gpid,
+#              color = clust, fill = clust)) + #, shape = imputed)) + 
+#   geom_point() + 
+#   #scale_shape_manual("Imputed", values = c("FALSE" = 15, "TRUE" = 0)) + 
+#   scale_color_viridis_d() + 
+#   scale_fill_viridis_d() + ggtitle("Week 1")
+# 
+# 
+# anim_plot2 <- anim_plot_data2 %>%
+#   ggplot(aes(x = xmap, y = ymap, frame = t, group = gpid, ids = gpid,
+#              color = clust, fill = clust)) + #, shape = imputed)) + 
+#   geom_point() + 
+#  # scale_shape_manual("Imputed", values = c("FALSE" = 15, "TRUE" = 0)) + 
+#   scale_color_viridis_d() + 
+#   scale_fill_viridis_d() + ggtitle("Week 2")
+# 
+# anim_plot3 <- anim_plot_data3 %>%
+#   ggplot(aes(x = xmap, y = ymap, frame = t, group = gpid, ids = gpid,
+#              color = clust, fill = clust)) + #, shape = imputed)) + 
+#   geom_point() + 
+#   #scale_shape_manual("Imputed", values = c("FALSE" = 15, "TRUE" = 0)) + 
+#   scale_color_viridis_d() + 
+#   scale_fill_viridis_d() + ggtitle("Week 3")
+# 
+
+#ggarrange(anim_plot1, anim_plot2, anim_plot3, ncol = 2, nrow = 2)
+
+anim_plot_data1_2 <-anim_plot_data1
+anim_plot_data2_2 <-anim_plot_data2
+anim_plot_data3_2 <-anim_plot_data3
+
+anim_plot_data1_2$week <- 1
+anim_plot_data2_2$week <- 2
+anim_plot_data3_2$week <- 3
+
+anim_plot_data_all <- rbind(anim_plot_data1_2, anim_plot_data2_2, anim_plot_data3_2)
+
+
+anim_plot_data_all %>%
   ggplot(aes(x = xmap, y = ymap, frame = t, group = gpid, ids = gpid,
              color = clust, fill = clust)) + #, shape = imputed)) + 
   geom_point() + 
   #scale_shape_manual("Imputed", values = c("FALSE" = 15, "TRUE" = 0)) + 
   scale_color_viridis_d() + 
-  scale_fill_viridis_d() + ggtitle("Week 1")
-
-
-anim_plot2 <- anim_plot_data2 %>%
-  ggplot(aes(x = xmap, y = ymap, frame = t, group = gpid, ids = gpid,
-             color = clust, fill = clust)) + #, shape = imputed)) + 
-  geom_point() + 
- # scale_shape_manual("Imputed", values = c("FALSE" = 15, "TRUE" = 0)) + 
-  scale_color_viridis_d() + 
-  scale_fill_viridis_d() + ggtitle("Week 2")
-
-anim_plot3 <- anim_plot_data3 %>%
-  ggplot(aes(x = xmap, y = ymap, frame = t, group = gpid, ids = gpid,
-             color = clust, fill = clust)) + #, shape = imputed)) + 
-  geom_point() + 
-  #scale_shape_manual("Imputed", values = c("FALSE" = 15, "TRUE" = 0)) + 
-  scale_color_viridis_d() + 
-  scale_fill_viridis_d() + ggtitle("Week 3")
-
-
-ggarrange(anim_plot1, anim_plot2, anim_plot3, ncol = 2, nrow = 2)
+  scale_fill_viridis_d() + ggtitle("Cluster By Week") + facet_wrap(vars(week))
 
 ```
 
@@ -2753,10 +2754,10 @@ apd3_nomiss <- filter(anim_plot_data3, imputed == FALSE)
 
 #Squiggly Plots Example
 
-apd1_nomiss_c1 <- filter(apd1_nomiss, clust == 1)
-apd2_nomiss_c1 <- filter(apd2_nomiss, clust == 1)
+apd1_nomiss_c21 <- filter(apd2_nomiss, clust == 1)
+apd2_nomiss_c25 <- filter(apd2_nomiss, clust == 5)
 
-tmp1 <-  apd1_nomiss_c1 %>% highlight_key(~gpid)
+tmp1 <-  apd1_nomiss_c21 %>% highlight_key(~gpid)
  
 p1 <- ggplot(tmp1, aes(x = xmap, y = ymap, group = gpid, 
                  hoverinfo = NULL,
@@ -2765,7 +2766,7 @@ p1 <- ggplot(tmp1, aes(x = xmap, y = ymap, group = gpid,
   scale_color_viridis_d() +
   theme(legend.position="none") + ggtitle("a)")
 
-tmp2 <-  apd2_nomiss_c1 %>% highlight_key(~gpid)
+tmp2 <-  apd2_nomiss_c25 %>% highlight_key(~gpid)
 
 p2 <- ggplot(tmp2, aes(x = xmap, y = ymap, group = gpid, 
                  hoverinfo = NULL,
@@ -2774,46 +2775,15 @@ p2 <- ggplot(tmp2, aes(x = xmap, y = ymap, group = gpid,
   scale_color_viridis_d() +
   theme(legend.position="none")+ ggtitle("b)")
 
-
-#Linear Plots Example
-
-apd3_nomiss_c3 <- filter(apd3_nomiss, clust == 3)
-apd1_nomiss_c4 <- filter(apd1_nomiss, clust == 4)
-
-tmp3 <-  apd3_nomiss_c3 %>% highlight_key(~gpid)
-
-p3 <- ggplot(tmp3, aes(x = xmap, y = ymap, group = gpid, 
-                 hoverinfo = NULL,
-                 color = factor(gpid %% 10))) + 
-  geom_path(arrow = arrow(length = unit(1, "mm")), alpha = .5) + 
-  scale_color_viridis_d() +
-  theme(legend.position="none")+ ggtitle("b)")
-
-tmp4 <-  apd1_nomiss_c4 %>% highlight_key(~gpid)
-
-p4 <- ggplot(tmp4, aes(x = xmap, y = ymap, group = gpid, 
-                 hoverinfo = NULL,
-                 color = factor(gpid %% 10))) + 
-  geom_path(arrow = arrow(length = unit(1, "mm")), alpha = .5) + 
-  scale_color_viridis_d() +
-  theme(legend.position="none")+ ggtitle("a)")
-
-
 ```
 
 
-```{r int-best-plots, message=FALSE, warning = FALSE, cache=TRUE, fig.cap = "Trajectories for a) Week 1 Cluster 1 and b) Week 2 Cluster 2. These are instances where our method outperforms linear interpolation", fig.scap="Clusters for Intersection Model has lowest MSE"}
+```{r int-best-plots, message=FALSE, warning = FALSE, cache=TRUE, fig.cap = "Trajectories for a) Week 2 Cluster 1, where our method peforms best and b) Week 2 Cluster 5, where linear interpolation performs best. These are instances where our method outperforms linear interpolation"}
 
 ggarrange(p1, p2, ncol = 2)
 
 ```
 
-
-```{r lin-best-plots, message=FALSE, warning = FALSE, cache=TRUE, fig.cap = "Trajectories for a) Week 1 Cluster 4 and b) Week 3 Cluster 3. These are instances linear interpolation outperforms our method", fig.scap="Clusters for Linear Interpolation has lowest MSE"}
-
-ggarrange(p4, p3, ncol = 2)
-
-```
 
 
 <!----------------- Intersection Method ----------------------->
