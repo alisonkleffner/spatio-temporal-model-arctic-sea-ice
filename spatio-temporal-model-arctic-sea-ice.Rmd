@@ -755,15 +755,28 @@ Current methods to determine the location of leads generally either involve the 
 
 Deformation methods to locate leads is determined by the motion of sea ice. These methods use NASA's RADARSTAT Geophysical Processing System (RGPS), which uses synthetic aperture radar (SAR) images to track the trajectory of points on Arctic sea ice. To track trajectories, points are initially assigned to a vertex of a grid cell on an ice sheet, which is tracked over time using the SAR satellite images. Then the deformation of the ice is calculated within each grid cell, where areas of high deformation may be denoted as leads [@peterson_evaluating_2011]. These methods can provide additional information about a lead, such as size and deformation. However, satellite images only pass the same area typically every three to six days, thus we do not have a complete set of space-time observations to calculate deformation. Additionally, the error in the deformation calculations may be strongly underestimated as the grid cells may become distorted due to movement, which affects deformation calculations [@bouillon_producing_2015].
 
+<!--
+
+When working with static spatio-temporal data, interpolation involves the estimation of unknown data at a location and time of interest. Two main strategies exist for this type of interpolation: reduction and extension. Reduction methods reduce spatio-temporal data interpolation into a series of spatial interpolation steps, in which space and time are assumed independent [@li_interpolation_2004; @appice_using_2013]. This approach only works well if the locations are sampled at the same times. Therefore, any of the common spatial interpolation methods can be used: kriging, inverse distance weighting (IDW), and trend surfaces [@li_interpolation_2004]. Extension methods extend the spatial problem into a one higher dimension problem, with the third dimension representing time [@li_interpolation_2004; @li_fast_2014].
+-->
+
+When working with dynamic data, like the ocean surface, the spatio-temporal dynamics need to be reconstructed in order to interpolate. Satellite-derived data used to monitor dynamic items can have large missing data rates either due to the sampling rate of atmospheric conditions [@fablet_data-driven_2017]. Thus, if we want to have complete gridded data, interpolation is necessary. In optimal interpolation, the model of the covariance function of the spatio-temporal field-dynamics is used. The interpolated field is a result of a linear combination of the observations, assuming stationary [@fablet_data-drive_2017; @ouala_neural_2018]. Additionally, due to large amounts of data being collected, data driven methods have become popular. For example, data assimilation involves the construction of a dynamical systems made using the data [@li_variational_2015; @fablet_data-drive_2017; @ouala_neural_2018].
+
+<!--
+A trajectory is defined as a chronological sequence of locations, where there is a continuous mapping from the time dimension to a two-dimensional plane [@yuan_review_2017; @alowayr_reivew_2021]. Trajectory data may be collected at small time intervals or irregular time intervals, so interpolation is used to overcome this. Popular methods for trajectory interpolation generally have been grouped into four categories: linear [@wentz_comparison_2003; @long_kinematic_2016], kinematic [@long_kinematic_2016], curve [@tremblay_interpolation_2006], and random walks [@wentz_comparison_2003; @technitis_b_2015]. 
+-->
+
+Often when working with data relating to the environment, a simple global mean and covariance function is inaccurate as the relationships between variables may change over space. Hence, when developing a non-stationary spatio-temporal model, the mean and parameter function should have different parameters depending on the region. Therefore, a non-stationary model can be developed, either through a Gaussian Process or Bayesian Hierarchical framework, where the covariance function parameters varies by different regions [@guinness_nonstationary_2013; @SALVANA2020100411]. 
+
 Our proposed method for lead detection also uses the movement of the ice sheet. However, ice sheet movement is not consistent, as the underlying process will cause the ice sheet to move differently depending on the location resulting in leads [@peterson_evaluating_2011]. Thus, we aim to determine lead location by finding clusters of similar movement, where the boundaries between the clusters are the location of cracks. Additionally, using the information gained from clustering, we developed a non-stationary spatio-temporal interpolation method to estimate missing points along a trajectory. Within a cluster, all trajectories move in a similar fashion, so would expect a missing point to move similarly to observed points in the cluster. Hence, we can then create a completely gridded dataset that can be used to calculate deformation. 
 
-# Data
+# Data {#data}
 
 Data on the movement of the ice sheet comes from NASA's RADARSTAT Geophysical Processing System (RGPS). RGPS data is useful as it is independent of cloud coverage and has broad spatial coverage. Trajectories of around 30,000 points are tracked by RGPS using sequential synthetic aperture radar (SAR) images on the Arctic sea ice [@lindsay_radarsat_2003]. To track these points, an initial grid is created at the start of the study period where each cell dimension is 10 km on a side [@kwok_seasonal_2002]. The vertex of each cell is assigned an identifier $g$. In each SAR image, the points is found again using area-based and feature-based tracking [@peterson_evaluating_2011]. The trajectories of each identifier $g$ form a set of all trajectories $\mathcal{G} =\left\{g_1,...,g_n\right\}$, where $g_j = \left\{s_{jt}: t \in \mathcal{T}_j\right\}$. The location of $g_j$ is represented as $s_{jt} = (x_{jt}, y_{jt})$ or a set of latitudes and longitudes. Most $g_j$ are tracked in three day intervals, however sampling can be irregular [@peterson_evaluating_2011]. Thus, $\mathcal{T}_j \subset \left\{1,...,T\right\}$, which  is a collection of time points where identifier $g_j$ is observed. We focus on the Beaufort region, which has n = 8811 and $T$=22.
 
 
 
-```{r trajectories, fig.cap = "Plot of only known locations of each $g_j$, represented by a line, to show movement. An arrow is given to indicate direction of movement. The color of each $g_j$ does not have special meaning, they are just used to distinguish individual trajectories.", cache=TRUE, message=FALSE, warning = FALSE, fig.height = 5, fig.width = 9}
+```{r trajectories, fig.cap = "Plot of only known locations of each $g_j$, represented by a line, to show movement. An arrow is given to indicate direction of movement. The color of each $g_j$ does not have special meaning, they are just used to distinguish individual trajectories.", cache=TRUE, message=FALSE, warning = FALSE, fig.height = 5, fig.width = 7}
 colnames(tmp) <- c("gpid", "k", "obs_time", "x", "y", "location", "t", "i") #Why did I do this?
 
 tmp2 <- tmp %>% highlight_key(~gpid)
@@ -786,7 +799,7 @@ Since we want to detect cracks only using movement data, it is first important t
 
 ## Spatio-Temporal Clustering: Bounding Box
 
-```{r bb-pic, fig.scap="Bounding Example", fig.cap= "Picture of points used to calculate features of our Bounding Box", out.width="60%"}
+```{r bb-pic, fig.scap="Bounding Example", fig.cap= "Picture of points used to calculate features of our Bounding Box", out.width="50%"}
 
 knitr::include_graphics("images/bounding-box.png")
 ```
