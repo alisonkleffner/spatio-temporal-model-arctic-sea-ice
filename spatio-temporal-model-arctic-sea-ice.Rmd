@@ -21,7 +21,7 @@ keywords:
 - Gaussian process. 
 
 abstract: |
-  Arctic Sea Ice is a barrier between the warm air of the ocean and the atmosphere, thus playing an important role in the climate. When narrow linear cracks (leads) form in the sea ice, the heat from the ocean is then released into the atmosphere. To estimate where cracks may form, motion data from the RADARSAT Geophysical Processing System (RGPS) are analyzed. The RGPS provides a set of trajectories (or cells) to trace the displacements of sea ice, however, chunks of data are missing due to the data collection method. We propose a spatial clustering and interpolation method that allows us to infer missing observations and estimate, where a crack may form. To do this feature inputs were created for KNN clustering by creating a bounding box around each trajectory, resulting in trajectories being assigned a cluster. A crack is considered to have formed on the boundary between different clusters. Within the clusters, spatiotemporal interpolation method is used to infer missing locations. Our clustering approach is then compared to other methods to determine ice crack formation, and cross-validation is used to assess our interpolation method.
+  Arctic Sea Ice is a barrier between the warm air of the ocean and the atmosphere, thus playing an important role in the climate. When narrow linear cracks (leads) form in the sea ice, the heat from the ocean is released into the atmosphere. To estimate where cracks may form, motion data from the RADARSAT Geophysical Processing System (RGPS) is analyzed. RGPS provides a set of trajectories of points on the ice sheet to trace the displacement of sea ice, however, chunks of data are missing due to the data collection method by satellite. We propose a spatio-temporal clustering and interpolation method that estimates where a crack may form and allows us to infer missing observations. Features based on the sea ice displacement are created for k-means clustering by creating a bounding box around each trajectory, resulting in trajectories being assigned a cluster. A crack is considered to have formed on the boundary between different clusters. Within the clusters, a spatio-temporal interpolation model using a Gaussian Process is used to infer missing locations. Our clustering approach is compared to ice lead detection methods, and cross-validation is used to assess our interpolation method.
 
 bibliography: bibliography.bib
 output: rticles::asa_article
@@ -791,6 +791,13 @@ Since we want to detect cracks only using movement data, it is first important t
 # Methods {#methods}
 
 ## Spatio-Temporal Clustering: Bounding Box
+
+```{r bb-pic, fig.scap="Bounding Example", fig.cap= "Picture of points used to calculate features of our Bounding Box", out.width="80%"}
+
+knitr::include_graphics("images/bounding-box.png")
+```
+
+
 
 ### Bounding Box Features
 
@@ -1588,8 +1595,8 @@ xy_join1 <- right_join(f1, xy1, by = c("gpid", "t"))
 xy_join1 <- xy_join1 %>% distinct(gpid,t,.keep_all= TRUE)
 
 
-error_x1 <- sum((xy_join1$xmap-xy_join1$xmap_pred)^2)/nrow(xy_join1) #6.24
-error_y1 <- sum((xy_join1$ymap-xy_join1$ymap_pred)^2)/nrow(xy_join1) #5.03
+error_x1 <- sum((xy_join1$xmap-xy_join1$xmap_pred)^2)/nrow(xy_join1) 
+error_y1 <- sum((xy_join1$ymap-xy_join1$ymap_pred)^2)/nrow(xy_join1) 
 
 
 ```
