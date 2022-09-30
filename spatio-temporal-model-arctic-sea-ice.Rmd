@@ -435,7 +435,8 @@ lat_sim <- function(int, m, m_new, tp, frame, frame2){
   Y <- known[,5]
   fit <- fit_model(Y,locs, X, "exponential_spacetime", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,min(30,N-1)), silent = TRUE) #needs to go to number of rows - 1
   known_grd <- sim_estimate(m_new,int,tp,grid, frame)
-  locs_pred <- as.matrix(known_grd[,c("xmap", "ymap","obs_time")]) # Would need to create obs_time when don't have them (round number?)
+  known_grd2 <- filter(known_grd, !is.na(gpid_id))
+  locs_pred <- as.matrix(known_grd2[,c("xmap", "ymap","obs_time")]) # Would need to create obs_time when don't have them (round number?)
   colnames(locs_pred) <- c("xmap", "ymap", "obs_time")
   X_pred <- as.matrix(rep(1,nrow(locs_pred)))
   ncondsim <- 30
@@ -464,7 +465,8 @@ long_sim <- function(int, m, m_new, tp, frame, frame2){
   Y <- known[,6]
   fit <- fit_model(Y,locs, X, "exponential_spacetime", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,min(30,N-1)), silent = TRUE) #needs to go to number of rows - 1
   known_grd <- sim_estimate(m_new,int,tp,grid, frame)
-  locs_pred <- as.matrix(known_grd[,c("xmap", "ymap","obs_time")]) # Would need to create obs_time when don't have them (round number?)
+  known_grd2 <- filter(known_grd, !is.na(gpid_id))
+  locs_pred <- as.matrix(known_grd2[,c("xmap", "ymap","obs_time")]) # Would need to create obs_time when don't have them (round number?)
   colnames(locs_pred) <- c("xmap", "ymap", "obs_time")
   X_pred <- as.matrix(rep(1,nrow(locs_pred)))
   ncondsim <- 30
@@ -488,12 +490,13 @@ for (r in 1:7){
       sd_df <- sd_pred_sim(pred[[1]],pred[[2]])
       grid_t <- grid_tp_sim(df2,r,int_list)
       known2 <- sim_estimate(int_df,i,r,grid_t, df)
-      df_p = data.frame(sd_df, i, r, known2$gpid)
+      known3 <- filter(known2, !is.na(gpid_id))
+      df_p = data.frame(sd_df, i, r, known3$gpid)
       pred_cv = rbind.data.frame(pred_cv, df_p)}, error=function(e){return(NA)})
   }
-  all_pred <- rbind.data.frame(all_pred,pred_cv)
+  #all_pred <- rbind.data.frame(all_pred,pred_cv)
 }
-  return(all_pred)
+  return(pred_cv)
 }
 
 all_long <- function(df, df2, int_list, int_df){
@@ -504,12 +507,13 @@ all_long <- function(df, df2, int_list, int_df){
         sd_df <- sd_pred_sim(pred[[1]],pred[[2]])
         grid_t <- grid_tp_sim(df2,r,int_list)
         known2 <- sim_estimate(int_df,i,r,grid_t, df)
-        df_p = data.frame(sd_df, i, r, known2$gpid)
+        known3 <- filter(known2, !is.na(gpid_id))
+        df_p = data.frame(sd_df, i, r, known3$gpid)
         pred_cv = rbind.data.frame(pred_cv, df_p)}, error=function(e){return(NA)})
     }
-    all_pred <- rbind.data.frame(all_pred,pred_cv)
+    #all_pred <- rbind.data.frame(all_pred,pred_cv)
   }
-  return(all_pred)
+  return(pred_cv)
 }
 
 
@@ -1589,21 +1593,22 @@ for(t in sel){
 ```{r sim1-res, message=FALSE, warning = FALSE, cache=TRUE}
 
 #Gives Location for X
-int_1x = all_lat(w1, f1,polyg1,n1)
+int_1x = all_lat(w1, f_sim1,polyg1,n1)
+
 
 #Gives Location for Y
-int_1y = all_long(w1,f1,polyg1,n1)
+int_1y = all_long(w1,f_sim1,polyg1,n1)
 
-xy1 <- data.frame(int_1x$known2.gpid, int_1x$r, int_1x$i, int_1x$pred_df, int_1x$sd, int_1x$lc, int_1x$uc, int_1y$pred_df, int_1y$sd, int_1y$lc, int_1y$uc)
+xy1 <- data.frame(int_1x$known3.gpid, int_1x$r, int_1x$i, int_1x$pred_df, int_1x$sd, int_1x$lc, int_1x$uc, int_1y$pred_df, int_1y$sd, int_1y$lc, int_1y$uc)
 colnames(xy1) <- c("gpid", "t", "intersection", "xmap_pred", "x_sd", "x_lc", "x_uc", "ymap_pred", "y_sd", "y_lc", "y_uc")
 
 
-xy_join1 <- right_join(f1, xy1, by = c("gpid", "t"))
+xy_join1 <- right_join(f_sim1, xy1, by = c("gpid", "t"))
 xy_join1 <- xy_join1 %>% distinct(gpid,t,.keep_all= TRUE)
 
 
-error_x1 <- sum((xy_join1$xmap-xy_join1$xmap_pred)^2)/nrow(xy_join1) 
-error_y1 <- sum((xy_join1$ymap-xy_join1$ymap_pred)^2)/nrow(xy_join1) 
+error_x1 <- sqrt(sum((xy_join1$xmap-xy_join1$xmap_pred)^2)/nrow(xy_join1)) #1.501
+error_y1 <- sqrt(sum((xy_join1$ymap-xy_join1$ymap_pred)^2)/nrow(xy_join1)) #1.52
 
 
 ```
@@ -1714,22 +1719,22 @@ for(t in sel){
 ```{r sim2-res, message=FALSE, warning = FALSE, cache=TRUE}
 
 #Gives Location for X
-int_2x = all_lat(w2, f1,polyg2,n2)
+int_2x = all_lat(w2, f_sim2,polyg2,n2)
 
 
 #Gives Location for Y
-int_2y = all_long(w2,f1,polyg2,n2)
+int_2y = all_long(w2,f_sim2,polyg2,n2)
 
-xy2 <- data.frame(int_2x$known2.gpid, int_2x$r, int_2x$i, int_2x$pred_df, int_2x$sd, int_2x$lc, int_2x$uc, int_2y$pred_df, int_2y$sd, int_2y$lc, int_2y$uc)
+xy2 <- data.frame(int_2x$known3.gpid, int_2x$r, int_2x$i, int_2x$pred_df, int_2x$sd, int_2x$lc, int_2x$uc, int_2y$pred_df, int_2y$sd, int_2y$lc, int_2y$uc)
 colnames(xy2) <- c("gpid", "t", "intersection", "xmap_pred", "x_sd", "x_lc", "x_uc", "ymap_pred", "y_sd", "y_lc", "y_uc")
 
 
-xy_join2 <- right_join(f1, xy2, by = c("gpid", "t"))
+xy_join2 <- right_join(f_sim2, xy2, by = c("gpid", "t"))
 xy_join2 <- xy_join2 %>% distinct(gpid,t,.keep_all= TRUE)
 
 
-error_x2 <- sum((xy_join2$xmap-xy_join2$xmap_pred)^2)/nrow(xy_join2) #6.24
-error_y2 <- sum((xy_join2$ymap-xy_join2$ymap_pred)^2)/nrow(xy_join2) #5.03
+error_x2 <- sqrt(sum((xy_join2$xmap-xy_join2$xmap_pred)^2)/nrow(xy_join2)) #1.543
+error_y2 <- sqrt(sum((xy_join2$ymap-xy_join2$ymap_pred)^2)/nrow(xy_join2)) #1.55
 
 
 ```
@@ -1845,19 +1850,19 @@ for(t in sel){
 ```{r sim3-res, message=FALSE, warning = FALSE, cache=TRUE}
 
 #Gives Location for X
-int_3x = all_lat(w3, f1,polyg3,n3)
+int_3x = all_lat(w3, f_sim3,polyg3,n3)
 
 #Gives Location for Y
-int_3y = all_long(w3,f1,polyg3,n3)
+int_3y = all_long(w3,f_sim3,polyg3,n3)
 
-xy3 <- data.frame(int_3x$known2.gpid, int_3x$r, int_3x$i, int_3x$pred_df, int_3x$sd, int_3x$lc, int_3x$uc, int_3y$pred_df, int_3y$sd, int_3y$lc, int_3y$uc)
+xy3 <- data.frame(int_3x$known3.gpid, int_3x$r, int_3x$i, int_3x$pred_df, int_3x$sd, int_3x$lc, int_3x$uc, int_3y$pred_df, int_3y$sd, int_3y$lc, int_3y$uc)
 colnames(xy3) <- c("gpid", "t", "intersection", "xmap_pred", "x_sd", "x_lc", "x_uc", "ymap_pred", "y_sd", "y_lc", "y_uc")
 
-xy_join3 <- right_join(f1, xy3, by = c("gpid", "t"))
+xy_join3 <- right_join(f_sim3, xy3, by = c("gpid", "t"))
 xy_join3 <- xy_join3 %>% distinct(gpid,t, .keep_all= TRUE)
 
-error_x3 <- sum((xy_join3$xmap-xy_join3$xmap_pred)^2)/nrow(xy_join3) #6.24
-error_y3 <- sum((xy_join3$ymap-xy_join3$ymap_pred)^2)/nrow(xy_join3) #5.03
+error_x3 <- sqrt(sum((xy_join3$xmap-xy_join3$xmap_pred)^2)/nrow(xy_join3)) #1.403
+error_y3 <- sqrt(sum((xy_join3$ymap-xy_join3$ymap_pred)^2)/nrow(xy_join3)) #1.399
 
 
 ```
@@ -1936,13 +1941,12 @@ noint_y_sim3 <- sum((xy_join_noint3$ymap-xy_join_noint3$ymap_pred)^2)/nrow(xy_jo
 
 ```{r results-table, message=FALSE, warning = FALSE, cache = TRUE}
 
-result_data <- data.frame(X1 = c(sqrt(error_x1), sqrt(error_x2), sqrt(error_x3)), Y1 = c(sqrt(error_y1), sqrt(error_y2), sqrt(error_y3)), X2 = c(sqrt(error_x_lin1), sqrt(error_x_lin2), sqrt(error_x_lin3)), Y2 = c(sqrt(error_y_lin1), sqrt(error_y_lin2), sqrt(error_y_lin3)), X3 = c(sqrt(noint_x_sim1), sqrt(noint_x_sim2), sqrt(noint_x_sim3)), Y3 = c(sqrt(noint_y_sim1), sqrt(noint_y_sim2), sqrt(noint_y_sim3)))
+result_data <- data.frame(X1 = c((error_x1), (error_x2), (error_x3)), Y1 = c((error_y1), (error_y2), (error_y3)), X2 = c(sqrt(error_x_lin1), sqrt(error_x_lin2), sqrt(error_x_lin3)), Y2 = c(sqrt(error_y_lin1), sqrt(error_y_lin2), sqrt(error_y_lin3)), X3 = c(sqrt(noint_x_sim1), sqrt(noint_x_sim2), sqrt(noint_x_sim3)), Y3 = c(sqrt(noint_y_sim1), sqrt(noint_y_sim2), sqrt(noint_y_sim3)))
  
 kableExtra::kable(result_data, booktabs = TRUE, caption = "RMSE for Interpolation Methods", col.names = c("$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{no int}$", "$Y_{no int}$"), escape = FALSE) %>% pack_rows(
   index = (c("Simulation 1" = 1, "Simulation 2" = 1, "Simulation 3" = 1))
 ) %>% 
   add_header_above(c("Intersection" = 2, "Linear" = 2, "No Intersection" = 2))
-
 
 ```
 
@@ -1960,7 +1964,6 @@ xy_join1$ininty[xy_join1$y_lc < xy_join1$ymap & xy_join1$ymap < xy_join1$y_uc] <
 cp_sim1_y <- sum(xy_join1$ininty)/nrow(xy_join1) #coverage probability
 sd_sim1_y <- mean(xy_join1$y_sd)
 
-
 ```
 
 
@@ -1976,6 +1979,7 @@ xy_join2$ininty[xy_join2$y_lc < xy_join2$ymap & xy_join2$ymap < xy_join2$y_uc] <
 cp_sim2_y <- sum(xy_join2$ininty)/nrow(xy_join2) #coverage probability
 sd_sim2_y <- mean(xy_join2$y_sd)
 
+
 ```
 
 
@@ -1990,7 +1994,6 @@ xy_join3$ininty <- 0
 xy_join3$ininty[xy_join3$y_lc < xy_join3$ymap & xy_join3$ymap < xy_join3$y_uc] <- 1
 cp_sim3_y <- sum(xy_join3$ininty)/nrow(xy_join3) #coverage probability
 sd_sim3_y <- mean(xy_join3$y_sd)
-
 
 ```
 
@@ -2036,7 +2039,6 @@ sim1_y_c1_noi <- sum((x1_c1_noint$ymap-x1_c1_noint$ymap_pred)^2)/nrow(x1_c1_noin
 sim1_x_c2_noi <- sum((x1_c2_noint$xmap-x1_c2_noint$xmap_pred)^2)/nrow(x1_c2_noint)
 sim1_y_c2_noi <- sum((x1_c2_noint$ymap-x1_c2_noint$ymap_pred)^2)/nrow(x1_c2_noint)
 
-
 ```
 
 ```{r sim-by-clus2, message=FALSE, warning = FALSE}
@@ -2072,7 +2074,6 @@ sim2_y_c1_noi <- sum((x2_c1_noint$ymap-x2_c1_noint$ymap_pred)^2)/nrow(x2_c1_noin
 sim2_x_c2_noi <- sum((x2_c2_noint$xmap-x2_c2_noint$xmap_pred)^2)/nrow(x2_c2_noint)
 sim2_y_c2_noi <- sum((x2_c2_noint$ymap-x2_c2_noint$ymap_pred)^2)/nrow(x2_c2_noint)
 
-
 ```
 
 ```{r sim-by-clus3, message=FALSE, warning = FALSE}
@@ -2097,7 +2098,6 @@ lin3_y_c2 <- sum((miss_na3_2$ymap-miss_na3_2$ymap_pred)^2)/nrow(miss_na3_2)
 
 #Model without Intersection
 
-
 x3_c1_noint <- filter(xy_join_noint3, clust == 1)
 x3_c2_noint <- filter(xy_join_noint3, clust == 2)
 
@@ -2121,6 +2121,7 @@ kableExtra::kable(result_data_clust, booktabs = TRUE, caption = "RMSE for Interp
 ) %>% 
   add_header_above(c(" ", "Intersection" = 2, "Linear" = 2, "No Intersection" = 2))
 
+
 ```
 
 
@@ -2129,7 +2130,6 @@ kableExtra::kable(result_data_clust, booktabs = TRUE, caption = "RMSE for Interp
 cp_simdata <- data.frame(sim = c("1", "2", "3"), cov_probx = c(cp_sim1_x, cp_sim2_x, cp_sim3_x), sdx = c(sd_sim1_x, sd_sim2_x, sd_sim3_x), cov_proby = c(cp_sim1_y, cp_sim2_y , cp_sim3_y), sdx = c(sd_sim1_y, sd_sim2_y, sd_sim3_y))
 
 kableExtra::kable(cp_simdata, booktabs = TRUE, col.names = c("Simulation", "Proportion of X", "Avg SD of X", "Proportion of Y", "Avg SD of Y"), caption = "Proportion of Prediction interval containing observed and Average Standard Deviation of Estimates for Simulated Data") 
-
 
 ```
 
@@ -2145,11 +2145,11 @@ cp_sim2_y <- xy_join2 %>% group_by(clust) %>% summarise(cp = sum((ininty)/n()))
 cp_sim3_x <- xy_join3 %>% group_by(clust) %>% summarise(cp = sum((inintx)/n()))
 cp_sim3_y <- xy_join3 %>% group_by(clust) %>% summarise(cp = sum((ininty)/n()))
 
-
 ```
 
 
 ```{r cp-sim-table, message=FALSE, warning=FALSE, cache=TRUE}
+
 
 cp_by_clust_sim <- data.frame(Cluster = c(1,2), w1x = c(round(cp_sim1_x[,2],4)), w1y = c(round(cp_sim1_y[,2],4)), w2x = round(cp_sim2_x[,2],4), w2y = round(cp_sim2_y[,2],4), w3x = round(cp_sim3_x[,2],4),  w3y = c(round(cp_sim3_y[,2],4)))
 #
@@ -4275,7 +4275,7 @@ Through our simulated and ice motion data, we have demonstrated some situations 
 
 An drawback of our method for finding spatio-temporal neighbors is that if an object is not located within an intersection, it is removed from the data used to develop the models. Thus, we could be losing valuable information for model development to obtain the estimates. Typically this only happens to the $g_j$ on the edges of the ice sheet. 
 
-When developing the models with the Vecchia Approximation, some other issues arise. The first is that when the temporal range is exceptionally large, especially in comparison with the spatial range, the model be fit as the log-likelihood does not converge. Additionally, the estimated covariance parameters do not make sense practically even when the model can be successfully fit. This is because the parameter values are large, though the variance and spatial range values are sometimes reasonable for the simulated data. For example, the large temporal range means that the data is not changing much over time, and there is a strong dependence over multiple lifetime's worth of data, which is not realistic. Using the simulated data as an example, in simulation 1 the $y$-values for cluster 2 were generated with $\sigma^2$ = 80, $\phi$ = 50, $\tau$ = 10, $c_0$= 0. The covariance parameter estimates for one of the intersection on the third day were: $\sigma^2$ = 77.91, $\phi$ = 458, $\tau$ = 686,239.164, $c_0$ = 0. In this scenario, the model is overestimating the spatial and temporal range parameters, with the temporal range being a larger overestimate. This may be due to only working with a small amount of data that is not moving much over time. This is especially true when considering the ice motion data. With the simulation data, we tried setting a value for the range parameters to their true values. We found that if we set $\phi$, then $\tau$ is still large. On the other hand, if we set $\tau$, then $\phi$ is closer to the true value. This shows that the temporal dependence is posing an issue, which may be due to the lack of movement over the days. Potentially obtaining more practical covariance parameter estimates may lead to better predictions and a higher coverage.  
+When developing the models with the Vecchia Approximation, some other issues arise. The first is that when the temporal range is exceptionally large, especially in comparison with the spatial range, the model be fit as the log-likelihood does not converge. Additionally, the estimated covariance parameters do not make sense practically even when the model can be successfully fit. This is because the parameter values are large, though the variance and spatial range values are sometimes reasonable for the simulated data. For example, the large temporal range means that the data is not changing much over time, and there is a strong dependence over multiple lifetime's worth of data, which is not realistic. Using the simulated data as an example, the covariance parameter estimates for one of the intersection on the third day were: $\sigma^2$ = 77.91, $\phi$ = 458, $\tau$ = 686,239.164, $c_0$ = 0. In this scenario, the temporal range is quite large, which may be due to only working with a small amount of data that is not moving much over time. This is especially true when considering the ice motion data. Potentially obtaining more practical covariance parameter estimates may lead to better predictions and a higher coverage.  
 
 Another potential source for error when using a space-time covariance function is that variation in time is needed. Otherwise, if there is only observed data for one of the three days used to create the model, the model cannot be developed. Finally, another issue, mainly seen in the overall model for week 1 in \cref{tab:border-cv-rmse}, is the location columns were sometimes considered too linearly dependent to form a model. Though taking a random subset of the data generally allowed the model to converge.  
 
