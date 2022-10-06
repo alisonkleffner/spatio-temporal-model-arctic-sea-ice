@@ -28,3 +28,6 @@ gridExtra
 RColorBrewer
 kableExtra
 zoo
+Matrix
+foreach
+INLA

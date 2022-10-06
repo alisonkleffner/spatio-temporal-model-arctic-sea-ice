@@ -1,5 +1,7 @@
 ## Create a Variogram
 
+library("gstat")
+
 b <- variogram(xmap ~ t , ~xmap+ymap, data= anim_plot_data3)
 plot(b)
 

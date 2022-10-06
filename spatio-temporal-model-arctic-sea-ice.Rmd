@@ -70,6 +70,7 @@ library(gridExtra)
 library(RColorBrewer)
 library(kableExtra)
 library(zoo)
+library(INLA)
 
 ```
 
@@ -856,6 +857,10 @@ To fit the model, we need to define:
 
 We specified the covariance function as the exponential space-time covariance function. It is defined as $$\Sigma_{\theta}(s;t) = \Sigma^{(s)}_{\theta}*\Sigma^{(t)}_{\theta} \quad (1)$$ where $\Sigma^{(s)}_{\theta} = \sigma^2\exp\left\{||x-y||/\phi\right\}$ and $\Sigma^{(t)}_{\theta} = \sigma^2\exp\left\{-|t|/\tau\right\}$. The parameters in the covariance function are $\sigma^2$ (variance), $\phi$ (spatial range), and $tau$ (temporal range). The spatial and temporal ranges are smoothness parameters that relate to dependence over space and time respectively. The output is the maximum Vecchia likelihood estimates for the covariance parameters. The model created by these estimates can be used to predict the unobserved locations at the time ($t$). The initial grid estimates of the coordinates are used as the starting locations in the prediction function and shifted based on the estimated model parameters. Predictions for the coordinate are made by finding the conditional expectation of the model developed.  
 
+### Bivariate Interpolation
+
+Additionally, we considered a joint (bivariate) response method, as when a observation is missing it is missing both coordinates. Thus, it is desirable to predict both coordinates at the same time as a joint model can take into account correlation between x and y. The Integrated Nested Laplace Approximation (INLA), using the R-INLA package can create joint response models [@rue_inla_2009, @rue_review_2017]. INLA is a Bayesian Hierarchical approach which allows for the spatio-temporal structure of the data to be taken into account in the inferential process. In INLA, the linear predictor, $$\eta_{i} = \sum^{M}_{m=1}\beta_{M}x_{mi} + \sum^{L}_{l=1}f_{l}(z_{li}) \quad (3)$$ takes on the form of a Bayesian Additive Model, where $f_{l}(z_{li})$ are unknown functions of the covariates and $\beta_{M}x_{mi}$ are linear effects of the covariates [@BLANGIARDO201333]. A subset of Bayesian additive models, latent Gaussian models, are used and assigned Gaussian priors [@MORAGA2021100440]. This is beneficial as a latent field is a Gaussian Markov Random Field with a sparse precision matrix [@BLANGIARDO201333]. Latent effects are denoted by x and hyperparameters by $\theta$. In INLA, the main aim is to solve for the posterior marginal distributions of x ($\pi(x_i|y)$) and $\theta$ $(\pi(\theta_j|y))$. Solving for the posterior marginal exploits assumptions of the model where a numerical approximation to the posterior is found through the Laplace Approximation [@rue_inla_2009].
+
 
 # Simulation Study {#simulation}
 
@@ -1538,8 +1543,6 @@ feat_data1_1 <- d_new %>%
   arrange(gpid)
 
 
-
-
 ```
 
 
@@ -1556,8 +1559,6 @@ f2 <- filter(feat_data1_1, t > 7)
 y1 <- polygon_sim(7, f1)
 y2 <- polygon_sim(8, f2)
 
-
-
 ## Get Intersection
 
 intersections_pp <- st_intersection(y1, y2) %>% mutate(int_name = paste0(Group.1, "-", Group.1.1))
@@ -1570,7 +1571,6 @@ FrameData <- lapply(z, function(x) as.data.frame(x))
 new<- melt(FrameData)[,-1] #gives list of index and intersection group
 colnames(new) <- c("gpid", "intersection")
 n1 <- merge(feat_t1, new, by = "gpid") #Data frame of all of the gpids with interactions
-
 
 ```
 
@@ -1586,7 +1586,6 @@ sel <- sample( nrow(w1), size = p*nrow(w1))
 for(t in sel){
   w1[t,c(5,6)] <- NA #w1[t,c(3,4)] <- NA
 }
-
 
 ```
 
@@ -1677,9 +1676,11 @@ feat_data1_2 <- d_new %>%
 f1 <- filter(feat_data1_2, t < 8)
 f2 <- filter(feat_data1_2, t > 7)
 
+
 ```
 
 ```{r sim2-int, message=FALSE, warning = FALSE}
+
 
 y1 <- polygon_sim(7, f1)
 y2 <- polygon_sim(8, f2)
@@ -1712,7 +1713,6 @@ sel <- sample(nrow(w2), size = p*nrow(w2))
 for(t in sel){
   w2[t,c(5,6)] <- NA #w1[t,c(3,4)] <- NA
 }
-
 
 ```
 
@@ -1805,6 +1805,7 @@ feat_data1_3 <- d_new %>%
 f1 <- filter(feat_data1_3, t < 8)
 f2 <- filter(feat_data1_3, t > 7)
 
+
 ```
 
 
@@ -1812,7 +1813,6 @@ f2 <- filter(feat_data1_3, t > 7)
 
 y1 <- polygon_sim(7, f1)
 y2 <- polygon_sim(8, f2)
-
 
 ## Get Intersection
 intersections_pp <- st_intersection(y1, y2) %>% mutate(int_name = paste0(Group.1, "-", Group.1.1))
@@ -1833,7 +1833,6 @@ n3 <- merge(feat_t1, new, by = "gpid") #Data frame of all of the gpids with inte
 
 w3 <- f1
 f_sim3 <- f1
-
 
 p <- 0.1 #proportion of missing values
 set.seed(5)
@@ -1937,16 +1936,198 @@ noint_y_sim3 <- sum((xy_join_noint3$ymap-xy_join_noint3$ymap_pred)^2)/nrow(xy_jo
 
 ```
 
+<!-- Bivariate Interpolation --------------------->
+
+```{r sim-bi-functions}
+
+get_data <- function(df, tp, i){
+  obs1 <- filter(df, t == tp & intersection == i)
+  obs2 <- filter(df, t == tp-1 & !is.na(xmap) & intersection == i)
+  obs3 <- filter(df, t == tp+1 & !is.na(xmap) & intersection == i)
+  obs4 <- rbind(obs1, obs2, obs3)
+  return(obs4)
+}
+
+
+data_inla <- function(f, tp, poly, w, n, int){
+
+  grd <- grid_tp_sim(f, tp, poly)
+
+  final_wgrd <- inner_join(w, grd, by = "gpid")[,c(1,2,3,4,5,6,8,13,14)]
+
+  colnames(final_wgrd) <- c("gpid","t", "ux", "uy", "xmap", "ymap", "clust", "x_grid", "y_grid")
+
+  withint <- inner_join(final_wgrd, n[,c(1,9)], by = "gpid")
+
+  withint2<- withint %>% distinct(gpid, t, .keep_all= TRUE)
+
+  with_act <- inner_join(withint2, f[,c(1,2,5,6)], by = c("gpid", "t"))
+  colnames(with_act) <- c("gpid","t", "ux", "uy", "xmap", "ymap", "clust", "x_grid", "y_grid", "intersection", "x_actual", "y_actual")
+
+  w1_known <- filter(with_act , !is.na(xmap))
+  w1_miss <- filter(with_act , is.na(xmap))
+
+  w1_miss$xval <- w1_miss$x_grid
+  w1_miss$yval <- w1_miss$y_grid
+
+  w1_known$xval <- w1_known$x_actual
+  w1_known$yval <- w1_known$y_actual
+
+  w_new <- rbind(w1_known, w1_miss)
+
+  #Just Get Day Before and Day After
+  d <- get_data(w_new, tp, int)
+  #remove na grid
+  d2 <- filter(d, !is.na(x_grid))
+  return(d2)
+
+}
+
+sim_inla <- function(f_new, tp_new, poly_new, w_new, n_new, int_new){
+  val2 <- data_inla(f_new, tp_new, poly_new, w_new, n_new, int_new)
+  n <- nrow(val2) #Seems to be doing better when have more data 
+  XY <- matrix(NA, ncol =2, nrow= n*2)
+  XY[1:n,1] <- val2$xmap #likelihood 1
+  XY[n+1:n,2]<- val2$ymap #likelihood 2
+  I <- matrix(NA, nrow = 2*n, ncol=2)
+  I[1:n, 1] <- 1
+  I[n+1:n,2] <- 1
+  
+  t.joint <- rep(val2$t,2)
+  idx.t <- rep(1:2, each = n)
+  x.joint <- rep(val2$xval, 2)
+  y.joint <- rep(val2$yval, 2)
+  idx.x <- rep(1:2, each = n)
+  idx.y <- rep(1:2, each = n)
+  
+  data2 <- list(R = XY, I = I, xval = x.joint, yval = y.joint, idx.x = idx.x, idx.y = idx.y, t = t.joint,  idx.t = idx.t)
+  
+  form2 <- R ~ I + f(idx.x, xval, model="iid", n=2) + f(idx.y, yval, model="iid", n=2) + f(idx.t, t, model="rw1", n=2)
+  
+  
+  m0.2lik <- inla(form2, family = c("gaussian", "gaussian"),
+                data = data2,
+                control.predictor = list(compute = TRUE),
+                control.compute=list(dic=TRUE)#, verbose = TRUE
+  )
+ 
+  x.na <- which(is.na(val2$xmap))
+  y.na <- which(is.na(val2$ymap))
+ 
+  r1 <- m0.2lik$summary.fitted.values[x.na, c("mean", "sd")]
+  r2 <- m0.2lik$summary.fitted.values[n+ y.na, c("mean", "sd")]
+  
+
+  m <- val2[x.na,]
+  m$xpred <- r1[,1]
+  m$x_sd <- r1[,2]
+  m$ypred <- r2[,1]
+  m$y_sd <- r2[,2]
+  
+  
+  #m <- m[,c(1,9,15,16,10,17,18,11,12)] #giving us grid values as prediction
+  
+  return(m)
+}
+
+
+all_pred <- NULL
+pred_cv <- NULL
+all_inla <- function(df, df2, int_list, int_df){
+  for (r in 1:7){
+    for (i in 1:4){
+      tryCatch({
+        pred = sim_inla(df,r,int_list,df2,int_df, i)
+        pred2 = data.frame(pred)
+        df_p = data.frame(pred2, r)
+        pred_cv = rbind.data.frame(pred_cv, df_p)}, error=function(e){return(NA)})
+    }
+    #all_pred <- rbind.data.frame(all_pred,pred_cv)
+  }
+  return(pred_cv)
+}
+
+```
+
+
+```{r bi-results1, cache=TRUE, message=FALSE, warning=FALSE}
+
+w1_new <- w1[,-9]
+
+guess1 <- all_inla(f_sim1, w1_new, polyg1, n1)
+
+x_error1 <- sqrt(sum((guess1$x_actual-guess1$xpred)^2)/nrow(guess1)) #1.541
+y_error1 <- sqrt(sum((guess1$y_actual-guess1$ypred)^2)/nrow(guess1)) #1.641
+
+# bi_c_x1 <- guess1 %>% group_by(clust) %>% summarise(x = sqrt((sum((xpred-x_actual)^2)/n()))) #1- 1.42, 2- 1.63
+# bi_c_y1 <- guess1 %>% group_by(clust) %>% summarise(y = sqrt((sum((ypred-y_actual)^2)/n()))) #1- 1.70, 2- 1.59
+
+bi1_c1 <- filter(guess1, clust == 1)
+bi1_c2 <- filter(guess1, clust == 2)
+
+bi1_x_c1 <- sum((bi1_c1$x_actual-bi1_c1$xpred)^2)/nrow(bi1_c1)
+bi1_y_c1 <- sum((bi1_c1$y_actual-bi1_c1$ypred)^2)/nrow(bi1_c1)
+bi1_x_c2 <- sum((bi1_c2$x_actual-bi1_c2$xpred)^2)/nrow(bi1_c2)
+bi1_y_c2 <- sum((bi1_c2$y_actual-bi1_c2$ypred)^2)/nrow(bi1_c2)
+
+```
+
+```{r bi-results2, cache=TRUE, message=FALSE, warning=FALSE}
+
+w2_new <- w2[,-9]
+
+guess2 <- all_inla(f_sim2, w2_new, polyg2, n2)
+
+x_error2 <- sqrt(sum((guess2$x_actual-guess2$xpred)^2)/nrow(guess2)) #1.627
+y_error2 <- sqrt(sum((guess2$y_actual-guess2$ypred)^2)/nrow(guess2)) #1.58
+
+# bi_c_x2 <- guess2 %>% group_by(clust) %>% summarise(x = sqrt((sum((xpred-x_actual)^2)/n()))) #1- 1.80, 2- 1.57
+# bi_c_y2 <- guess2 %>% group_by(clust) %>% summarise(y = sqrt((sum((ypred-y_actual)^2)/n()))) #1- 1.72, 2- 1.54
+
+bi2_c1 <- filter(guess2, clust == 1)
+bi2_c2 <- filter(guess2, clust == 2)
+
+bi2_x_c1 <- sum((bi2_c1$x_actual-bi2_c1$xpred)^2)/nrow(bi2_c1)
+bi2_y_c1 <- sum((bi2_c1$y_actual-bi2_c1$ypred)^2)/nrow(bi2_c1)
+bi2_x_c2 <- sum((bi2_c2$x_actual-bi2_c2$xpred)^2)/nrow(bi2_c2)
+bi2_y_c2 <- sum((bi2_c2$y_actual-bi2_c2$ypred)^2)/nrow(bi2_c2)
+
+
+```
+
+```{r bi-results3, cache=TRUE, message=FALSE, warning=FALSE}
+
+w3_new <- w3[,-9]
+
+guess3 <- all_inla(f_sim3, w3_new, polyg3, n3)
+
+x_error3 <- sqrt(sum((guess3$x_actual-guess3$xpred)^2)/nrow(guess3)) #1.431
+y_error3 <- sqrt(sum((guess3$y_actual-guess3$ypred)^2)/nrow(guess3)) #1.514
+
+# bi_c_x3 <- guess3 %>% group_by(clust) %>% summarise(x = sqrt((sum((xpred-x_actual)^2)/n()))) #1- 1.49, 2- 1.36
+# bi_c_y3 <- guess3 %>% group_by(clust) %>% summarise(y = sqrt((sum((ypred-y_actual)^2)/n()))) #1- 1.51, 2- 1.51
+
+bi3_c1 <- filter(guess3, clust == 1)
+bi3_c2 <- filter(guess3, clust == 2)
+
+bi3_x_c1 <- sum((bi3_c1$x_actual-bi3_c1$xpred)^2)/nrow(bi3_c1)
+bi3_y_c1 <- sum((bi3_c1$y_actual-bi3_c1$ypred)^2)/nrow(bi3_c1)
+bi3_x_c2 <- sum((bi3_c2$x_actual-bi3_c2$xpred)^2)/nrow(bi3_c2)
+bi3_y_c2 <- sum((bi3_c2$y_actual-bi3_c2$ypred)^2)/nrow(bi3_c2)
+
+```
+
+
 <!-- Initial Results Table -->
 
 ```{r results-table, message=FALSE, warning = FALSE, cache = TRUE}
 
-result_data <- data.frame(X1 = c((error_x1), (error_x2), (error_x3)), Y1 = c((error_y1), (error_y2), (error_y3)), X2 = c(sqrt(error_x_lin1), sqrt(error_x_lin2), sqrt(error_x_lin3)), Y2 = c(sqrt(error_y_lin1), sqrt(error_y_lin2), sqrt(error_y_lin3)), X3 = c(sqrt(noint_x_sim1), sqrt(noint_x_sim2), sqrt(noint_x_sim3)), Y3 = c(sqrt(noint_y_sim1), sqrt(noint_y_sim2), sqrt(noint_y_sim3)))
- 
-kableExtra::kable(result_data, booktabs = TRUE, caption = "RMSE for Interpolation Methods", col.names = c("$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{no int}$", "$Y_{no int}$"), escape = FALSE) %>% pack_rows(
+result_data <- data.frame(X1 = c((error_x1), (error_x2), (error_x3)), Y1 = c((error_y1), (error_y2), (error_y3)), X2 = c(sqrt(error_x_lin1), sqrt(error_x_lin2), sqrt(error_x_lin3)), Y2 = c(sqrt(error_y_lin1), sqrt(error_y_lin2), sqrt(error_y_lin3)), X3 = c(sqrt(noint_x_sim1), sqrt(noint_x_sim2), sqrt(noint_x_sim3)), Y3 = c(sqrt(noint_y_sim1), sqrt(noint_y_sim2), sqrt(noint_y_sim3)), X4 = c(x_error1, x_error2, x_error3), Y4 = c(y_error1, y_error2, y_error3))
+
+kableExtra::kable(result_data, booktabs = TRUE, caption = "RMSE for Interpolation Methods", col.names = c("$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{no int}$", "$Y_{no int}$", "$X_{bi}$", "$Y_{bi}$"), escape = FALSE) %>% pack_rows(
   index = (c("Simulation 1" = 1, "Simulation 2" = 1, "Simulation 3" = 1))
-) %>% 
-  add_header_above(c("Intersection" = 2, "Linear" = 2, "No Intersection" = 2))
+) %>%
+  add_header_above(c("Intersection" = 2, "Linear" = 2, "No Intersection" = 2, "Bivariate" = 2))
 
 ```
 
@@ -2114,13 +2295,12 @@ sim3_y_c2_noi <- sum((x3_c2_noint$ymap-x3_c2_noint$ymap_pred)^2)/nrow(x3_c2_noin
 
 ```{r results-table-by-clust, message=FALSE, warning = FALSE}
 
-result_data_clust <- data.frame(Cluster = c(1,2,1,2,1,2), X1 = c(sqrt(sim1_x_c1), sqrt(sim1_x_c2), sqrt(sim2_x_c1), sqrt(sim2_x_c2), sqrt(sim3_x_c1), sqrt(sim3_x_c2)), Y1 = c(sqrt(sim1_y_c1), sqrt(sim1_y_c2), sqrt(sim2_y_c1), sqrt(sim2_y_c2), sqrt(sim3_y_c1), sqrt(sim3_y_c2)), X2 = c(sqrt(lin1_x_c1), sqrt(lin1_x_c2), sqrt(lin2_x_c1), sqrt(lin2_x_c2), sqrt(lin3_x_c1), sqrt(lin3_x_c2)), Y2 = c(sqrt(lin1_y_c1), sqrt(lin1_y_c2), sqrt(lin2_y_c1), sqrt(lin2_y_c2), sqrt(lin3_y_c1), sqrt(lin3_y_c2)), X3 = c(sqrt(sim1_x_c1_noi), sqrt(sim1_x_c2_noi), sqrt(sim2_x_c1_noi), sqrt(sim2_x_c2_noi), sqrt(sim3_x_c1_noi), sqrt(sim3_x_c2_noi)), Y3 = c(sqrt(sim1_y_c1_noi), sqrt(sim1_y_c2_noi), sqrt(sim2_y_c1_noi), sqrt(sim2_y_c2_noi), sqrt(sim3_y_c1_noi), sqrt(sim3_y_c2_noi)))
+result_data_clust <- data.frame(Cluster = c(1,2,1,2,1,2), X1 = c(sqrt(sim1_x_c1), sqrt(sim1_x_c2), sqrt(sim2_x_c1), sqrt(sim2_x_c2), sqrt(sim3_x_c1), sqrt(sim3_x_c2)), Y1 = c(sqrt(sim1_y_c1), sqrt(sim1_y_c2), sqrt(sim2_y_c1), sqrt(sim2_y_c2), sqrt(sim3_y_c1), sqrt(sim3_y_c2)), X2 = c(sqrt(lin1_x_c1), sqrt(lin1_x_c2), sqrt(lin2_x_c1), sqrt(lin2_x_c2), sqrt(lin3_x_c1), sqrt(lin3_x_c2)), Y2 = c(sqrt(lin1_y_c1), sqrt(lin1_y_c2), sqrt(lin2_y_c1), sqrt(lin2_y_c2), sqrt(lin3_y_c1), sqrt(lin3_y_c2)), X3 = c(sqrt(sim1_x_c1_noi), sqrt(sim1_x_c2_noi), sqrt(sim2_x_c1_noi), sqrt(sim2_x_c2_noi), sqrt(sim3_x_c1_noi), sqrt(sim3_x_c2_noi)), Y3 = c(sqrt(sim1_y_c1_noi), sqrt(sim1_y_c2_noi), sqrt(sim2_y_c1_noi), sqrt(sim2_y_c2_noi), sqrt(sim3_y_c1_noi), sqrt(sim3_y_c2_noi)), X4 =  c(sqrt(bi1_x_c1), sqrt(bi1_x_c2), sqrt(bi2_x_c1), sqrt(bi2_x_c2), sqrt(bi3_x_c1), sqrt(bi3_x_c2)), Y4 = c(sqrt(bi1_y_c1), sqrt(bi1_y_c2), sqrt(bi2_y_c1), sqrt(bi2_y_c2), sqrt(bi3_y_c1), sqrt(bi3_y_c2)))
 
-kableExtra::kable(result_data_clust, booktabs = TRUE, caption = "RMSE for Interpolation Methods by cluster", col.names = c("Cluster", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{no int}$", "$Y_{no int}$"), escape = FALSE) %>% pack_rows(
+kableExtra::kable(result_data_clust, booktabs = TRUE, caption = "RMSE for Interpolation Methods by cluster", col.names = c("Cluster", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{no int}$", "$Y_{no int}$", "$X_{bi}$", "$Y_{bi}$"), escape = FALSE) %>% pack_rows(
   index = (c("Simulation 1" = 2, "Simulation 2" = 2, "Simulation 3" = 2))
-) %>% 
-  add_header_above(c(" ", "Intersection" = 2, "Linear" = 2, "No Intersection" = 2))
-
+) %>%
+  add_header_above(c(" ", "Intersection" = 2, "Linear" = 2, "No Intersection" = 2, "Bivariate" = 2))
 
 ```
 
@@ -3125,6 +3305,7 @@ e_w3_x <- cv_error_x_p(m2, anim_plot_data3, w3_xcv) #65.61
 e_w1_y <- cv_error_y_p(m1, anim_plot_data1, w1_ycv) #115.96
 e_w2_y <- cv_error_y_p(m5, anim_plot_data2, w2_ycv) #68.64
 e_w3_y <- cv_error_y_p(m2, anim_plot_data3, w3_ycv) #97.1
+
 ```
 
 <!----------------- Linear Interpolation ----------------------->
@@ -3190,21 +3371,21 @@ join_cv <- filter(join1, !is.na(xmap2)) #data used in cv
 join_cv$xmap<- NA #want data used in cv to be miss
 join_cv$ymap<- NA
 
-back_toget <- rbind(join_nocv, join_cv) #bring them back together so now have missing cv data in the dataset
+back_toget1 <- rbind(join_nocv, join_cv) #bring them back together so now have missing cv data in the dataset
 
 #but in order
-back_toget <- back_toget %>%
+back_toget1 <- back_toget1 %>%
   arrange(gpid, t)
 
 
-back_toget <- back_toget[-c(3,4,6,7,10,11)] #remove unnecessary columns
+back_toget1 <- back_toget1[-c(3,4,6,7,10,11)] #remove unnecessary columns
 
 #second missing variable to help denote if cv data or not
-back_toget$missing2 <- "no"
-back_toget$missing2[is.na(back_toget$xmap)] <- "yes"
+back_toget1$missing2 <- "no"
+back_toget1$missing2[is.na(back_toget1$xmap)] <- "yes"
 
 #linear interpolation
-lin <- back_toget %>% group_by(gpid) %>%
+lin <- back_toget1 %>% group_by(gpid) %>%
   mutate(xmap =na.approx(xmap, na.rm = FALSE)) %>%
   mutate(ymap =na.approx(ymap, na.rm = FALSE))
 
@@ -3240,20 +3421,20 @@ join_cv <- filter(join1, !is.na(xmap2)) #data used in cv
 join_cv$xmap<- NA #want data used in cv to be miss
 join_cv$ymap<- NA
 
-back_toget <- rbind(join_nocv, join_cv) #bring them back together so now have missing cv data in the dataset
+back_toget2 <- rbind(join_nocv, join_cv) #bring them back together so now have missing cv data in the dataset
 
 #but in order
-back_toget <- back_toget %>%
+back_toget2 <- back_toget2 %>%
   arrange(gpid, t)
 
-back_toget <- back_toget[-c(3,4,6,7,10,11)] #remove unnecessary columns
+back_toget2 <- back_toget2[-c(3,4,6,7,10,11)] #remove unnecessary columns
 
 #second missing variable to help denote if cv data or not
-back_toget$missing2 <- "no"
-back_toget$missing2[is.na(back_toget$xmap)] <- "yes"
+back_toget2$missing2 <- "no"
+back_toget2$missing2[is.na(back_toget2$xmap)] <- "yes"
 
 #linear interpolation
-lin <- back_toget %>% group_by(gpid) %>%
+lin <- back_toget2 %>% group_by(gpid) %>%
   mutate(xmap =na.approx(xmap, na.rm = FALSE)) %>%
   mutate(ymap =na.approx(ymap, na.rm = FALSE))
 
@@ -3289,20 +3470,20 @@ join_cv <- filter(join1, !is.na(xmap2)) #data used in cv
 join_cv$xmap<- NA #want data used in cv to be miss
 join_cv$ymap<- NA
 
-back_toget <- rbind(join_nocv, join_cv) #bring them back together so now have missing cv data in the dataset
+back_toget3 <- rbind(join_nocv, join_cv) #bring them back together so now have missing cv data in the dataset
 
 #but in order
-back_toget <- back_toget %>%
+back_toget3 <- back_toget3 %>%
   arrange(gpid, t)
 
-back_toget <- back_toget[-c(3,4,6,7,10,11)] #remove unnecessary columns
+back_toget3 <- back_toget3[-c(3,4,6,7,10,11)] #remove unnecessary columns
 
 #second missing variable to help denote if cv data or not
-back_toget$missing2 <- "no"
-back_toget$missing2[is.na(back_toget$xmap)] <- "yes"
+back_toget3$missing2 <- "no"
+back_toget3$missing2[is.na(back_toget3$xmap)] <- "yes"
 
 #linear interpolation
-lin <- back_toget %>% group_by(gpid) %>%
+lin <- back_toget3 %>% group_by(gpid) %>%
   mutate(xmap =na.approx(xmap, na.rm = FALSE)) %>%
   mutate(ymap =na.approx(ymap, na.rm = FALSE))
 
@@ -3560,19 +3741,186 @@ w3y <- cv_error_y_noi(anim_plot_data3,h3y) # 9.924 - 3.150238
 
 ```
 
+<!-----------Bivariate Model --->
+
+
+```{r bi-functions}
+
+get_data <- function(df, tp, i){
+  obs1 <- filter(df, t == tp & intersection == i)
+  obs2 <- filter(df, t == tp-1 & !is.na(xmap) & intersection == i)
+  obs3 <- filter(df, t == tp+1 & !is.na(xmap) & intersection == i)
+  obs4 <- rbind(obs1, obs2, obs3)
+  return(obs4)
+}
+
+
+grid_tp_sim <- function(frame, tp, m){
+  time_og <- filter(frame, t==tp)
+  pts <- st_as_sf(time_og, coords = c("xmap", "ymap")) 
+  grid_50 <- st_make_grid(m, cellsize = c(5, 5)) %>% 
+    st_sf(grid_id = 1:length(.))
+  grid_lab <- st_centroid(grid_50) %>% cbind(st_coordinates(.))
+  pts_grd <- pts %>% st_join(grid_50, join = st_intersects) %>% as.data.frame
+  all_pts_grd <- left_join(pts_grd,grid_lab,by= "grid_id")
+  all_pts_grd2 <- all_pts_grd %>% distinct(gpid, .keep_all= TRUE)
+  g1 <- all_pts_grd2[,c(1,6,8,7,9,10,11)]
+  g1 <- rownames_to_column(g1, "index")
+  return(g1)
+}
+
+
+data_inla_ice <- function(f, tp, poly, w, n, int){
+  
+  grd <- grid_tp(f, tp, poly)
+  
+  back_toget_new <- filter(w, imputed == FALSE)
+  back_toget_new$cv <- FALSE
+  back_toget_new$cv[back_toget_new$missing2 == "yes"] <- TRUE
+  
+  final_wgrd <- inner_join(back_toget_new, grd, by = "gpid")[,c(1,2,3,4,5,9,14,15)]
+  
+  colnames(final_wgrd) <- c("gpid","t", "cluster", "xmap", "ymap", "cv", "x_grid", "y_grid")
+  
+  withint <- inner_join(final_wgrd, n[,c(1,5)], by = "gpid")
+  
+  withint2<- withint %>% distinct(gpid, t, intersection, .keep_all= TRUE)
+  
+  with_act <- inner_join(withint2, f[,c(1,2,5,6,9)], by = c("gpid", "t"))
+  colnames(with_act) <- c("gpid","t", "cluster1", "xmap", "ymap", "cv", "x_grid", "y_grid", "intersection", "x_actual", "y_actual", "cluster2")
+  
+  w1_known <- filter(with_act , cv == FALSE)
+  w1_miss <- filter(with_act , cv == TRUE)
+  
+  w1_miss$xval <- w1_miss$x_grid
+  w1_miss$yval <- w1_miss$y_grid
+  
+  w1_known$xval <- w1_known$x_actual
+  w1_known$yval <- w1_known$y_actual
+  
+  w_new <- rbind(w1_known, w1_miss)
+  
+  #Just Get Day Before and Day After
+  d <- get_data(w_new, tp, int)
+  #remove na grid
+  d2 <- filter(d, !is.na(x_grid))
+  return(d2)
+  
+}
+
+ice_inla <- function(f_new, tp_new, poly_new, w_new, n_new, int_new){
+  val2 <- data_inla_ice(f_new, tp_new, poly_new, w_new, n_new, int_new)
+  n <- nrow(val2) #Seems to be doing better when have more data 
+  XY <- matrix(NA, ncol =2, nrow= n*2)
+  XY[1:n,1] <- val2$xmap #likelihood 1
+  XY[n+1:n,2]<- val2$ymap #likelihood 2
+  I <- matrix(NA, nrow = 2*n, ncol=2)
+  I[1:n, 1] <- 1
+  I[n+1:n,2] <- 1
+  
+  t.joint <- rep(val2$t,2)
+  idx.t <- rep(1:2, each = n)
+  x.joint <- rep(val2$xval, 2)
+  y.joint <- rep(val2$yval, 2)
+  idx.x <- rep(1:2, each = n)
+  idx.y <- rep(1:2, each = n)
+  
+  data2 <- list(R = XY, I = I, xval = x.joint, yval = y.joint, idx.x = idx.x, idx.y = idx.y, t = t.joint,  idx.t = idx.t)
+  
+  form2 <- R ~ I + f(idx.x, xval, model="iid", n=2) + f(idx.y, yval, model="iid", n=2) + f(idx.t, t, model="rw1", n=2)
+  
+  
+  m0.2lik <- inla(form2, family = c("gaussian", "gaussian"),
+                  data = data2,
+                  control.predictor = list(compute = TRUE),
+                  control.compute=list(dic=TRUE)#, verbose = TRUE
+  )
+  
+  x.na <- which(is.na(val2$xmap))
+  y.na <- which(is.na(val2$ymap))
+  
+  r1 <- m0.2lik$summary.fitted.values[x.na, c("mean", "sd")]
+  r2 <- m0.2lik$summary.fitted.values[n+ y.na, c("mean", "sd")]
+  
+  
+  m <- val2[x.na,]
+  m$xpred <- r1[,1]
+  m$x_sd <- r1[,2]
+  m$ypred <- r2[,1]
+  m$y_sd <- r2[,2]
+  
+  
+  #m <- m[,c(1,9,15,16,10,17,18,11,12)] #giving us grid values as prediction
+  
+  return(m)
+}
+
+all_pred <- NULL
+pred_cv <- NULL
+all_inla_ice <- function(df, df2, int_list, int_df){
+  for (r in min(df$t):max(df$t)){
+   for (i in 1:max(int_df$intersection)){
+      tryCatch({
+        pred = ice_inla(df,r,int_list,df2,int_df, i)
+        pred2 = data.frame(pred)
+        df_p = data.frame(pred2, r)
+        pred_cv = rbind.data.frame(pred_cv, df_p)}, error=function(e){return(NA)})
+    }
+    #all_pred <- rbind.data.frame(all_pred,pred_cv)
+  }
+  return(pred_cv)
+}
+
+```
+
+
+```{r bi-week1, cache=TRUE, message=FALSE, warning=FALSE}
+
+test1 <- all_inla_ice(anim_plot_data1, back_toget1, m3,m1)
+
+```
+
+```{r bi-week2, cache=TRUE, message=FALSE, warning=FALSE}
+
+test2 <- all_inla_ice(anim_plot_data2, back_toget2, m6,m5)
+
+```
+
+```{r bi-week3, cache=TRUE, message=FALSE, warning=FALSE}
+
+test3 <- all_inla_ice(anim_plot_data3, back_toget3, m4,m2)
+
+
+```
+
+```{r bi-error, cache=TRUE, message=FALSE, warning=FALSE}
+
+x_bi_error1 <- sqrt(sum((test1$x_actual-test1$xpred)^2)/nrow(test1)) #3.173
+y_bi_error1 <- sqrt(sum((test1$y_actual-test1$ypred)^2)/nrow(test1)) #7.306
+
+x_bi_error2 <- sqrt(sum((test2$x_actual-test2$xpred)^2)/nrow(test2)) #3.173
+y_bi_error2 <- sqrt(sum((test2$y_actual-test2$ypred)^2)/nrow(test2)) #7.306
+
+x_bi_error3 <- sqrt(sum((test3$x_actual-test3$xpred)^2)/nrow(test3)) #3.173
+y_bi_error3 <- sqrt(sum((test3$y_actual-test3$ypred)^2)/nrow(test3)) #7.306
+
+```
+
 
 
 ```{r results-table2, message=FALSE, warning = FALSE}
 
-result_data2 <- data.frame(X1 = c(sqrt(e_w1_x), sqrt(e_w2_x), sqrt(e_w3_x)), Y1 = c(sqrt(e_w1_y), sqrt(e_w2_y), sqrt(e_w3_y)), X2 = c(sqrt(error_x_lin_actual_w1), sqrt(error_x_lin_actual_w2), sqrt(error_x_lin_actual_w3)), Y2 = c(sqrt(error_y_lin_actual_w1), sqrt(error_y_lin_actual_w2), sqrt(error_y_lin_actual_w3)), X3 = c(sqrt(w1x), sqrt(w2x), sqrt(w3x)), Y3 = c(sqrt(w1y), sqrt(w2y), sqrt(w3y)))
+result_data2 <- data.frame(X1 = c(sqrt(e_w1_x), sqrt(e_w2_x), sqrt(e_w3_x)), Y1 = c(sqrt(e_w1_y), sqrt(e_w2_y), sqrt(e_w3_y)), X2 = c(sqrt(error_x_lin_actual_w1), sqrt(error_x_lin_actual_w2), sqrt(error_x_lin_actual_w3)), Y2 = c(sqrt(error_y_lin_actual_w1), sqrt(error_y_lin_actual_w2), sqrt(error_y_lin_actual_w3)), X3 = c(sqrt(w1x), sqrt(w2x), sqrt(w3x)), Y3 = c(sqrt(w1y), sqrt(w2y), sqrt(w3y)), X4 = c(x_bi_error1, x_bi_error2, x_bi_error3), Y4 = c(y_bi_error1, y_bi_error2, y_bi_error3))
 #
-kableExtra::kable(result_data2, booktabs = TRUE, caption = "RMSE for Interpolation Methods",  col.names = c("$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{noint}$", "$Y_{noint}$"), escape = FALSE) %>% pack_rows(
+kableExtra::kable(result_data2, booktabs = TRUE, caption = "RMSE for Interpolation Methods",  col.names = c("$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{noint}$", "$Y_{noint}$", "$X_{bi}$", "$Y_{bi}$"), escape = FALSE) %>% pack_rows(
   index = (c("Week 1" = 1, "Week 2" = 1, "Week 3" = 1))
 ) %>%
-  add_header_above(c("Intersection" = 2, "Linear" = 2, "No Intersection" = 2))
+  add_header_above(c("Intersection" = 2, "Linear" = 2, "No Intersection" = 2, "Bivariate" = "2"))
+
 
 
 ```
+
 
 Next, we tested our spatio-temporal interpolation method on the ice motion dataset in order to see how it performs on real data. We did not estimate the already missing data for validation purposes.For cross validation, we can create a model for an intersection and time. The intersections were found using the clusters in \cref{fig:by-week-cluster-plot}. In each intersection and time combination, 10% of the known data was removed from the dataset. Next, we found all the observed data in that intersection for $t-1$, $t$, and $t+1$ to obtain the spatio-temporal neighbors. Then, using the observed data, the model was fit and used to estimate the points assigned to be missing. This was done for all intersection and time combinations for the three weeks. The RMSE for each week can be found in \cref{tab:results-table2}. Additionally, linear interpolation and the overall model method was performed on the same missing data for comparison, similar to the simulated data. However, since linear interpolation is unable to estimate data without a point before and after (essentially the beginning or end of the week), it is not exactly a one-to-one comparison. Also, for the overall model, due to the log-likelihood failing to converge, a model was only able to be developed for one day in week 1. Hence, the week 1 RMSE value for this week is not useful for comparison. In \cref{tab:results-table2}, linear interpolation outperforms the other methods except for the $y$-values in week 1.  
 
@@ -3662,7 +4010,6 @@ c_w2_y <- e_w2_df_y %>% group_by(clust) %>% summarise(y = sqrt((sum((pred-ymap)^
 c_w3_x <- e_w3_df_x %>% group_by(clust) %>% summarise(x = sqrt((sum((pred-xmap)^2)/n())))
 c_w3_y <- e_w3_df_y %>% group_by(clust) %>% summarise(y = sqrt((sum((pred-ymap)^2)/n())))
 
-
 ```
 
 ```{r cp-by-clust-int, message=FALSE, warning = FALSE, cache=TRUE}
@@ -3673,6 +4020,7 @@ c_w2_x2 <- e_w2_df_x %>% group_by(clust) %>% summarise(cp = sum((inint2)/n()))
 c_w2_y2 <- e_w2_df_y %>% group_by(clust) %>% summarise(cp = sum((inint2)/n()))
 c_w3_x2 <- e_w3_df_x %>% group_by(clust) %>% summarise(cp = sum((inint2)/n()))
 c_w3_y2 <- e_w3_df_y %>% group_by(clust) %>% summarise(cp = sum((inint2)/n()))
+
 
 ```
 
@@ -3711,37 +4059,48 @@ c_w3_y_noi <- w3y_df %>% group_by(clust) %>% summarise(x = sqrt((sum((pred-ymap)
 ```
 
 
+```{r bi-by-clust, message=FALSE, warning=FALSE}
+
+bi_c_x1 <- test1 %>% group_by(cluster1) %>% summarise(x = sqrt((sum((xpred-x_actual)^2)/n()))) #1- 3.16, 2- 4.58, 3 - 2.85, 4 - 2.97, 5 - 4.01, 5 - 3.26
+bi_c_y1 <- test1 %>% group_by(cluster1) %>% summarise(y = sqrt((sum((ypred-y_actual)^2)/n()))) #1- 4.52, 2- 4.64, 3 - 3.21, 4 - 4.55, 5 - 3.71, 5 - 3.35
+
+bi_c_x2 <- test2 %>% group_by(cluster1) %>% summarise(x = sqrt((sum((xpred-x_actual)^2)/n()))) #1- 3.16, 2- 4.58, 3 - 2.85, 4 - 2.97, 5 - 4.01, 5 - 3.26
+bi_c_y2 <- test2 %>% group_by(cluster1) %>% summarise(y = sqrt((sum((ypred-y_actual)^2)/n()))) #1- 4.52, 2- 4.64, 3 - 3.21, 4 - 4.55, 5 - 3.71, 5 - 3.35
+
+bi_c_x3 <- test3 %>% group_by(cluster1) %>% summarise(x = sqrt((sum((xpred-x_actual)^2)/n()))) #1- 3.16, 2- 4.58, 3 - 2.85, 4 - 2.97, 5 - 4.01, 5 - 3.26
+bi_c_y3 <- test3 %>% group_by(cluster1) %>% summarise(y = sqrt((sum((ypred-y_actual)^2)/n()))) #1- 4.52, 2- 4.64, 3 - 3.21, 4 - 4.55, 5 - 3.71, 5 - 3.35
+
+
+```
+
+
 ```{r results-clust1-actual, message=FALSE, warning = FALSE}
 
-result_cluster1_ice <- data.frame(Cluster = c(1,2,3,4,5,6), X1 = c(c_w1_x2[,2]), Y1 = c(c_w1_y2[,2]), X2 <- c(lin_w1_x[,2]), Y2 <- c(lin_w1_y[,2]), X3 = c(c_w1_x_noi[,2]), Y3 = c(c_w1_y_noi[,2]))
+result_cluster1_ice <- data.frame(Cluster = c(1,2,3,4,5,6), X1 = c(c_w1_x[,2]), Y1 = c(c_w1_y[,2]), X2 <- c(lin_w1_x[,2]), Y2 <- c(lin_w1_y[,2]), X3 = c(c_w1_x_noi[,2]), Y3 = c(c_w1_y_noi[,2]), X4 <- c(bi_c_x1[,2]), Y4 <- c(bi_c_y1[,2]))
 
 #
-kableExtra::kable(result_cluster1_ice, booktabs = TRUE, caption = "RMSE by Cluster for Week 1 for Interpolation Methods", col.names = c("Cluster", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{noint}$", "$Y_{noint}$"), escape = FALSE) %>%
-  add_header_above(c(" ", "Intersection" = 2, "Linear" = 2, "No Intersection" = 2))
-
-
+kableExtra::kable(result_cluster1_ice, booktabs = TRUE, caption = "RMSE by Cluster for Week 1 for Interpolation Methods", col.names = c("Cluster", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{noint}$", "$Y_{noint}$", "$X_b$", "$Y_b$"), escape = FALSE) %>%
+  add_header_above(c(" ", "Intersection" = 2, "Linear" = 2, "No Intersection" = 2, "Bivariate" = 2))
 
 ```
 
 
 ```{r results-clust2-actual, message=FALSE, warning = FALSE}
 
-result_cluster2_ice <- data.frame(Cluster = c(1,2,3,4,5), X1 = c(c_w2_x[,2]), Y1 = c(c_w2_y[,2]), X2 <- c(lin_w2_x[,2]), Y2 <- c(lin_w2_y[,2]), X3 = c(c_w2_x_noi[,2]), Y3 = c(c_w2_y_noi[,2]))
+result_cluster2_ice <- data.frame(Cluster = c(1,2,3,4,5), X1 = c(c_w2_x[,2]), Y1 = c(c_w2_y[,2]), X2 <- c(lin_w2_x[,2]), Y2 <- c(lin_w2_y[,2]), X3 = c(c_w2_x_noi[,2]), Y3 = c(c_w2_y_noi[,2]), X4 <- c(bi_c_x2[,2]), Y4 <- c(bi_c_y2[,2]))
 #
-kableExtra::kable(result_cluster2_ice, booktabs = TRUE, caption = "RMSE by Cluster for Week 2 for Interpolation Methods", col.names = c("Cluster", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{noint}$", "$Y_{noint}$"), escape = FALSE) %>%
-  add_header_above(c(" ", "Intersection" = 2, "Linear" = 2, "No Intersection" = 2))
-
+kableExtra::kable(result_cluster2_ice, booktabs = TRUE, caption = "RMSE by Cluster for Week 2 for Interpolation Methods", col.names = c("Cluster", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{noint}$", "$Y_{noint}$", "$X_b$", "$Y_b$"), escape = FALSE) %>%
+  add_header_above(c(" ", "Intersection" = 2, "Linear" = 2, "No Intersection" = 2, "Bivariate" = 2))
 
 ```
 
 
 ```{r results-clust3-actual, message=FALSE, warning = FALSE, cache=TRUE}
 
-result_cluster3_ice <- data.frame(Cluster = c(1,2,3,4,5,6), X1 = c(c_w3_x[,2]), Y1 = c(c_w3_y[,2]), X2 <- c(lin_w3_x[,2]), Y2 <- c(lin_w3_y[,2]), X3 = c(c_w3_x_noi[,2]), Y3 = c(c_w3_y_noi[,2]))
+result_cluster3_ice <- data.frame(Cluster = c(1,2,3,4,5,6), X1 = c(c_w3_x[,2]), Y1 = c(c_w3_y[,2]), X2 <- c(lin_w3_x[,2]), Y2 <- c(lin_w3_y[,2]), X3 = c(c_w3_x_noi[,2]), Y3 = c(c_w3_y_noi[,2]), X4 <- c(bi_c_x3[,2]), Y4 <- c(bi_c_y3[,2]))
 #
-kableExtra::kable(result_cluster3_ice, booktabs = TRUE, caption = "RMSE by Cluster for Week 3 for Interpolation Methods", col.names = c("Cluster", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{noint}$", "$Y_{noint}$"), escape = FALSE) %>%
-  add_header_above(c(" ", "Intersection" = 2, "Linear" = 2, "No Intersection" = 2))
-
+kableExtra::kable(result_cluster3_ice, booktabs = TRUE, caption = "RMSE by Cluster for Week 3 for Interpolation Methods", col.names = c("Cluster", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{noint}$", "$Y_{noint}$", "$X_b$", "$Y_b$"), escape = FALSE) %>%
+  add_header_above(c(" ", "Intersection" = 2, "Linear" = 2, "No Intersection" = 2, "Bivariate" = 2))
 
 ```
 

@@ -9,19 +9,18 @@ get_data <- function(df, tp, i){
   return(obs4)
 }
 
-grid_tp_sim <- function(frame, tp, m){
-  time_og <- filter(frame, t==tp)
+grid_tp <- function(frame, t, m){
+  time_og <- lonely(frame,t)
   pts <- st_as_sf(time_og, coords = c("xmap", "ymap")) 
-  grid_50 <- st_make_grid(m, cellsize = c(5, 5)) %>% 
+  grid_50 <- st_make_grid(m, cellsize = c(10, 10)) %>% 
     st_sf(grid_id = 1:length(.))
   grid_lab <- st_centroid(grid_50) %>% cbind(st_coordinates(.))
   pts_grd <- pts %>% st_join(grid_50, join = st_intersects) %>% as.data.frame
   all_pts_grd <- left_join(pts_grd,grid_lab,by= "grid_id")
   all_pts_grd2 <- all_pts_grd %>% distinct(gpid, .keep_all= TRUE)
-  g1 <- all_pts_grd2[,c(1,6,8,7,9,10,11)]
-  g1 <- rownames_to_column(g1, "index")
-  return(g1)
+  return(all_pts_grd2)
 }
+
 
 
 data_inla <- function(f, tp, poly, w, n, int){
@@ -58,7 +57,7 @@ data_inla <- function(f, tp, poly, w, n, int){
 
 }
 
-#val2 <- data_inla(f1, 3, polyg1, w1, n1, 1)
+val3 <- data_inla(f1, 3, polyg1, w1, n1, 1)
 
 
 sim_inla <- function(f_new, tp_new, poly_new, w_new, n_new, int_new){
@@ -127,6 +126,8 @@ all_inla <- function(df, df2, int_list, int_df){
   }
   return(pred_cv)
 }
+
+test <- all_inla_ice(anim_plot_data1, back_toget, m3,m1)
 
 
 # Results-----------------------------------------------------------------------

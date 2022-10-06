@@ -475,6 +475,33 @@ the starting locations in the prediction function and shifted based on
 the estimated model parameters. Predictions for the coordinate are made
 by finding the conditional expectation of the model developed.
 
+\hypertarget{bivariate-interpolation}{%
+\subsubsection{Bivariate Interpolation}\label{bivariate-interpolation}}
+
+Additionally, we considered a joint (bivariate) response method, as when
+a observation is missing it is missing both coordinates. Thus, it is
+desirable to predict both coordinates at the same time as a joint model
+can take into account correlation between x and y. The Integrated Nested
+Laplace Approximation (INLA), using the R-INLA package can create joint
+response models \citep[\citet{rue_review_2017}]{rue_inla_2009}. INLA is
+a Bayesian Hierarchical approach which allows for the spatio-temporal
+structure of the data to be taken into account in the inferential
+process. In INLA, the linear predictor,
+\[\eta_{i} = \sum^{M}_{m=1}\beta_{M}x_{mi} + \sum^{L}_{l=1}f_{l}(z_{li}) \quad (3)\]
+takes on the form of a Bayesian Additive Model, where \(f_{l}(z_{li})\)
+are unknown functions of the covariates and \(\beta_{M}x_{mi}\) are
+linear effects of the covariates \citep{BLANGIARDO201333}. A subset of
+Bayesian additive models, latent Gaussian models, are used and assigned
+Gaussian priors \citep{MORAGA2021100440}. This is beneficial as a latent
+field is a Gaussian Markov Random Field with a sparse precision matrix
+\citep{BLANGIARDO201333}. Latent effects are denoted by x and
+hyperparameters by \(\theta\). In INLA, the main aim is to solve for the
+posterior marginal distributions of x (\(\pi(x_i|y)\)) and \(\theta\)
+\((\pi(\theta_j|y))\). Solving for the posterior marginal exploits
+assumptions of the model where a numerical approximation to the
+posterior is found through the Laplace Approximation
+\citep{rue_inla_2009}.
+
 \hypertarget{simulation}{%
 \section{Simulation Study}\label{simulation}}
 
@@ -646,21 +673,21 @@ was not its initial cluster assignment.
 
 \caption{\label{tab:results-table}RMSE for Interpolation Methods}
 \centering
-\begin{tabular}[t]{rrrrrr}
+\begin{tabular}[t]{rrrrrrrr}
 \toprule
-\multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{No Intersection} \\
-\cmidrule(l{3pt}r{3pt}){1-2} \cmidrule(l{3pt}r{3pt}){3-4} \cmidrule(l{3pt}r{3pt}){5-6}
-$X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{no int}$ & $Y_{no int}$\\
+\multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{No Intersection} & \multicolumn{2}{c}{Bivariate} \\
+\cmidrule(l{3pt}r{3pt}){1-2} \cmidrule(l{3pt}r{3pt}){3-4} \cmidrule(l{3pt}r{3pt}){5-6} \cmidrule(l{3pt}r{3pt}){7-8}
+$X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{no int}$ & $Y_{no int}$ & $X_{bi}$ & $Y_{bi}$\\
 \midrule
 \addlinespace[0.3em]
-\multicolumn{6}{l}{\textbf{Simulation 1}}\\
-\hspace{1em}1.503894 & 1.518972 & 1.0420551 & 1.2255967 & 1.437696 & 1.294731\\
+\multicolumn{8}{l}{\textbf{Simulation 1}}\\
+\hspace{1em}1.503894 & 1.518972 & 1.0420551 & 1.2255967 & 1.437696 & 1.294731 & 1.540583 & 1.642770\\
 \addlinespace[0.3em]
-\multicolumn{6}{l}{\textbf{Simulation 2}}\\
-\hspace{1em}1.543514 & 1.549562 & 1.4546991 & 1.5396450 & 1.473934 & 1.488392\\
+\multicolumn{8}{l}{\textbf{Simulation 2}}\\
+\hspace{1em}1.543514 & 1.549562 & 1.4546991 & 1.5396450 & 1.473934 & 1.488392 & 1.626539 & 1.580433\\
 \addlinespace[0.3em]
-\multicolumn{6}{l}{\textbf{Simulation 3}}\\
-\hspace{1em}1.408127 & 1.400610 & 0.9500911 & 0.9206641 & 1.457596 & 1.489168\\
+\multicolumn{8}{l}{\textbf{Simulation 3}}\\
+\hspace{1em}1.408127 & 1.400610 & 0.9500911 & 0.9206641 & 1.457596 & 1.489168 & 1.430776 & 1.513578\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -724,24 +751,24 @@ this can impact the accuracy of the estimations.
 
 \caption{\label{tab:results-table-by-clust}RMSE for Interpolation Methods by cluster}
 \centering
-\begin{tabular}[t]{rrrrrrr}
+\begin{tabular}[t]{rrrrrrrrr}
 \toprule
-\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{No Intersection} \\
-\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7}
-Cluster & $X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{no int}$ & $Y_{no int}$\\
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{No Intersection} & \multicolumn{2}{c}{Bivariate} \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7} \cmidrule(l{3pt}r{3pt}){8-9}
+Cluster & $X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{no int}$ & $Y_{no int}$ & $X_{bi}$ & $Y_{bi}$\\
 \midrule
 \addlinespace[0.3em]
-\multicolumn{7}{l}{\textbf{Simulation 1}}\\
-\hspace{1em}1 & 1.414740 & 1.582810 & 0.8154561 & 1.1625768 & 1.562165 & 1.290407\\
-\hspace{1em}2 & 1.567436 & 1.469275 & 1.1881687 & 1.2722442 & 1.336760 & 1.297965\\
+\multicolumn{9}{l}{\textbf{Simulation 1}}\\
+\hspace{1em}1 & 1.414740 & 1.582810 & 0.8154561 & 1.1625768 & 1.562165 & 1.290407 & 1.411076 & 1.767549\\
+\hspace{1em}2 & 1.567436 & 1.469275 & 1.1881687 & 1.2722442 & 1.336760 & 1.297965 & 1.625572 & 1.592882\\
 \addlinespace[0.3em]
-\multicolumn{7}{l}{\textbf{Simulation 2}}\\
-\hspace{1em}1 & 1.702304 & 1.644058 & 1.3158771 & 1.3290263 & 1.657531 & 1.596003\\
-\hspace{1em}2 & 1.497289 & 1.522774 & 1.5034563 & 1.6115459 & 1.407423 & 1.450749\\
+\multicolumn{9}{l}{\textbf{Simulation 2}}\\
+\hspace{1em}1 & 1.702304 & 1.644058 & 1.3158771 & 1.3290263 & 1.657531 & 1.596003 & 1.795339 & 1.721495\\
+\hspace{1em}2 & 1.497289 & 1.522774 & 1.5034563 & 1.6115459 & 1.407423 & 1.450749 & 1.573203 & 1.536279\\
 \addlinespace[0.3em]
-\multicolumn{7}{l}{\textbf{Simulation 3}}\\
-\hspace{1em}1 & 1.459455 & 1.483187 & 1.1561450 & 1.0959499 & 1.433968 & 1.404708\\
-\hspace{1em}2 & 1.351836 & 1.307802 & 0.6469916 & 0.6733144 & 1.484391 & 1.581026\\
+\multicolumn{9}{l}{\textbf{Simulation 3}}\\
+\hspace{1em}1 & 1.459455 & 1.483187 & 1.1561450 & 1.0959499 & 1.433968 & 1.404708 & 1.492580 & 1.512255\\
+\hspace{1em}2 & 1.351836 & 1.307802 & 0.6469916 & 0.6733144 & 1.484391 & 1.581026 & 1.362501 & 1.514974\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -930,21 +957,21 @@ between cluster 5 and 6 continue the crack.
 
 \caption{\label{tab:results-table2}RMSE for Interpolation Methods}
 \centering
-\begin{tabular}[t]{rrrrrr}
+\begin{tabular}[t]{rrrrrrrr}
 \toprule
-\multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{No Intersection} \\
-\cmidrule(l{3pt}r{3pt}){1-2} \cmidrule(l{3pt}r{3pt}){3-4} \cmidrule(l{3pt}r{3pt}){5-6}
-$X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{noint}$ & $Y_{noint}$\\
+\multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{No Intersection} & \multicolumn{2}{c}{Bivariate} \\
+\cmidrule(l{3pt}r{3pt}){1-2} \cmidrule(l{3pt}r{3pt}){3-4} \cmidrule(l{3pt}r{3pt}){5-6} \cmidrule(l{3pt}r{3pt}){7-8}
+$X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{noint}$ & $Y_{noint}$ & $X_{bi}$ & $Y_{bi}$\\
 \midrule
 \addlinespace[0.3em]
-\multicolumn{6}{l}{\textbf{Week 1}}\\
-\hspace{1em}3.156499 & 3.239215 & 1.526844 & 4.179299 & 3.092995 & 3.067393\\
+\multicolumn{8}{l}{\textbf{Week 1}}\\
+\hspace{1em}3.156499 & 3.239215 & 1.526844 & 4.179299 & 3.092995 & 3.067393 & 3.165122 & 7.715726\\
 \addlinespace[0.3em]
-\multicolumn{6}{l}{\textbf{Week 2}}\\
-\hspace{1em}3.142291 & 3.061897 & 2.000556 & 1.398822 & 3.197890 & 3.150918\\
+\multicolumn{8}{l}{\textbf{Week 2}}\\
+\hspace{1em}3.142291 & 3.061897 & 2.000556 & 1.398822 & 3.197890 & 3.150918 & 3.189823 & 3.110904\\
 \addlinespace[0.3em]
-\multicolumn{6}{l}{\textbf{Week 3}}\\
-\hspace{1em}3.178118 & 3.093726 & 1.026822 & 1.214958 & 3.190372 & 3.150259\\
+\multicolumn{8}{l}{\textbf{Week 3}}\\
+\hspace{1em}3.178118 & 3.093726 & 1.026822 & 1.214958 & 3.190372 & 3.150259 & 3.129654 & 3.040128\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1010,19 +1037,19 @@ data.
 
 \caption{\label{tab:results-clust1-actual}RMSE by Cluster for Week 1 for Interpolation Methods}
 \centering
-\begin{tabular}[t]{rrrrrrr}
+\begin{tabular}[t]{rrrrrrrrr}
 \toprule
-\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{No Intersection} \\
-\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7}
-Cluster & $X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{noint}$ & $Y_{noint}$\\
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{No Intersection} & \multicolumn{2}{c}{Bivariate} \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7} \cmidrule(l{3pt}r{3pt}){8-9}
+Cluster & $X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{noint}$ & $Y_{noint}$ & $X_b$ & $Y_b$\\
 \midrule
-1 & 0.6279070 & 0.4651163 & 3.198509 & 13.0416159 & 2.515490 & 3.410473\\
-2 & 0.1711712 & 0.1909091 & 0.186626 & 0.3586513 & 4.257679 & 4.105569\\
-3 & 0.3716012 & 0.3154574 & 1.314808 & 3.0661913 & 2.162818 & 2.883046\\
-4 & 0.3116090 & 0.3299389 & 1.396271 & 2.4424844 & 2.459404 & 2.777074\\
-5 & 0.0634328 & 0.2603774 & 0.770609 & 3.1659150 & 3.895142 & 3.241075\\
+1 & 3.017844 & 4.333265 & 3.198509 & 13.0416159 & 2.515490 & 3.410473 & 3.158595 & 17.678699\\
+2 & 4.375517 & 4.632771 & 0.186626 & 0.3586513 & 4.257679 & 4.105569 & 4.581420 & 4.634426\\
+3 & 2.640796 & 3.144429 & 1.314808 & 3.0661913 & 2.162818 & 2.883046 & 2.850915 & 9.878399\\
+4 & 3.023510 & 2.873472 & 1.396271 & 2.4424844 & 2.459404 & 2.777074 & 2.968842 & 2.788611\\
+5 & 3.925083 & 3.586200 & 0.770609 & 3.1659150 & 3.895142 & 3.241075 & 3.993945 & 8.781646\\
 \addlinespace
-6 & 0.2432046 & 0.3261803 & 1.888726 & 5.6371115 & 2.597491 & 3.098273\\
+6 & 3.143259 & 3.078621 & 1.888726 & 5.6371115 & 2.597491 & 3.098273 & 3.228581 & 4.689288\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1031,17 +1058,17 @@ Cluster & $X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{noint}$ & $Y_{noin
 
 \caption{\label{tab:results-clust2-actual}RMSE by Cluster for Week 2 for Interpolation Methods}
 \centering
-\begin{tabular}[t]{rrrrrrr}
+\begin{tabular}[t]{rrrrrrrrr}
 \toprule
-\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{No Intersection} \\
-\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7}
-Cluster & $X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{noint}$ & $Y_{noint}$\\
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{No Intersection} & \multicolumn{2}{c}{Bivariate} \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7} \cmidrule(l{3pt}r{3pt}){8-9}
+Cluster & $X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{noint}$ & $Y_{noint}$ & $X_b$ & $Y_b$\\
 \midrule
-1 & 3.003332 & 2.934830 & 3.2398842 & 3.3166785 & 2.625197 & 3.043491\\
-2 & 2.943829 & 2.889240 & 2.5484750 & 1.0259089 & 2.889908 & 2.939434\\
-3 & 2.937204 & 2.901313 & 1.5772293 & 1.9941807 & 2.946309 & 3.030898\\
-4 & 3.255739 & 3.127827 & 1.4045887 & 0.5231723 & 3.452124 & 3.190633\\
-5 & 4.205982 & 4.159416 & 0.3144192 & 0.3723263 & 4.413450 & 4.202641\\
+1 & 3.003332 & 2.934830 & 3.2398842 & 3.3166785 & 2.625197 & 3.043491 & 3.052204 & 4.603869\\
+2 & 2.943829 & 2.889240 & 2.5484750 & 1.0259089 & 2.889908 & 2.939434 & 3.041328 & 2.880118\\
+3 & 2.937204 & 2.901313 & 1.5772293 & 1.9941807 & 2.946309 & 3.030898 & 2.953442 & 2.905243\\
+4 & 3.255739 & 3.127827 & 1.4045887 & 0.5231723 & 3.452124 & 3.190633 & 3.373254 & 3.170601\\
+5 & 4.205982 & 4.159416 & 0.3144192 & 0.3723263 & 4.413450 & 4.202641 & 4.324355 & 4.280533\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1050,19 +1077,19 @@ Cluster & $X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{noint}$ & $Y_{noin
 
 \caption{\label{tab:results-clust3-actual}RMSE by Cluster for Week 3 for Interpolation Methods}
 \centering
-\begin{tabular}[t]{rrrrrrr}
+\begin{tabular}[t]{rrrrrrrrr}
 \toprule
-\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{No Intersection} \\
-\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7}
-Cluster & $X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{noint}$ & $Y_{noint}$\\
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{No Intersection} & \multicolumn{2}{c}{Bivariate} \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7} \cmidrule(l{3pt}r{3pt}){8-9}
+Cluster & $X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{noint}$ & $Y_{noint}$ & $X_b$ & $Y_b$\\
 \midrule
-1 & 2.848267 & 2.852569 & 2.0407810 & 2.6713539 & 2.700013 & 3.049005\\
-2 & 2.806052 & 2.951553 & 2.1528308 & 2.0588226 & 2.649236 & 2.852982\\
-3 & 3.657974 & 3.593269 & 0.1858682 & 0.4401472 & 3.759902 & 3.594164\\
-4 & 2.675125 & 2.777055 & 1.5252900 & 0.7179780 & 2.871803 & 2.919869\\
-5 & 3.162914 & 3.037071 & 0.2051635 & 0.4789511 & 3.079266 & 3.095375\\
+1 & 2.848267 & 2.852569 & 2.0407810 & 2.6713539 & 2.700013 & 3.049005 & 2.937763 & 2.844156\\
+2 & 2.806052 & 2.951553 & 2.1528308 & 2.0588226 & 2.649236 & 2.852982 & 2.681400 & 2.970934\\
+3 & 3.657974 & 3.593269 & 0.1858682 & 0.4401472 & 3.759902 & 3.594164 & 3.701206 & 3.611568\\
+4 & 2.675125 & 2.777055 & 1.5252900 & 0.7179780 & 2.871803 & 2.919869 & 2.605829 & 2.868458\\
+5 & 3.162914 & 3.037071 & 0.2051635 & 0.4789511 & 3.079266 & 3.095375 & 3.111608 & 2.992115\\
 \addlinespace
-6 & 3.209643 & 3.010415 & 0.2811618 & 0.5534701 & 3.227123 & 3.005055\\
+6 & 3.209643 & 3.010415 & 0.2811618 & 0.5534701 & 3.227123 & 3.005055 & 3.246212 & 3.025837\\
 \bottomrule
 \end{tabular}
 \end{table}
