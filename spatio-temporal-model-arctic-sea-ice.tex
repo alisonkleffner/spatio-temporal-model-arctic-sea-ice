@@ -779,11 +779,20 @@ Cluster & $X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{no int}$ & $Y_{no 
 \centering
 \begin{tabular}[t]{lrrrr}
 \toprule
-Simulation & Proportion of X & Avg SD of X & Proportion of Y & Avg SD of Y\\
+Method & \$Coverage\_\{X\}\$ & Avg S\$D\_\{X\}\$ & \$Coverage\_\{Y\}\$ & Avg S\$D\_\{Y\}\$\\
 \midrule
-1 & 0.2571429 & 0.3832179 & 0.2714286 & 0.3506978\\
-2 & 0.2142857 & 0.3486122 & 0.1964286 & 0.3784616\\
-3 & 0.2432432 & 0.3189445 & 0.3108108 & 0.3365939\\
+\addlinespace[0.3em]
+\multicolumn{5}{l}{\textbf{Simulation 1}}\\
+\hspace{1em}Univariate & 0.2571429 & 0.3832179 & 0.2714286 & 0.3506978\\
+\hspace{1em}Bivariate & 0.0142857 & 0.0162862 & 0.0142857 & 0.0351810\\
+\addlinespace[0.3em]
+\multicolumn{5}{l}{\textbf{Simulation 2}}\\
+\hspace{1em}Univariate & 0.2142857 & 0.3486122 & 0.1964286 & 0.3784616\\
+\hspace{1em}Bivariate & 0.0000000 & 0.0012624 & 0.0000000 & 0.0012609\\
+\addlinespace[0.3em]
+\multicolumn{5}{l}{\textbf{Simulation 3}}\\
+\hspace{1em}Univariate & 0.2432432 & 0.3189445 & 0.3108108 & 0.3365939\\
+\hspace{1em}Bivariate & 0.0135135 & 0.0010500 & 0.0000000 & 0.0010501\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1004,7 +1013,7 @@ However, when looking at the trajectory plot in \cref{traj-plot}, some
 of the trajectories in the plot are more linear than others (ie. have
 different movements defined by the clusters). Based on our simulation
 study, our method may have improvement over linear interpolation on
-curved data and less-sampled trajectories. Thus, the RMSE valuse are
+curved data and less-sampled trajectories. Thus, the RMSE values are
 also broken out by cluster, as these are the groups of movement patterns
 in the data. These values can be found for each week in
 \cref{tab:results-clust1-actual}, \cref{tab:results-clust2-actual}, and
@@ -1111,11 +1120,20 @@ development to increase this.
 \centering
 \begin{tabular}[t]{lrrrr}
 \toprule
-Week & Proportion of X & Avg SD of X & Proportion of Y & Avg SD of Y\\
+Method & Proportion of X & Avg SD of X & Proportion of Y & Avg SD of Y\\
 \midrule
-1 & 0.2779244 & 0.8341885 & 0.3122212 & 0.9207825\\
-2 & 0.2631451 & 0.7538514 & 0.3041575 & 0.8136070\\
-3 & 0.2466216 & 0.7597185 & 0.2640766 & 0.7950100\\
+\addlinespace[0.3em]
+\multicolumn{5}{l}{\textbf{Week 1}}\\
+\hspace{1em}Univariate & 0.2779244 & 0.8341885 & 0.3122212 & 0.9207825\\
+\hspace{1em}Bivariate & 0.0054730 & 0.0157526 & 0.0179828 & 0.0874537\\
+\addlinespace[0.3em]
+\multicolumn{5}{l}{\textbf{Week 2}}\\
+\hspace{1em}Univariate & 0.2631451 & 0.7538514 & 0.3041575 & 0.8136070\\
+\hspace{1em}Bivariate & 0.0089376 & 0.0264320 & 0.0148398 & 0.0261314\\
+\addlinespace[0.3em]
+\multicolumn{5}{l}{\textbf{Week 3}}\\
+\hspace{1em}Univariate & 0.2466216 & 0.7597185 & 0.2640766 & 0.7950100\\
+\hspace{1em}Bivariate & 0.0037925 & 0.0096209 & 0.0068510 & 0.0191015\\
 \bottomrule
 \end{tabular}
 \end{table}

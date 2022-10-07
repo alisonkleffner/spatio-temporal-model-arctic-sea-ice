@@ -2178,6 +2178,67 @@ sd_sim3_y <- mean(xy_join3$y_sd)
 
 ```
 
+```{r bi-cp-sim1, message=FALSE, warning = FALSE, cache = TRUE}
+
+guess1$x_lc <- guess1$xpred - (2*guess1$x_sd)
+guess1$x_uc <- guess1$xpred + (2*guess1$x_sd)
+
+guess1$y_lc <- guess1$ypred - (2*guess1$y_sd)
+guess1$y_uc <- guess1$ypred + (2*guess1$y_sd)
+
+guess1$inintx <- 0
+guess1$inintx[guess1$x_lc < guess1$x_actual & guess1$x_actual < guess1$x_uc] <- 1
+cp_sim1_bix <- sum(guess1$inintx)/nrow(guess1) #coverage probability
+sd_sim1_bix <- mean(guess1$x_sd)
+
+guess1$ininty <- 0
+guess1$ininty[guess1$y_lc < guess1$y_actual & guess1$y_actual < guess1$y_uc] <- 1
+cp_sim1_biy <- sum(guess1$ininty)/nrow(guess1) #coverage probability
+sd_sim1_biy <- mean(guess1$y_sd)
+
+```
+
+
+```{r bi-cp-sim2, message=FALSE, warning = FALSE, cache = TRUE}
+
+guess2$x_lc <- guess2$xpred - (2*guess2$x_sd)
+guess2$x_uc <- guess2$xpred + (2*guess2$x_sd)
+
+guess2$y_lc <- guess2$ypred - (2*guess2$y_sd)
+guess2$y_uc <- guess2$ypred + (2*guess2$y_sd)
+
+guess2$inintx <- 0
+guess2$inintx[guess2$x_lc < guess2$x_actual & guess2$x_actual < guess2$x_uc] <- 1
+cp_sim2_bix <- sum(guess2$inintx)/nrow(guess2) #coverage probability
+sd_sim2_bix <- mean(guess2$x_sd)
+
+guess2$ininty <- 0
+guess2$ininty[guess2$y_lc < guess2$y_actual & guess2$y_actual < guess2$y_uc] <- 1
+cp_sim2_biy <- sum(guess2$ininty)/nrow(guess2) #coverage probability
+sd_sim2_biy <- mean(guess2$y_sd)
+
+```
+
+```{r bi-cp-sim3, message=FALSE, warning = FALSE, cache = TRUE}
+
+guess3$x_lc <- guess3$xpred - (2*guess3$x_sd)
+guess3$x_uc <- guess3$xpred + (2*guess3$x_sd)
+
+guess3$y_lc <- guess3$ypred - (2*guess3$y_sd)
+guess3$y_uc <- guess3$ypred + (2*guess3$y_sd)
+
+guess3$inintx <- 0
+guess3$inintx[guess3$x_lc < guess3$x_actual & guess3$x_actual < guess3$x_uc] <- 1
+cp_sim3_bix <- sum(guess3$inintx)/nrow(guess3) #coverage probability
+sd_sim3_bix <- mean(guess3$x_sd)
+
+guess3$ininty <- 0
+guess3$ininty[guess3$y_lc < guess3$y_actual & guess3$y_actual < guess3$y_uc] <- 1
+cp_sim3_biy <- sum(guess3$ininty)/nrow(guess3) #coverage probability
+sd_sim3_biy <- mean(guess3$y_sd)
+
+```
+
 
 The same simulated data are also used to check the performance of our spatio-temporal interpolation model. For each of the simulations, another week of data is similarly simulated and clustered. Polygons for each cluster are created and then the intersection polygons for each weeks clusters are found. Once again, intersections represent the spatio-temporal neighbors of the data within that intersection. Next, 10% of the data for the first week are randomly assigned to be missing. Then univariate models for each coordinate are developed to obtain our estimates of the missing locations. 
 
@@ -2307,12 +2368,13 @@ kableExtra::kable(result_data_clust, booktabs = TRUE, caption = "RMSE for Interp
 
 ```{r cp-table-sim, message=FALSE, warning = FALSE, cache = TRUE}
 
-cp_simdata <- data.frame(sim = c("1", "2", "3"), cov_probx = c(cp_sim1_x, cp_sim2_x, cp_sim3_x), sdx = c(sd_sim1_x, sd_sim2_x, sd_sim3_x), cov_proby = c(cp_sim1_y, cp_sim2_y , cp_sim3_y), sdx = c(sd_sim1_y, sd_sim2_y, sd_sim3_y))
+cp_simdata <- data.frame(method = c(rep(c("Univariate", "Bivariate"), times=3)), cov_probx = c(cp_sim1_x, cp_sim1_bix, cp_sim2_x, cp_sim2_bix, cp_sim3_x, cp_sim3_bix), sdx = c(sd_sim1_x, sd_sim1_bix, sd_sim2_x, sd_sim2_bix, sd_sim3_x, sd_sim3_bix), cov_proby = c(cp_sim1_y, cp_sim1_biy, cp_sim2_y, cp_sim2_biy, cp_sim3_y, cp_sim3_biy), sdx = c(sd_sim1_y, sd_sim1_biy, sd_sim2_y, sd_sim2_biy, sd_sim3_y, sd_sim3_biy))
 
-kableExtra::kable(cp_simdata, booktabs = TRUE, col.names = c("Simulation", "Proportion of X", "Avg SD of X", "Proportion of Y", "Avg SD of Y"), caption = "Proportion of Prediction interval containing observed and Average Standard Deviation of Estimates for Simulated Data") 
+kableExtra::kable(cp_simdata, booktabs = TRUE, col.names = c("Method", "$Coverage_{X}$", "Avg S$D_{X}$", "$Coverage_{Y}$", "Avg S$D_{Y}$"), caption = "Proportion of Prediction interval containing observed and Average Standard Deviation of Estimates for Simulated Data") %>% pack_rows(
+  index = (c("Simulation 1" = 2, "Simulation 2" = 2, "Simulation 3" = 2))
+)
 
 ```
-
 
 ```{r cp-clust-sim, message=FALSE, warning=FALSE, cache=TRUE}
 
@@ -3993,8 +4055,68 @@ w3_cp_y2 <- sum(e_w3_df_y$inint2)/nrow(e_w3_df_y) #coverage probability - 0.283
 
 ```
 
+```{r bi-cp-w1, message=FALSE, warning = FALSE, cache=TRUE}
 
-However, when looking at the trajectory plot in \cref{traj-plot}, some of the trajectories in the plot are more linear than others (ie. have different movements defined by the clusters). Based on our simulation study, our method may have improvement over linear interpolation on curved data and less-sampled trajectories. Thus, the RMSE valuse are also broken out by cluster, as these are the groups of movement patterns in the data. These values can be found for each week in \cref{tab:results-clust1-actual}, \cref{tab:results-clust2-actual}, and \cref{tab:results-clust3-actual}. Once again, linear interpolation generally outperforms our method, but there are two exceptions. For week 1 and week 2, linear interpolation performed the worst of the other two methods for cluster 1. In \cref{fig:by-week-cluster-plot}, cluster 1 for both of these weeks is at the top of the plot. When comparing this cluster location to the trajectory plot in \cref{fig:traj-plot}, the top of the figure is where the most curved movement happens with a longer distance traveled over time. Hence, linear interpolation may not work as well here. Further, \cref{fig:int-best-plot} zooms in on an example for week 2 where our intersection method performs best (plot (a)) and linear interpolation performs best (plot (b)). \cref{fig:int-best-plot}a) is cluster 1, where the observed points are more spread out along the trajectory. On the other hand \cref{fig:int-best-plot}b) has small, linear movement, which is why linear interpolation performs best. 
+test1$x_lc <- test1$xpred - (2*test1$x_sd)
+test1$x_uc <- test1$xpred + (2*test1$x_sd)
+
+test1$y_lc <- test1$ypred - (2*test1$y_sd)
+test1$y_uc <- test1$ypred + (2*test1$y_sd)
+
+test1$inintx <- 0
+test1$inintx[test1$x_lc < test1$x_actual & test1$x_actual < test1$x_uc] <- 1
+cp_w1_bix <- sum(test1$inintx)/nrow(test1) #coverage probability
+sd_w1_bix <- mean(test1$x_sd)
+
+test1$ininty <- 0
+test1$ininty[test1$y_lc < test1$y_actual & test1$y_actual < test1$y_uc] <- 1
+cp_w1_biy <- sum(test1$ininty)/nrow(test1) #coverage probability
+sd_w1_biy <- mean(test1$y_sd)
+
+```
+
+```{r bi-cp-w2, message=FALSE, warning = FALSE, cache=TRUE}
+
+test2$x_lc <- test2$xpred - (2*test2$x_sd)
+test2$x_uc <- test2$xpred + (2*test2$x_sd)
+
+test2$y_lc <- test2$ypred - (2*test2$y_sd)
+test2$y_uc <- test2$ypred + (2*test2$y_sd)
+
+test2$inintx <- 0
+test2$inintx[test2$x_lc < test2$x_actual & test2$x_actual < test2$x_uc] <- 1
+cp_w2_bix <- sum(test2$inintx)/nrow(test2) #coverage probability
+sd_w2_bix <- mean(test2$x_sd)
+
+test2$ininty <- 0
+test2$ininty[test2$y_lc < test2$y_actual & test2$y_actual < test2$y_uc] <- 1
+cp_w2_biy <- sum(test2$ininty)/nrow(test2) #coverage probability
+sd_w2_biy <- mean(test2$y_sd)
+
+```
+
+```{r bi-cp-w3, message=FALSE, warning = FALSE, cache=TRUE}
+
+test3$x_lc <- test3$xpred - (2*test3$x_sd)
+test3$x_uc <- test3$xpred + (2*test3$x_sd)
+
+test3$y_lc <- test3$ypred - (2*test3$y_sd)
+test3$y_uc <- test3$ypred + (2*test3$y_sd)
+
+test3$inintx <- 0
+test3$inintx[test3$x_lc < test3$x_actual & test3$x_actual < test3$x_uc] <- 1
+cp_w3_bix <- sum(test3$inintx)/nrow(test3) #coverage probability
+sd_w3_bix <- mean(test3$x_sd)
+
+test3$ininty <- 0
+test3$ininty[test3$y_lc < test3$y_actual & test3$y_actual < test3$y_uc] <- 1
+cp_w3_biy <- sum(test3$ininty)/nrow(test3) #coverage probability
+sd_w3_biy <- mean(test3$y_sd)
+
+```
+
+
+However, when looking at the trajectory plot in \cref{traj-plot}, some of the trajectories in the plot are more linear than others (ie. have different movements defined by the clusters). Based on our simulation study, our method may have improvement over linear interpolation on curved data and less-sampled trajectories. Thus, the RMSE values are also broken out by cluster, as these are the groups of movement patterns in the data. These values can be found for each week in \cref{tab:results-clust1-actual}, \cref{tab:results-clust2-actual}, and \cref{tab:results-clust3-actual}. Once again, linear interpolation generally outperforms our method, but there are two exceptions. For week 1 and week 2, linear interpolation performed the worst of the other two methods for cluster 1. In \cref{fig:by-week-cluster-plot}, cluster 1 for both of these weeks is at the top of the plot. When comparing this cluster location to the trajectory plot in \cref{fig:traj-plot}, the top of the figure is where the most curved movement happens with a longer distance traveled over time. Hence, linear interpolation may not work as well here. Further, \cref{fig:int-best-plot} zooms in on an example for week 2 where our intersection method performs best (plot (a)) and linear interpolation performs best (plot (b)). \cref{fig:int-best-plot}a) is cluster 1, where the observed points are more spread out along the trajectory. On the other hand \cref{fig:int-best-plot}b) has small, linear movement, which is why linear interpolation performs best. 
 
 As previously stated, though the RMSE for the overall model was lower than the intersection model in week 1, this only represents one day's worth of data. So, for cluster 1 in week 2, there were mixed results between the two model methods as one performs better for $x$ and the other for $y$. Overall, when comparing the two model-based approaches, we find mixed results when comparing their performance, but the intersection model performs better more often. Once again, these results show that our method has some promise with non-linear and less-sampled data. 
 
@@ -4109,9 +4231,11 @@ The proportion of the prediction intervals containing the observed data, along w
 
 ```{r cp-table, message=FALSE, warning = FALSE}
 
-cp_data <- data.frame(week = c("1", "2", "3"), cov_probx = c(w1_cp_x2, w2_cp_x2, w3_cp_x2), sdx = c(sd_mean_w1x, sd_mean_w2x, sd_mean_w3x), cov_proby = c(w1_cp_y2, w2_cp_y2, w3_cp_y2), sdx = c(sd_mean_w1y, sd_mean_w2y, sd_mean_w3y))
+cp_data <- data.frame(met = c(rep(c("Univariate", "Bivariate"), times = 3)), cov_probx = c(w1_cp_x2,cp_w1_bix, w2_cp_x2, cp_w2_bix, w3_cp_x2, cp_w3_bix), sdx = c(sd_mean_w1x, sd_w1_bix, sd_mean_w2x, sd_w2_bix, sd_mean_w3x, sd_w3_bix), cov_proby = c(w1_cp_y2, cp_w1_biy, w2_cp_y2, cp_w2_biy, w3_cp_y2, cp_w3_biy), sdx = c(sd_mean_w1y, sd_w1_biy, sd_mean_w2y, sd_w2_biy, sd_mean_w3y, sd_w3_biy))
 
-kableExtra::kable(cp_data, booktabs = TRUE, col.names = c("Week", "Proportion of X", "Avg SD of X", "Proportion of Y", "Avg SD of Y"), caption = "Proportion of Prediction interval containing observed and Average Standard Deviation for Ice Data")
+kableExtra::kable(cp_data, booktabs = TRUE, col.names = c("Method", "Proportion of X", "Avg SD of X", "Proportion of Y", "Avg SD of Y"), caption = "Proportion of Prediction interval containing observed and Average Standard Deviation for Ice Data") %>% pack_rows(
+  index = (c("Week 1" = 2, "Week 2" = 2, "Week 3" = 2))
+)
 
 
 ```
