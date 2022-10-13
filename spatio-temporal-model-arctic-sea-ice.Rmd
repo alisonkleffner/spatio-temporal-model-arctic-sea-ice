@@ -4069,18 +4069,18 @@ xmap_10CV_pred_border <- function(m_new, m, int, tp, frame){
   locs<-as.matrix(loc)
   N <- nrow(locs)
   ## convert them into matrix
-  X<- as.matrix( rep(1,nrow(locs)))
+  X <- matrix(c(rep(1,nrow(locs)),locs[,3]), ncol = 2, byrow=FALSE)
   Y<- obs[,5]
-  fit <- fit_model(Y,locs, X, "exponential_spacetime", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,min(30,N-1)), silent = TRUE) #Silent option doesn't show the iterations. Maybe nice so get list of errors
+  fit <- fit_model(Y,locs[,1:2], X, "exponential_isotropic", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,min(30,N-1)), silent = TRUE) #Silent option doesn't show the iterations. Maybe nice so get list of errors
   predicted_locs <- known_data_grid(m_new,int,tp,grid, frame)
   est_df <- subset(predicted_locs,!(predicted_locs$gpid%in%rand_df$gpid))
   pred_loc <- as.matrix(est_df[ ,c("xmap","ymap", "obs_time")])
-  X_pred<- as.matrix( rep(1,nrow(pred_loc)))
+  X_pred <- matrix(c(rep(1,nrow(pred_loc)),pred_loc[,3]), ncol = 2, byrow=FALSE)
   ncondsim <- 30
-  sims <- cond_sim(fit = fit, locs_pred = pred_loc, X_pred = X_pred, covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+  sims <- cond_sim(fit = fit, locs_pred = pred_loc[,1:2], X_pred = X_pred, covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
                    ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE, nsims = ncondsim)
   ## for prediction
-  pred_grid<-predictions(fit,pred_loc, X_pred,covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+  pred_grid<-predictions(fit,pred_loc[,1:2], X_pred,covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
                          ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE)
   preds <- data.frame(est_df$gpid,pred_grid)
   b <- list(sims,preds)
@@ -4101,18 +4101,18 @@ ymap_10CV_pred_border <- function(m_new, m, int, tp, frame){
   locs<-as.matrix(loc)
   N <- nrow(locs)
   ## convert them into matrix
-  X<- as.matrix( rep(1,nrow(locs)))
+  X <- matrix(c(rep(1,nrow(locs)),locs[,3]), ncol = 2, byrow=FALSE)
   Y<- obs[,6]
-  fit <- fit_model(Y,locs, X, "exponential_spacetime", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,min(30,N-1)), silent = TRUE) #Silent option doesn't show the iterations. Maybe nice so get list of errors
+  fit <- fit_model(Y,locs[,1:2], X, "exponential_isotropic", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,min(30,N-1)), silent = TRUE) #Silent option doesn't show the iterations. Maybe nice so get list of errors
   predicted_locs <- known_data_grid(m_new,int,tp,grid, frame)
   est_df <- subset(predicted_locs,!(predicted_locs$gpid%in%rand_df$gpid))
   pred_loc <- as.matrix(est_df[ ,c("xmap","ymap", "obs_time")])
-  X_pred<- as.matrix( rep(1,nrow(pred_loc)))
+  X_pred <- matrix(c(rep(1,nrow(pred_loc)),pred_loc[,3]), ncol = 2, byrow=FALSE)
   ncondsim <- 30
-  sims <- cond_sim(fit = fit, locs_pred = pred_loc, X_pred = X_pred, covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+  sims <- cond_sim(fit = fit, locs_pred = pred_loc[,1:2], X_pred = X_pred, covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
                    ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE, nsims = ncondsim)
   ## for prediction
-  pred_grid<-predictions(fit,pred_loc, X_pred,covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+  pred_grid<-predictions(fit,pred_loc[,1:2], X_pred,covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
                          ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE)
   preds <- data.frame(est_df$gpid,pred_grid)
   b <- list(sims,preds)
@@ -4193,33 +4193,37 @@ cv_df_p <- function(m_df,frame, pred_df){
 
 
 ```{r pred-week1x-cv, cache=TRUE, message=FALSE, warning = FALSE}
-w1_xcvb <- all_cv_x_pred_border(m1,m3,anim_plot_data1)
 
+w1_xcvb <- all_cv_x_pred_border(m1,m3,anim_plot_data1)
 ```
 
 ```{r pred-week2x-cv, cache=TRUE, message=FALSE, warning = FALSE}
-w2_xcvb <- all_cv_x_pred_border(m5,m6,anim_plot_data2)
 
+w2_xcvb <- all_cv_x_pred_border(m5,m6,anim_plot_data2)
 ```
 
 ```{r pred-week3x-cv, cache=TRUE, message=FALSE, warning = FALSE}
-w3_xcvb <- all_cv_x_pred_border(m2,m4,anim_plot_data3)
 
+w3_xcvb <- all_cv_x_pred_border(m2,m4,anim_plot_data3)
 ```
 
 ```{r pred-week1y-cv, cache=TRUE, message=FALSE, warning = FALSE}
+
 w1_ycvb <- all_cv_y_pred_border(m1,m3,anim_plot_data1)
 ```
 
 ```{r pred-week2y-cv, cache=TRUE, message=FALSE, warning = FALSE}
+
 w2_ycvb <- all_cv_y_pred_border(m5,m6,anim_plot_data2)
 ```
 
 ```{r pred-week3y-cv, cache=TRUE, message=FALSE, warning = FALSE}
+
 w3_ycvb <- all_cv_y_pred_border(m2,m4,anim_plot_data3)
 ```
 
 ```{r error-border-cv, cache=TRUE, message=FALSE, warning = FALSE}
+
 e_w1_x <- cv_error_x_p(m1, anim_plot_data1, w1_xcvb) #10.338
 e_w1_y <- cv_error_y_p(m1, anim_plot_data1, w1_ycvb) #11.613
 
@@ -4245,8 +4249,6 @@ anim_plot_data <- tmp %>%
 
 anim_plot_data$missing <- "no"
 anim_plot_data$missing[is.na(anim_plot_data$xmap)] <- "yes"
-
-
 
 e_w1_df_x <- cv_df_p(m1, anim_plot_data1,w1_xcvb)
 e_w1_df_y <- cv_df_p(m1, anim_plot_data1,w1_ycvb)
@@ -4281,6 +4283,8 @@ back_toget <- back_toget[-c(3,4,6,7,10,11)] #remove unnecessary columns
 #second missing variable to help denote if cv data or not
 back_toget$missing2 <- "no"
 back_toget$missing2[is.na(back_toget$xmap)] <- "yes"
+
+back_toget1b <- back_toget
 
 #linear interpolation
 lin <- back_toget %>% group_by(gpid) %>%
@@ -4319,8 +4323,6 @@ anim_plot_data <- tmp %>%
 anim_plot_data$missing <- "no"
 anim_plot_data$missing[is.na(anim_plot_data$xmap)] <- "yes"
 
-
-
 e_w2_df_x <- cv_df_p(m5, anim_plot_data2,w2_xcvb)
 e_w2_df_y <- cv_df_p(m5, anim_plot_data2,w2_ycvb)
 
@@ -4354,6 +4356,8 @@ back_toget <- back_toget[-c(3,4,6,7,10,11)] #remove unnecessary columns
 #second missing variable to help denote if cv data or not
 back_toget$missing2 <- "no"
 back_toget$missing2[is.na(back_toget$xmap)] <- "yes"
+
+back_toget2b <- back_toget
 
 #linear interpolation
 lin <- back_toget %>% group_by(gpid) %>%
@@ -4390,8 +4394,6 @@ anim_plot_data <- tmp %>%
 anim_plot_data$missing <- "no"
 anim_plot_data$missing[is.na(anim_plot_data$xmap)] <- "yes"
 
-
-
 e_w3_df_x <- cv_df_p(m2, anim_plot_data3,w3_xcvb)
 e_w3_df_y <- cv_df_p(m2, anim_plot_data3,w3_ycvb)
 
@@ -4426,6 +4428,8 @@ back_toget <- back_toget[-c(3,4,6,7,10,11)]  #remove unnecessary columns
 back_toget$missing2 <- "no"
 back_toget$missing2[is.na(back_toget$xmap)] <- "yes"
 
+back_toget3b <- back_toget
+
 #linear interpolation
 lin <- back_toget %>% group_by(gpid) %>%
   mutate(xmap =na.approx(xmap, na.rm = FALSE)) %>%
@@ -4445,6 +4449,22 @@ error_x_lin_actual_w3 <- sum((miss_na3$xmap2-miss_na3$xmap_pred)^2)/nrow(miss_na
 error_y_lin_actual_w3 <- sum((miss_na3$ymap2-miss_na3$ymap_pred)^2)/nrow(miss_na3) #1.54
 ```
 
+<!--Bivariate Model -->
+
+```{r bi-w1-border, cache=TRUE, message=FALSE, warning = FALSE}
+#w1_border <- all_inla_ice(anim_plot_data1, back_toget1b, m3,m1)
+```
+
+```{r bi-w2-border, cache=TRUE, message=FALSE, warning = FALSE}
+#w2_border <- all_inla_ice(anim_plot_data2, back_toget2b, m6,m5)
+```
+
+```{r bi-w3-border, cache=TRUE, message=FALSE, warning = FALSE}
+#w3_border <- all_inla_ice(anim_plot_data3, back_toget3b, m4,m2)
+```
+
+
+
 ```{r border-clust}
 ################ By Cluster #####################
 
@@ -4454,7 +4474,6 @@ c_w2_xb <- e_w2_df_x %>% group_by(clust) %>% summarise(x = sqrt((sum((pred-xmap)
 c_w2_yb <- e_w2_df_y %>% group_by(clust) %>% summarise(y = sqrt((sum((pred-ymap)^2)/n())))
 c_w3_xb <- e_w3_df_x %>% group_by(clust) %>% summarise(x = sqrt((sum((pred-xmap)^2)/n())))
 c_w3_yb <- e_w3_df_y %>% group_by(clust) %>% summarise(y = sqrt((sum((pred-ymap)^2)/n())))
-
 
 lin_w1_x <- miss_na1 %>% group_by(cluster) %>% summarise(x = sqrt((sum((xmap_pred-xmap2)^2)/n())))
 lin_w1_y <- miss_na1 %>% group_by(cluster) %>% summarise(y = sqrt((sum((ymap_pred-ymap2)^2)/n())))
@@ -4477,6 +4496,7 @@ ice_border <- data.frame(X1 = c(sqrt(e_w1_x), sqrt(e_w2_x), sqrt(e_w3_x)), Y1 = 
 kableExtra::kable(ice_border, booktabs = TRUE, caption = "RMSE for Interpolation Methods on Cluster Border Points",  col.names = c("$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$"), escape = FALSE) %>% pack_rows(
   index = (c("Week 1" = 1, "Week 2" = 1, "Week 3" = 1))
 ) %>% add_header_above(c("Intersection" = 2, "Linear" = 2))
+
 ```
 
 
@@ -4486,7 +4506,6 @@ ice_border_clust <- data.frame(Cluster = c(1,2,3,4,5,6), X1 = round(c_w1_xb[,2],
 #
 kableExtra::kable(ice_border_clust, booktabs = TRUE, caption = "RMSE by Cluster for Cross Validation Along Cluster Borders", col.names = c("Cluster", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$"), escape = FALSE) %>%
   add_header_above(c(" ", "Week 1" = 4, "Week 2" = 4, "Week 3" = 4))
-
 
 ```
 

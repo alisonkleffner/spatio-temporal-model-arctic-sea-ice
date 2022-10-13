@@ -705,3 +705,82 @@ w1y <- cv_error_y_noi(anim_plot_data1,h1y) #8.287- 3.067 (55, 57)
 w2y <- cv_error_y_noi(anim_plot_data2,h2y) #9.923 - 3.151
 w3y <- cv_error_y_noi(anim_plot_data3,h3y) # 9.926 - 3.150238
 
+######################
+## Along Border
+######################
+
+xmap_10CV_pred_border <- function(m_new, m, int, tp, frame){
+  grid <- grid_tp(frame, tp , m)
+  obs1 <- known_data_border(m_new,int,tp-1,grid, frame)
+  obs2 <- known_data_border(m_new,int,tp,grid, frame)
+  obs3 <- known_data_border(m_new,int,tp+1,grid, frame)
+  obs4 <- known_data_border(m_new,int,tp+2,grid, frame)
+  bord_df <- filter(obs2, border == "no")
+  set.seed(4)
+  rand_df <- bord_df[sample(nrow(bord_df), size=(round(0.9*nrow(bord_df)))),]
+  if(nrow(obs3) ==0){obs <- rbind(obs1, rand_df, obs4)}else{obs <- rbind(obs1, rand_df, obs3)}
+  loc <- obs[,c("xmap","ymap", "obs_time")]
+  locs<-as.matrix(loc)
+  N <- nrow(locs)
+  ## convert them into matrix
+  X <- matrix(c(rep(1,nrow(locs)),locs[,3]), ncol = 2, byrow=FALSE)
+  Y<- obs[,5]
+  fit <- fit_model(Y,locs[,1:2], X, "exponential_isotropic", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,min(30,N-1)), silent = TRUE) #Silent option doesn't show the iterations. Maybe nice so get list of errors
+  predicted_locs <- known_data_grid(m_new,int,tp,grid, frame)
+  est_df <- subset(predicted_locs,!(predicted_locs$gpid%in%rand_df$gpid))
+  pred_loc <- as.matrix(est_df[ ,c("xmap","ymap", "obs_time")])
+  X_pred <- matrix(c(rep(1,nrow(pred_loc)),pred_loc[,3]), ncol = 2, byrow=FALSE)
+  ncondsim <- 30
+  sims <- cond_sim(fit = fit, locs_pred = pred_loc[,1:2], X_pred = X_pred, covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+                   ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE, nsims = ncondsim)
+  ## for prediction
+  pred_grid<-predictions(fit,pred_loc[,1:2], X_pred,covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+                         ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE)
+  preds <- data.frame(est_df$gpid,pred_grid)
+  b <- list(sims,preds)
+  return(b)
+}
+
+ymap_10CV_pred_border <- function(m_new, m, int, tp, frame){
+  grid <- grid_tp(frame, tp , m)
+  obs1 <- known_data_border(m_new,int,tp-1,grid, frame)
+  obs2 <- known_data_border(m_new,int,tp,grid, frame)
+  obs3 <- known_data_border(m_new,int,tp+1,grid, frame)
+  obs4 <- known_data_border(m_new,int,tp+2,grid, frame)
+  bord_df <- filter(obs2, border == "no")
+  set.seed(4)
+  rand_df <- bord_df[sample(nrow(bord_df), size=(round(0.9*nrow(bord_df)))),]
+  if(nrow(obs3) ==0){obs <- rbind(obs1, rand_df, obs4)}else{obs <- rbind(obs1, rand_df, obs3)}
+  loc <- obs[,c("xmap","ymap", "obs_time")]
+  locs<-as.matrix(loc)
+  N <- nrow(locs)
+  ## convert them into matrix
+  X <- matrix(c(rep(1,nrow(locs)),locs[,3]), ncol = 2, byrow=FALSE)
+  Y<- obs[,6]
+  fit <- fit_model(Y,locs[,1:2], X, "exponential_isotropic", max_iter = 1000, convtol = 1e-04,reorder = TRUE, m_seq = c(10,min(30,N-1)), silent = TRUE) #Silent option doesn't show the iterations. Maybe nice so get list of errors
+  predicted_locs <- known_data_grid(m_new,int,tp,grid, frame)
+  est_df <- subset(predicted_locs,!(predicted_locs$gpid%in%rand_df$gpid))
+  pred_loc <- as.matrix(est_df[ ,c("xmap","ymap", "obs_time")])
+  X_pred <- matrix(c(rep(1,nrow(pred_loc)),pred_loc[,3]), ncol = 2, byrow=FALSE)
+  ncondsim <- 30
+  sims <- cond_sim(fit = fit, locs_pred = pred_loc[,1:2], X_pred = X_pred, covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+                   ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE, nsims = ncondsim)
+  ## for prediction
+  pred_grid<-predictions(fit,pred_loc[,1:2], X_pred,covparms = fit$covparms, covfun_name = fit$covfun_name, y_obs = fit$y,locs_obs = fit$locs
+                         ,X_obs= fit$X, beta=fit$betahat, m = 10, reorder = TRUE)
+  preds <- data.frame(est_df$gpid,pred_grid)
+  b <- list(sims,preds)
+  return(b)
+}
+
+
+w1_xcvb <- all_cv_x_pred_border(m1,m3,anim_plot_data1)
+
+w1_ycvb <- all_cv_y_pred_border(m1,m3,anim_plot_data1)
+
+
+e_w1_x <- cv_error_x_p(m1, anim_plot_data1, w1_xcvb) #9.308
+e_w1_y <- cv_error_y_p(m1, anim_plot_data1, w1_ycvb) #10.577
+
+
+

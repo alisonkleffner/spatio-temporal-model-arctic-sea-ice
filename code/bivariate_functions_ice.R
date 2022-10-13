@@ -73,7 +73,7 @@ data_inla_ice <- function(f, tp, poly, w, n, int){
   
 }
 
-ice_inla(anim_plot_data3, 64, m4, back_toget3, m2, 10)
+ice_inla(anim_plot_data1, 55, m3, back_toget, m1, 5)
 
 ice_inla <- function(f_new, tp_new, poly_new, w_new, n_new, int_new){
   val2 <- data_inla_ice(f_new, tp_new, poly_new, w_new, n_new, int_new)
@@ -171,3 +171,10 @@ y_error2 <- sqrt(sum((test2$y_actual-test2$ypred)^2)/nrow(test2)) #3.104
 
 c_x2 <- test2 %>% group_by(cluster1) %>% summarise(x = sqrt((sum((xpred-x_actual)^2)/n()))) #1- 3.06, 2- 3.04, 3 - 2.95, 4 - 3.38, 5 - 4.32
 c_y2 <- test2 %>% group_by(cluster1) %>% summarise(y = sqrt((sum((ypred-y_actual)^2)/n()))) #1- 4.51, 2- 2.88, 3 - 2.90, 4 - 3.17, 5 - 4.28
+
+
+
+## Along Border ----------------------------------------------------------------
+
+## Don't Need To Change anything, just input correct data sets
+
