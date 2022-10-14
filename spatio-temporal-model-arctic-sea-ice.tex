@@ -1153,21 +1153,21 @@ method performs best.
 
 \caption{\label{tab:border-cv-rmse}RMSE for Interpolation Methods on Cluster Border Points}
 \centering
-\begin{tabular}[t]{rrrr}
+\begin{tabular}[t]{rrrrrr}
 \toprule
-\multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} \\
-\cmidrule(l{3pt}r{3pt}){1-2} \cmidrule(l{3pt}r{3pt}){3-4}
-$X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$\\
+\multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{Bivariate} \\
+\cmidrule(l{3pt}r{3pt}){1-2} \cmidrule(l{3pt}r{3pt}){3-4} \cmidrule(l{3pt}r{3pt}){5-6}
+$X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & X & Y\\
 \midrule
 \addlinespace[0.3em]
-\multicolumn{4}{l}{\textbf{Week 1}}\\
-\hspace{1em}3.050927 & 3.252175 & 1.517341 & 4.147691\\
+\multicolumn{6}{l}{\textbf{Week 1}}\\
+\hspace{1em}3.05 & 3.25 & 1.52 & 4.15 & 3.07 & 8.34\\
 \addlinespace[0.3em]
-\multicolumn{4}{l}{\textbf{Week 2}}\\
-\hspace{1em}3.304622 & 3.265918 & 2.038981 & 1.832126\\
+\multicolumn{6}{l}{\textbf{Week 2}}\\
+\hspace{1em}3.30 & 3.27 & 2.04 & 1.83 & 3.34 & 3.29\\
 \addlinespace[0.3em]
-\multicolumn{4}{l}{\textbf{Week 3}}\\
-\hspace{1em}3.029221 & 2.954847 & 0.992153 & 1.240639\\
+\multicolumn{6}{l}{\textbf{Week 3}}\\
+\hspace{1em}3.03 & 2.95 & 0.99 & 1.24 & 2.98 & 2.96\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1199,32 +1199,20 @@ Cluster & $X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{int}$ & $Y_{int}$ 
 \centering
 \begin{tabular}[t]{lrrrr}
 \toprule
-Week & Proportion of X & Avg SD of X & Proportion of Y & Avg SD of Y\\
+Method & Proportion of X & Avg SD of X & Proportion of Y & Avg SD of Y\\
 \midrule
-1 & 0.320 & 0.942 & 0.344 & 1.069\\
-2 & 0.267 & 0.808 & 0.267 & 0.871\\
-3 & 0.277 & 0.775 & 0.283 & 0.785\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}
-
-\caption{\label{tab:cp-table-border-clust}Proportion of Prediction interval containing observed by Cluster for Cluster Border}
-\centering
-\begin{tabular}[t]{rrrllrr}
-\toprule
-\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Week 1} & \multicolumn{2}{c}{Week 2} & \multicolumn{2}{c}{Week 3} \\
-\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7}
-Cluster & $X_{s1}$ & $Y_{s1}$ & $X_{s2}$ & $Y_{s2}$ & $X_{s3}$ & $Y_{s3}$\\
-\midrule
-1 & 0.592 & 0.592 & 0.467 & 0.413 & 0.422 & 0.357\\
-2 & 0.270 & 0.288 & 0.28 & 0.278 & 0.471 & 0.418\\
-3 & 0.347 & 0.312 & 0.337 & 0.351 & 0.184 & 0.245\\
-4 & 0.482 & 0.301 & 0.26 & 0.251 & 0.491 & 0.309\\
-5 & 0.157 & 0.300 & 0.149 & 0.163 & 0.283 & 0.264\\
-\addlinespace
-6 & 0.273 & 0.396 &  &  & 0.177 & 0.254\\
+\addlinespace[0.3em]
+\multicolumn{5}{l}{\textbf{Week 1}}\\
+\hspace{1em}Univariate & 0.3164129 & 0.8139586 & 0.3237451 & 0.9273353\\
+\hspace{1em}Bivariate & 0.0150857 & 0.0413185 & 0.0386091 & 0.2400281\\
+\addlinespace[0.3em]
+\multicolumn{5}{l}{\textbf{Week 2}}\\
+\hspace{1em}Univariate & 0.2656070 & 0.8021689 & 0.2633034 & 0.8650718\\
+\hspace{1em}Bivariate & 0.0131325 & 0.0327602 & 0.0134940 & 0.0563141\\
+\addlinespace[0.3em]
+\multicolumn{5}{l}{\textbf{Week 3}}\\
+\hspace{1em}Univariate & 0.2766667 & 0.7782864 & 0.2826667 & 0.7883115\\
+\hspace{1em}Bivariate & 0.0051210 & 0.0151256 & 0.0000000 & 0.0215558\\
 \bottomrule
 \end{tabular}
 \end{table}

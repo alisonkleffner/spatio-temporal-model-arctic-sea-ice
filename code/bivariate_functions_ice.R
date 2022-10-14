@@ -73,7 +73,7 @@ data_inla_ice <- function(f, tp, poly, w, n, int){
   
 }
 
-ice_inla(anim_plot_data1, 55, m3, back_toget, m1, 5)
+ice_inla(anim_plot_data3, 65, m4, back_toget3b, m2, 2)
 
 ice_inla <- function(f_new, tp_new, poly_new, w_new, n_new, int_new){
   val2 <- data_inla_ice(f_new, tp_new, poly_new, w_new, n_new, int_new)
@@ -178,3 +178,20 @@ c_y2 <- test2 %>% group_by(cluster1) %>% summarise(y = sqrt((sum((ypred-y_actual
 
 ## Don't Need To Change anything, just input correct data sets
 
+w1_border <- all_inla_ice(anim_plot_data1, back_toget1b, m3,m1)
+
+xb_bi_error1 <- sqrt(sum((w1_border$x_actual-w1_border$xpred)^2)/nrow(w1_border)) 
+yb_bi_error1 <- sqrt(sum((w1_border$y_actual-w1_border$ypred)^2)/nrow(w1_border)) 
+
+w3_border <- all_inla_ice(anim_plot_data3, back_toget3b, m4,m2)
+
+
+w3_xcvb_d <- distinct(w3_xcvb, est_df.gpid, q, .keep_all = TRUE)
+w3_ycvb_d <- distinct(w3_ycvb, est_df.gpid, q, .keep_all = TRUE)
+
+
+e_w3_x <- cv_error_x_p(m2, anim_plot_data3, w3_xcvb_d) #9.19
+e_w3_y <- cv_error_y_p(m2, anim_plot_data3, w3_ycvb_d) #8.749
+
+xb_bi_error3 <- sqrt(sum((f_w3_border$x_actual-f_w3_border$xpred)^2)/nrow(f_w3_border)) 
+yb_bi_error3 <- sqrt(sum((f_w3_border$y_actual-f_w3_border$ypred)^2)/nrow(f_w3_border))

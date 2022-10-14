@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.3.11)  12 OCT 2022 17:13
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.3.11)  13 OCT 2022 20:01
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -894,6 +894,11 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.8}) has
                                                   \__shipout_drop_firstpage_...
 l.1142 A
         s in prior sections, 30 conditional simulations were performed to]
+
+LaTeX Warning: Reference `tab:cp-table-border-clust' on page 1 undefined on inp
+ut line 1148.
+
+
 Overfull \hbox (52.16656pt too wide) in paragraph at lines 1179--1194
  [][] 
  []
@@ -903,38 +908,32 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.9}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1248 
+l.1236 
        ] [30
 pdfTeX warning (ext4): destination with the same identifier (name{table.10}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1248 
+l.1236 
        
 pdfTeX warning (ext4): destination with the same identifier (name{table.11}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1248 
-       ] [31
-pdfTeX warning (ext4): destination with the same identifier (name{table.12}) ha
-s been already used, duplicate ignored
-<argument> ...shipout:D \box_use:N \l_shipout_box 
-                                                  \__shipout_drop_firstpage_...
-l.1248 
-       
-pdfTeX warning (ext4): destination with the same identifier (name{table.13}) ha
-s been already used, duplicate ignored
-<argument> ...shipout:D \box_use:N \l_shipout_box 
-                                                  \__shipout_drop_firstpage_...
-l.1248 
+l.1236 
        ]
-Overfull \hbox (2.42473pt too wide) in paragraph at lines 1249--1267
+Overfull \hbox (2.42473pt too wide) in paragraph at lines 1237--1255
 \OT1/cmr/m/n/12 where our in-ter-po-la-tion method is ben-e-fi-cial. First, it 
 takes into ac-count the non-stationarity
  []
 
-[32] (spatio-temporal-model-arctic-sea-ice.bbl [33] [34] [35])
+[31
+pdfTeX warning (ext4): destination with the same identifier (name{table.12}) ha
+s been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1255 
+       ] [32] (spatio-temporal-model-arctic-sea-ice.bbl [33] [34] [35])
 
 Package natbib Warning: There were undefined citations.
 
@@ -947,13 +946,13 @@ s not changed.
 (rerunfilecheck)             Checksum: 3DF0C6492EA416362F2FE0A0B7C97CA5;2983.
  ) 
 Here is how much of TeX's memory you used:
- 14302 strings out of 478582
- 246790 string characters out of 2841984
- 547375 words of memory out of 3000000
- 32138 multiletter control sequences out of 15000+600000
+ 14300 strings out of 478582
+ 246755 string characters out of 2841984
+ 546236 words of memory out of 3000000
+ 32137 multiletter control sequences out of 15000+600000
  477426 words of font info for 57 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 60i,11n,63p,428b,472s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 60i,11n,63p,428b,482s stack positions out of 5000i,500n,10000p,200000b,80000s
  <C:\Users\akleffner2\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600
 \tcrm1200.pk><C:/Users/akleffner2/AppData/Local/Programs/MiKTeX/fonts/type1/pub
 lic/amsfonts/cm/cmbx10.pfb><C:/Users/akleffner2/AppData/Local/Programs/MiKTeX/f
@@ -970,10 +969,10 @@ Data/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/a
 kleffner2/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti12.p
 fb><C:/Users/akleffner2/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfon
 ts/cm/cmtt12.pfb>
-Output written on spatio-temporal-model-arctic-sea-ice.pdf (36 pages, 9343353 b
+Output written on spatio-temporal-model-arctic-sea-ice.pdf (36 pages, 9342772 b
 ytes).
 PDF statistics:
- 590 PDF objects out of 1000 (max. 8388607)
- 130 named destinations out of 1000 (max. 500000)
+ 588 PDF objects out of 1000 (max. 8388607)
+ 129 named destinations out of 1000 (max. 500000)
  221 words of extra memory for PDF output out of 10000 (max. 10000000)
 

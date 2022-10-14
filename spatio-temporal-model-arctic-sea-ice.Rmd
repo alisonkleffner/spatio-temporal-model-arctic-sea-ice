@@ -4452,17 +4452,35 @@ error_y_lin_actual_w3 <- sum((miss_na3$ymap2-miss_na3$ymap_pred)^2)/nrow(miss_na
 <!--Bivariate Model -->
 
 ```{r bi-w1-border, cache=TRUE, message=FALSE, warning = FALSE}
-#w1_border <- all_inla_ice(anim_plot_data1, back_toget1b, m3,m1)
+
+w1_border <- all_inla_ice(anim_plot_data1, back_toget1b, m3,m1)
 ```
 
 ```{r bi-w2-border, cache=TRUE, message=FALSE, warning = FALSE}
-#w2_border <- all_inla_ice(anim_plot_data2, back_toget2b, m6,m5)
+
+w2_border <- all_inla_ice(anim_plot_data2, back_toget2b, m6,m5)
 ```
 
 ```{r bi-w3-border, cache=TRUE, message=FALSE, warning = FALSE}
-#w3_border <- all_inla_ice(anim_plot_data3, back_toget3b, m4,m2)
+
+w3_border <- all_inla_ice(anim_plot_data3, back_toget3b, m4,m2)
+
 ```
 
+```{r bi-border-error, cache=TRUE, message=FALSE, warning = FALSE}
+
+xb_bi_error1 <- sqrt(sum((w1_border$x_actual-w1_border$xpred)^2)/nrow(w1_border)) 
+yb_bi_error1 <- sqrt(sum((w1_border$y_actual-w1_border$ypred)^2)/nrow(w1_border)) 
+
+xb_bi_error2 <- sqrt(sum((w2_border$x_actual-w2_border$xpred)^2)/nrow(w2_border)) 
+yb_bi_error2 <- sqrt(sum((w2_border$y_actual-w2_border$ypred)^2)/nrow(w2_border)) 
+
+#Remove when no variation in time (model doesn't run well) - t=65 at int 2 (64 not in df and t=66 doesn't exist in that int (missing from beginning))
+f_w3_border <- filter(w3_border , t == 65 & intersection == 2)
+f_w3_border <- filter(w3_border , t != 65 & intersection != 2)
+xb_bi_error3 <- sqrt(sum((f_w3_border$x_actual-f_w3_border$xpred)^2)/nrow(f_w3_border)) 
+yb_bi_error3 <- sqrt(sum((f_w3_border$y_actual-f_w3_border$ypred)^2)/nrow(f_w3_border))
+```
 
 
 ```{r border-clust}
@@ -4482,6 +4500,16 @@ lin_w2_y <- miss_na2 %>% group_by(cluster) %>% summarise(y = sqrt((sum((ymap_pre
 lin_w3_x <- miss_na3 %>% group_by(cluster) %>% summarise(x = sqrt((sum((xmap_pred-xmap2)^2)/n())))
 lin_w3_y <- miss_na3 %>% group_by(cluster) %>% summarise(y = sqrt((sum((ymap_pred-ymap2)^2)/n())))
 
+bi_c_x1b <- w1_border %>% group_by(cluster2) %>% summarise(x = sqrt((sum((xpred-x_actual)^2)/n()))) 
+bi_c_y1b <- w1_border %>% group_by(cluster2) %>% summarise(y = sqrt((sum((ypred-y_actual)^2)/n()))) 
+bi_c_x2b <- w2_border %>% group_by(cluster2) %>% summarise(x = sqrt((sum((xpred-x_actual)^2)/n()))) 
+bi_c_y2b <- w2_border %>% group_by(cluster2) %>% summarise(y = sqrt((sum((ypred-y_actual)^2)/n())))
+
+
+bi_c_x3b <- f_w3_border %>% group_by(cluster2) %>% summarise(x = sqrt((sum((xpred-x_actual)^2)/n())))
+bi_c_y3b <- f_w3_border %>% group_by(cluster2) %>% summarise(y = sqrt((sum((ypred-y_actual)^2)/n()))) 
+
+
 ```
 
 
@@ -4491,11 +4519,11 @@ As in prior sections, 30 conditional simulations were performed to calculate the
 
 ```{r border-cv-rmse, message=FALSE, warning = FALSE, cache=TRUE}
 
-ice_border <- data.frame(X1 = c(sqrt(e_w1_x), sqrt(e_w2_x), sqrt(e_w3_x)), Y1 = c(sqrt(e_w1_y), sqrt(e_w2_y), sqrt(e_w3_y)), X2 = c(sqrt(error_x_lin_actual_w1), sqrt(error_x_lin_actual_w2), sqrt(error_x_lin_actual_w3)), Y2 = c(sqrt(error_y_lin_actual_w1), sqrt(error_y_lin_actual_w2), sqrt(error_y_lin_actual_w3)))
+ice_border <- data.frame(X1 = c(round(sqrt(e_w1_x),2), round(sqrt(e_w2_x),2), round(sqrt(e_w3_x),2)), Y1 = c(round(sqrt(e_w1_y),2), round(sqrt(e_w2_y),2), round(sqrt(e_w3_y),2)), X2 = c(round(sqrt(error_x_lin_actual_w1),2), round(sqrt(error_x_lin_actual_w2),2), round(sqrt(error_x_lin_actual_w3),2)), Y2 = c(round(sqrt(error_y_lin_actual_w1),2), round(sqrt(error_y_lin_actual_w2),2), round(sqrt(error_y_lin_actual_w3),2)), X3 = c(round(xb_bi_error1,2), round(xb_bi_error2,2), round(xb_bi_error3,2)), Y3 = c(round(yb_bi_error1,2), round(yb_bi_error2,2), round(yb_bi_error3,2)))
 #
-kableExtra::kable(ice_border, booktabs = TRUE, caption = "RMSE for Interpolation Methods on Cluster Border Points",  col.names = c("$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$"), escape = FALSE) %>% pack_rows(
+kableExtra::kable(ice_border, booktabs = TRUE, caption = "RMSE for Interpolation Methods on Cluster Border Points",  col.names = c("$X_{int}$", "$Y_{int}$", "$X_{lin}$", "$Y_{lin}$", "X", "Y"), escape = FALSE) %>% pack_rows(
   index = (c("Week 1" = 1, "Week 2" = 1, "Week 3" = 1))
-) %>% add_header_above(c("Intersection" = 2, "Linear" = 2))
+) %>% add_header_above(c("Intersection" = 2, "Linear" = 2, "Bivariate" = 2))
 
 ```
 
@@ -4509,23 +4537,146 @@ kableExtra::kable(ice_border_clust, booktabs = TRUE, caption = "RMSE by Cluster 
 
 ```
 
-```{r cp-table-border, message=FALSE, warning = FALSE, cache=TRUE}
 
-cp_data_border <- data.frame(week = c("1", "2", "3"), cov_probx = c(0.32, 0.267, 0.277), sdx = c(0.942, 0.808, 0.775), cov_proby = c(0.344, 0.267, 0.283), sdy = c(1.069, 0.871, 0.785))
+<!-- Coverage Probability Along Border -->
 
-kableExtra::kable(cp_data_border, booktabs = TRUE, col.names = c("Week", "Proportion of X", "Avg SD of X", "Proportion of Y", "Avg SD of Y"), caption = "Proportion of Prediction interval containing observed and Average Standard Deviation for Ice Data") 
+```{r cp_w1b, message=FALSE, warning = FALSE, cache=TRUE}
+
+sd_mean_w1x <- mean(e_w1_df_x$sd) #0.788
+sd_mean_w1y <- mean(e_w1_df_y$sd) #0.834
+
+e_w1_df_x$low2 <- e_w1_df_x$pred - (2*e_w1_df_x$sd)
+e_w1_df_x$up2 <- e_w1_df_x$pred + (2*e_w1_df_x$sd)
+
+e_w1_df_y$low2 <- e_w1_df_y$pred - (2*e_w1_df_y$sd)
+e_w1_df_y$up2 <- e_w1_df_y$pred + (2*e_w1_df_y$sd)
+
+e_w1_df_x$inint2 <- 0
+e_w1_df_x$inint2[e_w1_df_x$low2 < e_w1_df_x$xmap & e_w1_df_x$xmap < e_w1_df_x$up2] <- 1
+
+e_w1_df_y$inint2 <- 0
+e_w1_df_y$inint2[e_w1_df_y$low2 < e_w1_df_y$ymap & e_w1_df_y$ymap < e_w1_df_y$up2] <- 1
+
+w1_cp_x2 <- sum(e_w1_df_x$inint2)/nrow(e_w1_df_x) #coverage probability - 0.256
+w1_cp_y2 <- sum(e_w1_df_y$inint2)/nrow(e_w1_df_y) #coverage probability - 0.293
 ```
 
 
-```{r cp-table-border-clust, message=FALSE, warning=FALSE, cache=TRUE}
+```{r cp_w2b, message=FALSE, warning = FALSE, cache=TRUE}
 
-cp_by_clust_sim <- data.frame(Cluster = c(1,2,3,4,5,6), w1x = c(0.592, 0.27, 0.347, 0.482, 0.157, 0.273), w1y = c(0.592, 0.288, 0.312, 0.301, 0.3, 0.396), w2x = c(0.467, 0.28, 0.337, 0.26, 0.149, " "), w2y = c(0.413, 0.278, 0.351, 0.251, 0.163, " "), w3x = c(0.422, 0.471, 0.184, 0.491, 0.283, 0.177),  w3y = c(0.357, 0.418, 0.245, 0.309, 0.264, 0.254))
-#
-kableExtra::kable(cp_by_clust_sim , booktabs = TRUE, caption = "Proportion of Prediction interval containing observed by Cluster for Cluster Border", col.names = c("Cluster", "$X_{s1}$", "$Y_{s1}$", "$X_{s2}$", "$Y_{s2}$", "$X_{s3}$", "$Y_{s3}$"), escape = FALSE) %>% 
-  add_header_above(c(" ", "Week 1" = 2, "Week 2" = 2, "Week 3" = 2))
+sd_mean_w2x <- mean(e_w2_df_x$sd) #0.7509988
+sd_mean_w2y <- mean(e_w2_df_y$sd) #0.8104493
+
+e_w2_df_x$low2 <- e_w2_df_x$pred - (2*e_w2_df_x$sd)
+e_w2_df_x$up2 <- e_w2_df_x$pred + (2*e_w2_df_x$sd)
+
+e_w2_df_y$low2 <- e_w2_df_y$pred - (2*e_w2_df_y$sd)
+e_w2_df_y$up2 <- e_w2_df_y$pred + (2*e_w2_df_y$sd)
+
+e_w2_df_x$inint2 <- 0
+e_w2_df_x$inint2[e_w2_df_x$low2 < e_w2_df_x$xmap & e_w2_df_x$xmap < e_w2_df_x$up2] <- 1
+
+e_w2_df_y$inint2 <- 0
+e_w2_df_y$inint2[e_w2_df_y$low2 < e_w2_df_y$ymap & e_w2_df_y$ymap < e_w2_df_y$up2] <- 1
+
+w2_cp_x2 <- sum(e_w2_df_x$inint2)/nrow(e_w2_df_x) #coverage probability - 0.2630683
+w2_cp_y2 <- sum(e_w2_df_y$inint2)/nrow(e_w2_df_y) #coverage probability - 0.2980793
+
 
 ```
 
+
+```{r cp_w3b, message=FALSE, warning = FALSE, cache=TRUE}
+
+sd_mean_w3x <- mean(e_w3_df_x$sd) #0.7600099
+sd_mean_w3y <- mean(e_w3_df_y$sd) #0.7960184
+
+e_w3_df_x$low2 <- e_w3_df_x$pred - (2*e_w3_df_x$sd)
+e_w3_df_x$up2 <- e_w3_df_x$pred + (2*e_w3_df_x$sd)
+
+e_w3_df_y$low2 <- e_w3_df_y$pred - (2*e_w3_df_y$sd)
+e_w3_df_y$up2 <- e_w3_df_y$pred + (2*e_w3_df_y$sd)
+
+e_w3_df_x$inint2 <- 0
+e_w3_df_x$inint2[e_w3_df_x$low2 < e_w3_df_x$xmap & e_w3_df_x$xmap < e_w3_df_x$up2] <- 1
+
+e_w3_df_y$inint2 <- 0
+e_w3_df_y$inint2[e_w3_df_y$low2 < e_w3_df_y$ymap & e_w3_df_y$ymap < e_w3_df_y$up2] <- 1
+
+w3_cp_x2 <- sum(e_w3_df_x$inint2)/nrow(e_w3_df_x) #0.246385
+w3_cp_y2 <- sum(e_w3_df_y$inint2)/nrow(e_w3_df_y) #0.2630986
+
+```
+
+
+```{r bi-cp-w1b, message=FALSE, warning = FALSE, cache=TRUE}
+
+w1_border$x_lc <- w1_border$xpred - (2*w1_border$x_sd)
+w1_border$x_uc <- w1_border$xpred + (2*w1_border$x_sd)
+
+w1_border$y_lc <- w1_border$ypred - (2*w1_border$y_sd)
+w1_border$y_uc <- w1_border$ypred + (2*w1_border$y_sd)
+
+w1_border$inintx <- 0
+w1_border$inintx[w1_border$x_lc < w1_border$x_actual & w1_border$x_actual < w1_border$x_uc] <- 1
+cp_w1b_bix <- sum(w1_border$inintx)/nrow(w1_border) #coverage probability
+sd_w1b_bix <- mean(w1_border$x_sd)
+
+w1_border$ininty <- 0
+w1_border$ininty[w1_border$y_lc < w1_border$y_actual & w1_border$y_actual < w1_border$y_uc] <- 1
+cp_w1b_biy <- sum(w1_border$ininty)/nrow(w1_border) #coverage probability
+sd_w1b_biy <- mean(w1_border$y_sd)
+
+```
+
+```{r bi-cp-w2b, message=FALSE, warning = FALSE, cache=TRUE}
+
+w2_border$x_lc <- w2_border$xpred - (2*w2_border$x_sd)
+w2_border$x_uc <- w2_border$xpred + (2*w2_border$x_sd)
+
+w2_border$y_lc <- w2_border$ypred - (2*w2_border$y_sd)
+w2_border$y_uc <- w2_border$ypred + (2*w2_border$y_sd)
+
+w2_border$inintx <- 0
+w2_border$inintx[w2_border$x_lc < w2_border$x_actual & w2_border$x_actual < w2_border$x_uc] <- 1
+cp_w2b_bix <- sum(w2_border$inintx)/nrow(w2_border) #coverage probability
+sd_w2b_bix <- mean(w2_border$x_sd)
+
+w2_border$ininty <- 0
+w2_border$ininty[w2_border$y_lc < w2_border$y_actual & w2_border$y_actual < w2_border$y_uc] <- 1
+cp_w2b_biy <- sum(w2_border$ininty)/nrow(w2_border) #coverage probability
+sd_w2b_biy <- mean(w2_border$y_sd)
+
+```
+
+```{r bi-cp-w3b, message=FALSE, warning = FALSE, cache=TRUE}
+
+w3_border$x_lc <- w3_border$xpred - (2*w3_border$x_sd)
+w3_border$x_uc <- w3_border$xpred + (2*w3_border$x_sd)
+
+w3_border$y_lc <- w3_border$ypred - (2*w3_border$y_sd)
+w3_border$y_uc <- w3_border$ypred + (2*w3_border$y_sd)
+
+w3_border$inintx <- 0
+w3_border$inintx[w3_border$x_lc < w3_border$x_actual & w3_border$x_actual < w3_border$x_uc] <- 1
+cp_w3b_bix <- sum(w3_border$inintx)/nrow(w3_border) #coverage probability
+sd_w3b_bix <- mean(w3_border$x_sd)
+
+f_w3_border$ininty <- 0
+f_w3_border$ininty[f_w3_border$y_lc < f_w3_border$y_actual & f_w3_border$y_actual < f_w3_border$y_uc] <- 1
+cp_w3b_biy <- sum(f_w3_border$ininty)/nrow(f_w3_border) #coverage probability
+sd_w3b_biy <- mean(f_w3_border$y_sd)
+
+```
+
+```{r cp-table-border, message=FALSE, warning = FALSE}
+
+cp_data2 <- data.frame(met = c(rep(c("Univariate", "Bivariate"), times = 3)), cov_probx = c(w1_cp_x2,cp_w1b_bix, w2_cp_x2, cp_w2b_bix, w3_cp_x2, cp_w3b_bix), sdx = c(sd_mean_w1x, sd_w1b_bix, sd_mean_w2x, sd_w2b_bix, sd_mean_w3x, sd_w3b_bix), cov_proby = c(w1_cp_y2, cp_w1b_biy, w2_cp_y2, cp_w2b_biy, w3_cp_y2, cp_w3b_biy), sdx = c(sd_mean_w1y, sd_w1b_biy, sd_mean_w2y, sd_w2b_biy, sd_mean_w3y, sd_w3b_biy))
+
+kableExtra::kable(cp_data2, booktabs = TRUE, col.names = c("Method", "Proportion of X", "Avg SD of X", "Proportion of Y", "Avg SD of Y"), caption = "Proportion of Prediction interval containing observed and Average Standard Deviation for Ice Data") %>% pack_rows(
+  index = (c("Week 1" = 2, "Week 2" = 2, "Week 3" = 2))
+)
+```
 
 
 # Discussion {#discussion}
