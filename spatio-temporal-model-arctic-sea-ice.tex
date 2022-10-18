@@ -482,7 +482,11 @@ INLA, the main aim is to solve for the posterior marginal distributions
 of \(d\) (\(\pi(d_i|h)\)) and \(\theta\) \((\pi(\theta_j|h))\). Solving
 for the posterior marginal exploits assumptions of the model where a
 numerical approximation to the posterior is found through the Laplace
-Approximation \citep{rue_inla_2009}.
+Approximation \citep{rue_inla_2009}. The form of the model used is
+\(XY \sim I + f(x,iid) + f(y,iid) + f(t, rw1)\) where \(I\) is the
+intercept, \(f(x,iid)\) and \(f(y,iid)\) are random effects for the
+coordinates using an \(iid\) model, and \(f(t, rw1)\) is a random effect
+for time using a random walk model.
 
 \hypertarget{simulation}{%
 \section{Simulation Study}\label{simulation}}
@@ -495,28 +499,33 @@ The data was simulated to mimic the motion of sea ice, where the
 movement happens in patches that are driven by external factors.
 Separate grids were created to simulate the observed data and the
 underlying process that is causing the movement. First, to create the
-underlying process, a find grid is created with each cell vertex
+underlying process, a fine grid is created with each cell vertex
 representing a point. This grid is a 30x30 equally spaced grid, which is
 a total of 900 points. Next, initial cluster memberships are assigned to
 create patches. For simplicity, the points are assigned into two
 clusters, each with an equal number of points. Then, this grid is
 shifted seven times, to represent seven days, simulating movement in the
 underlying process. The movement at each time step of the grid decreases
-over time. This data is then used in to exponential space-time
-covariance function (defined in (1)), along with the defined parameter
-values to simulate a covariance matrix. The covariance function has
-different parameter values for each cluster. Additionally, the parameter
-values used for simulation may also differ slightly for \(x\) and \(y\)
-within a cluster. The covariance functions and defined mean trend are
-then used to simulate a Gaussian Process model of the displacement for
-each location on the grid at a time. Hence,
+over time. This data is then used in an exponential space-time
+covariance function, along with the defined parameter values to simulate
+a covariance matrix. The exponential space-time covariance function is
+defined as
+\(\Sigma_{\theta}(s,t) = \Sigma_{\theta}^{(s)} * \Sigma_{\theta}^{(t)}\)
+where \(\Sigma_{\theta}^{(s)}\) is defined in (1) and
+\(\Sigma_{\theta}^{(t)} = \sigma^2 exp\left\{-|t|/\tau\right\}\). The
+temporal range parameter, \(\tau\), is a smoothness parameter related to
+dependence over time. The covariance function has different parameter
+values for each cluster. Additionally, the parameter values used for
+simulation also differ slightly for \(x\) and \(y\) within a cluster.
+The covariance functions and defined mean trend are then used to
+simulate a Gaussian Process model of the displacement for each location
+on the grid at a time. Hence,
 \[ U_{d,c}(s,t) \sim GP(\mu_{d,c}, C_{d,c}(\theta))\] where \(c\) is
-cluster (\(c\)=1 or 2), \(d\) is the coordinate (\(d\) = \(X\) or
-\(Y\)), and the parameter values for the parameter values for the mean
-(\(\mu_{d,c}\)) and covariance function (\(C_{d,c}(\theta)\)) can be
-found in \cref{tab:parms-table}. Thus, \(U_{d,c}(s,t)\) gives the
-displacement, or movement, for each point on the underlying grid for
-each day.
+cluster (\(c\)=1 or 2), \(d\) is the grid coordinate (\(d\) = \(X\) or
+\(Y\)), and the parameter values for the mean (\(\mu_{d,c}\)) and
+covariance function (\(C_{d,c}(\theta)\)) can be found in
+\cref{tab:parms-table}. Thus, \(U_{d,c}(s,t)\) gives the displacement,
+or movement, for each point on the underlying grid for each day.
 
 After the underlying process is created, a coarse grid representing the
 observed data is created in a similar fashion to the ice data given by
@@ -529,24 +538,20 @@ initial observed grid values would then be represented as
 determined by the value of the nearest point of the underlying process
 for that day, determined by Euclidean distance, to the observed point.
 Hence,
-\[(x_{t,j}, y_{t,j}) = (U^{X}_{t-1,c,g}, U^{Y}_{t-1,c,g}) + (x_{t-1,j}, y_{t-1,j}),\]
+\[(x_{t,j}, y_{t,j}) = (U^{X}_{t-1,c,r}, U^{Y}_{t-1,c,r}) + (x_{t-1,j}, y_{t-1,j}),\]
 where \(U^d_{t,c,g}\) is the underlying process for coordinate \(d\)
-(\(d\)=\(X\),\(X\)), cluster \(c\) (\(c\)=1,2) at time \(t-1\)
-(\(t\)=1,\ldots,7), for grid value \(g\), which is the closest grid
+(\(d\)=\(X\) or \(Y\)), cluster \(c\) (\(c\)=1 or 2) at time \(t-1\)
+(\(t\)=1,\ldots,7), for grid value \(r\), which is the closest grid
 location of the underling process to \((x_{t-1,j}, y_{t-1,j})\). This
 process is continued until \(t=7\) in order to obtain a final simulated
-dataset of a week's worth of data. \cref{fig:grids-combined} shows the
+data set of a weeks worth of data. \cref{fig:grids-combined} shows the
 initial locations for the observed data plotted on top of the underlying
-process. The true cluster memberships for each location are also given.
+process along with the true cluster memberships.
 
-In order to evaluate our ice crack detection and interpolation method,
-three different datasets were simulated in this manner with different
-parameter values, which can be found in \cref{tab:parms-table}. A plot
-of the trajectories for each simulation can be found in
-\cref{fig:traj-wrap}. In Simulation 1 and Simulation 3, the trajectories
-generally start mostly linear, with curvature towards the end of the
-week. In Simulation 2, more curvature happens earlier in the week, with
-more gradual curves as the week progresses.
+In order to evaluate our ice crack detection and interpolation methods,
+three different data sets were simulated in this manner with different
+parameter values (\cref{tab:parms-table}). A plot of the trajectories
+for each simulation can be found in \cref{fig:traj-wrap}.
 
 \begin{figure}[tbp]
 
@@ -574,7 +579,7 @@ more gradual curves as the week progresses.
 \toprule
 \multicolumn{1}{c}{ } & \multicolumn{5}{c}{X} & \multicolumn{5}{c}{Y} \\
 \cmidrule(l{3pt}r{3pt}){2-6} \cmidrule(l{3pt}r{3pt}){7-11}
-Cluster & $\sigma^{2}_{x}$ & $\phi_{x,s}$ & $\tau_{x}$ & $Nugget_x$ & $\mu_x$ & $\sigma^{2}_{y}$ & $\phi_{y,s}$ & $\tau_{y}$ & $Nugget_y$ & $\mu_y$\\
+Cluster & $\sigma^{2}_{x}$ & $\phi_{x,s}$ & $\tau_{x}$ & $c(0)$ & $\mu_x$ & $\sigma^{2}_{y}$ & $\phi_{y,s}$ & $\tau_{y}$ & $c(0)$ & $\mu_y$\\
 \midrule
 \addlinespace[0.3em]
 \multicolumn{11}{l}{\textbf{Simulation 1}}\\
@@ -621,9 +626,9 @@ points. First, the k-means determined clusters are plotted on the
 initial grid to visualize how well our method performs when we can see
 the true clusterings (see \cref{fig:plot-og-clus}). The cut-off for the
 initially assigned cluster groupings is given by the red-dashed line. In
-this figure, a majority of points seemed to be clustered correctly,
-however, there are a number of misclassified points in each simulation.
-In Simulation 1, most of the misclassifications happen along the border,
+this figure, a majority of points are clustered correctly, however,
+there are a number of misclassified points in each simulation. In
+Simulation 1, most of the misclassifications happen along the border,
 but seem to increase from left to right. Most of cluster 2 is clustered
 correctly in Simulation 2, with the majority of the misclassification in
 cluster 1 happening along the edges and boundary. Similarly, in
@@ -633,20 +638,19 @@ handful along the right edge of cluster 2.
 The clusters are also visualized on the last day of the week to see if
 the clusters determined by the bounding box can distinguish movement
 over time. In \cref{fig:all-clus}, there are distinguishable boundaries
-between clusters for each of the simulations. Simulation 3 has a little
-overlap along the boundary, but can still distinguish two continguous
-clusters. Thus, by clustering using the movement features of a
-trajectory, we are able to distinguish the different movement patterns
-of the data with a clearly defined boundary. Some of the
-misclassifications on the original grid may be due to the value of the
-underlying process that was added to get the new location. This value
-was determined by the closest grid cell of the underlying process by
-Euclidean distance. If the point eventually becomes closer to the other
-cluster, meaning that cluster's underlying process values are being
-added to cause the movement, it will eventually start to move like it.
-So, if it spends more time moving like cluster 1 than cluster 2, as an
-example, it will most likely be classified as cluster 1, even if that
-was not its initial cluster assignment.
+between clusters for each of the simulations. Thus, by clustering using
+the movement features of a trajectory, we are able to distinguish the
+different movement patterns of the data with a clearly defined boundary.
+Some of the misclassifications on the original grid may be due to the
+value of the underlying process that was added to get the new location.
+This value was determined by the closest grid cell of the underlying
+process by Euclidean distance. If a point eventually becomes closer to
+the other cluster, that cluster's underlying process values are then
+added to cause the movement. Hence, it will eventually start to move
+like the other cluster. So, if a point spends more time moving like
+cluster 1 than cluster 2, as an example, it will most likely be
+classified as cluster 1, even if that was not the initial cluster
+assignment.
 
 \hypertarget{interpolation-method}{%
 \subsection{Interpolation Method}\label{interpolation-method}}
@@ -657,19 +661,19 @@ was not its initial cluster assignment.
 \centering
 \begin{tabular}[t]{rrrrrrrr}
 \toprule
-\multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{No Intersection} & \multicolumn{2}{c}{Bivariate} \\
+\multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{Univariate Intersection} & \multicolumn{2}{c}{Overall Univariate} & \multicolumn{2}{c}{Bivariate} \\
 \cmidrule(l{3pt}r{3pt}){1-2} \cmidrule(l{3pt}r{3pt}){3-4} \cmidrule(l{3pt}r{3pt}){5-6} \cmidrule(l{3pt}r{3pt}){7-8}
-$X$ & $Y_{int}$ & $X$ & $Y_{lin}$ & $X_{no int}$ & $Y_{no int}$ & $X_{bi}$ & $Y_{bi}$\\
+$X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$\\
 \midrule
 \addlinespace[0.3em]
 \multicolumn{8}{l}{\textbf{Simulation 1}}\\
-\hspace{1em}1.50 & 1.51 & 1.04 & 1.23 & 1.43 & 1.29 & 1.54 & 1.67\\
+\hspace{1em}1.04 & 1.23 & 1.50 & 1.51 & 1.43 & 1.29 & 1.54 & 1.67\\
 \addlinespace[0.3em]
 \multicolumn{8}{l}{\textbf{Simulation 2}}\\
-\hspace{1em}1.54 & 1.55 & 1.45 & 1.54 & 1.47 & 1.49 & 1.63 & 1.58\\
+\hspace{1em}1.45 & 1.54 & 1.54 & 1.55 & 1.47 & 1.49 & 1.63 & 1.58\\
 \addlinespace[0.3em]
 \multicolumn{8}{l}{\textbf{Simulation 3}}\\
-\hspace{1em}1.41 & 1.40 & 0.95 & 0.92 & 1.46 & 1.51 & 1.43 & 1.51\\
+\hspace{1em}0.95 & 0.92 & 1.41 & 1.40 & 1.46 & 1.51 & 1.43 & 1.51\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -681,8 +685,8 @@ each cluster are created and then the intersection polygons for each
 weeks clusters are found. Once again, intersections represent the
 spatio-temporal neighbors of the data within that intersection. Next,
 10\% of the data for the first week are randomly assigned to be missing.
-Then univariate models for each coordinate are developed to obtain our
-estimates of the missing locations.
+Then a univariate model for each coordinate and a bivariate model are
+developed to obtain our estimates of the missing locations.
 
 In order to have a baseline method for comparison, we also used linear
 interpolation on the same data. Linear interpolation estimates an
@@ -692,42 +696,41 @@ straight-line path and sampled at a high rate. On the other hand, it
 tends to underperform when a trajectory follows a curved path or is not
 heavily sampled \citep{wentz_comparison_2003, guo_improved_2021}.
 Another method used for comparison is similar to our proposed method,
-except now the intersections are ignored. Instead a model was developed
-using all known points for \(t-1\), \(t\), and \(t+1\) (this essentially
-ignores the non-stationarity aspect of our data). The Root Mean Square
-Error (RMSE) for each simulation and interpolation method can be found
-in \cref{tab:results-table}.
+except now the intersections are ignored (overall model). Instead a
+model was developed using all known points for \(t-1\), \(t\), and
+\(t+1\) (this essentially ignores the non-stationarity aspect of our
+data). The Root Mean Square Error (RMSE) for each simulation and
+interpolation method can be found in \cref{tab:results-table}.
 
-Our interpolation method never seems to outperform linear interpolation.
-Further, only in Simulation 3 does running the model within each
-intersection perform better than the overall model. However, since each
-cluster was created with different movements,
+Our interpolation method never outperform linear interpolation. Further,
+only in Simulation 3 does running the model within each intersection
+perform better than the overall model. However, since each cluster was
+created with different parameter values,
 \cref{tab:results-table-by-clust} breaks out the RMSE calculations by
 cluster to see if there are different areas where our proposed method
-may perform better. If just strictly comparing our proposed method to
-linear interpolation for now, linear interpolation performs better in
-Simulation 1 and Simulation 3. In Simulation 2, our method outperforms
-linear interpolation for \(y\) in cluster 2. For Simulation 2 in
-\cref{fig:traj-wrap}, the \(y\)-values of cluster 2 are more spread out
-and curved than the others. The other simulations may have some
-curvature, but samples are taken closer together, or the data may be
-spread out but mostly linear. Nonetheless, the performance of linear
-interpolation is not surprising as there are long periods of linear
-movement in each of the simulations, so the results may be dependent on
-what points were randomly removed. Additionally, linear interpolation
-can not estimate the first or last point of a trajectory, so there are
-fewer predicted locations used to calculate the RMSE. Thus, these
-simulations show that linear interpolation generally outperforms our
-method, but our methods shows promise with curved data that may not be
-highly sampled.
+may perform better. If just strictly comparing our proposed univariate
+method to linear interpolation, linear interpolation always performs
+better in Simulation 1 and Simulation 3. In Simulation 2, our method
+outperforms linear interpolation for \(y\) in cluster 2. For Simulation
+2 in \cref{fig:traj-wrap}, the \(y\)-values of cluster 2 are more spread
+out and curved than the other clusters in the simulation. The other
+simulations may have some curvature, but samples are taken closer
+together, or the data may be spread out but mostly linear. Nonetheless,
+the performance of linear interpolation is not surprising as there are
+long periods of linear movement in each of the simulations, so the
+results may be dependent on what points were randomly removed.
+Additionally, linear interpolation can not estimate the first or last
+point of a trajectory, so there are fewer predicted locations used to
+calculate the RMSE. Thus, these simulations show that linear
+interpolation generally outperforms our univariate method, but it shows
+promise with curved data that may not be highly sampled.
 
 The results regarding intersection creation are mixed, with creating
 intersections only being beneficial for Simulation 3. However, these
-results may be impacted by some of the intersections not containing
-muhch data, which may impact model development. Through the simulations
-we also found that having a fine enought grid for the initial starting
-values in the prediction function is key. If the grid is too coarse,
-this can impact the accuracy of the estimations.
+results may be impacted by some of the intersections not containing much
+data, which may impact model development. Finally, our bivariate method
+never outperforms our proposed univariate method, which makes sense as
+\(x\) and \(y\) were simulated separately.
 
 \begin{table}
 
@@ -735,76 +738,75 @@ this can impact the accuracy of the estimations.
 \centering
 \begin{tabular}[t]{rrrrrrrrr}
 \toprule
-\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Intersection} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{No Intersection} & \multicolumn{2}{c}{Bivariate} \\
+\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{Univariate Intersection} & \multicolumn{2}{c}{Overall Unviariate} & \multicolumn{2}{c}{Bivariate} \\
 \cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7} \cmidrule(l{3pt}r{3pt}){8-9}
-Cluster & $X_{int}$ & $Y_{int}$ & $X_{lin}$ & $Y_{lin}$ & $X_{no int}$ & $Y_{no int}$ & $X_{bi}$ & $Y_{bi}$\\
+Cluster & $X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$\\
 \midrule
 \addlinespace[0.3em]
 \multicolumn{9}{l}{\textbf{Simulation 1}}\\
-\hspace{1em}1 & 1.41 & 1.58 & 0.82 & 1.16 & 1.54 & 1.28 & 1.41 & 1.77\\
-\hspace{1em}2 & 1.57 & 1.47 & 1.19 & 1.27 & 1.35 & 1.29 & 1.63 & 1.59\\
+\hspace{1em}1 & 0.82 & 1.16 & 1.41 & 1.58 & 1.54 & 1.28 & 1.41 & 1.77\\
+\hspace{1em}2 & 1.19 & 1.27 & 1.57 & 1.47 & 1.35 & 1.29 & 1.63 & 1.59\\
 \addlinespace[0.3em]
 \multicolumn{9}{l}{\textbf{Simulation 2}}\\
-\hspace{1em}1 & 1.70 & 1.64 & 1.32 & 1.33 & 1.66 & 1.60 & 1.80 & 1.72\\
-\hspace{1em}2 & 1.50 & 1.52 & 1.50 & 1.61 & 1.40 & 1.45 & 1.57 & 1.54\\
+\hspace{1em}1 & 1.32 & 1.33 & 1.70 & 1.64 & 1.66 & 1.60 & 1.80 & 1.72\\
+\hspace{1em}2 & 1.50 & 1.61 & 1.50 & 1.52 & 1.40 & 1.45 & 1.57 & 1.54\\
 \addlinespace[0.3em]
 \multicolumn{9}{l}{\textbf{Simulation 3}}\\
-\hspace{1em}1 & 1.46 & 1.48 & 1.16 & 1.10 & 1.43 & 1.44 & 1.49 & 1.51\\
-\hspace{1em}2 & 1.35 & 1.31 & 0.65 & 0.67 & 1.49 & 1.58 & 1.36 & 1.51\\
+\hspace{1em}1 & 1.16 & 1.10 & 1.46 & 1.48 & 1.43 & 1.44 & 1.49 & 1.51\\
+\hspace{1em}2 & 0.65 & 0.67 & 1.35 & 1.31 & 1.49 & 1.58 & 1.36 & 1.51\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{table}
 
-\caption{\label{tab:cp-table-sim}Proportion of Prediction interval containing observed and Average Standard Deviation of Estimates for Simulated Data}
+\caption{\label{tab:cp-table-sim}Coverage of the proposed Univariate and Bivariate Models along with their Average Standard Deviation for the Simulated Data}
 \centering
 \begin{tabular}[t]{lrrrr}
 \toprule
-Method & \$Coverage\_\{X\}\$ & Avg S\$D\_\{X\}\$ & \$Coverage\_\{Y\}\$ & Avg S\$D\_\{Y\}\$\\
+Method & $Coverage_{X}$ & $\bar{SD_{X}}$ & $Coverage_{Y}$ & $\bar{SD_{Y}}$\\
 \midrule
 \addlinespace[0.3em]
 \multicolumn{5}{l}{\textbf{Simulation 1}}\\
-\hspace{1em}Univariate & 0.2571429 & 0.3832179 & 0.2714286 & 0.3506978\\
-\hspace{1em}Bivariate & 0.0142857 & 0.0162862 & 0.0142857 & 0.0351810\\
+\hspace{1em}Univariate & 0.257 & 0.383 & 0.271 & 0.351\\
+\hspace{1em}Bivariate & 0.014 & 0.016 & 0.014 & 0.035\\
 \addlinespace[0.3em]
 \multicolumn{5}{l}{\textbf{Simulation 2}}\\
-\hspace{1em}Univariate & 0.2142857 & 0.3486122 & 0.1964286 & 0.3784616\\
-\hspace{1em}Bivariate & 0.0000000 & 0.0012624 & 0.0000000 & 0.0012609\\
+\hspace{1em}Univariate & 0.214 & 0.349 & 0.196 & 0.378\\
+\hspace{1em}Bivariate & 0.000 & 0.001 & 0.000 & 0.001\\
 \addlinespace[0.3em]
 \multicolumn{5}{l}{\textbf{Simulation 3}}\\
-\hspace{1em}Univariate & 0.2432432 & 0.3189445 & 0.3108108 & 0.3365939\\
-\hspace{1em}Bivariate & 0.0135135 & 0.0010500 & 0.0000000 & 0.0010501\\
+\hspace{1em}Univariate & 0.243 & 0.319 & 0.311 & 0.337\\
+\hspace{1em}Bivariate & 0.014 & 0.001 & 0.000 & 0.001\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 A benefit of using a model-based approach to interpolate missing
 locations is that we are able to determine the uncertainty of the
-estimate. To do so, conditional draws of the unobserved values given the
-observed values are used to quantify the uncertainty. This is
-accomplished by exploiting an advantage of Vecchia's Approximation that
-approximate draws from a Gaussian Process model can be made through the
-inverse Cholesky Factor \citep{guinness_permutation_2018}. Therefore,
-for each model, 30 simulations of predictions are conducted to calculate
-the standard deviation. These can then be used to create an interval of
+estimate. To do so, for the univariate model, conditional draws of the
+unobserved values given the observed values are used to quantify the
+uncertainty. This is accomplished by exploiting an advantage of
+Vecchia's Approximation that approximate draws from a Gaussian Process
+model can be made through the inverse Cholesky Factor
+\citep{guinness_permutation_2018}. Therefore, for each model, 30
+simulations of predictions are conducted to calculate the standard
+deviation. For our proposed bivariate method with INLA, the standard
+deviation of the estimates are computed using the posterior marginals.
+The standard deviation values can then be used to create an interval of
 our estimates. The intervals are found by \(\hat{x} \pm (2*sd_x)\) and
 \(\hat{y} \pm (2*sd_y)\), where \(\hat{x}\) and \(\hat{y}\) are the
-predictions, and \(sd_x\) and \(sd_y\) are the standard deviations
-determined by the conditional simulations. Next, we found the proportion
-of the intervals that contain the true value, otherwise known as
-coverage. For each simulation the coverage can be found in
-\cref{tab:cp-table-sim} along with the average standard deviation values
-to show typical interval width. The proportions in this table are low,
-mainly in the 20\%-30\% range. Like the RMSE values, the proportions can
-be separated by cluster, which are found in \cref{tab:cp-sim-table}.
-These values are also low, with no proportion over 50\%. Also, the
-\(x\)-values in cluster 1 for Simulation 3 have almost no intervals that
-contain the true value. The standard deviation values in
-\cref{tab:cp-table-sim} are also low, meaning there is not much
-variability among the predictions and the intervals are narrow. The low
-coverage values show that the model has room for improvement in terms of
-prediction accuracy.
+predictions, and \(sd_x\) and \(sd_y\) are the standard deviations of a
+prediction. Next, we found the proportion of the intervals that contain
+the true value, otherwise known as coverage. For each simulation the
+coverage can be found in \cref{tab:cp-table-sim} along with the average
+standard deviation values to show typical interval width. The
+proportions in this table are low, mainly in the 20\%-30\% range for the
+univariate model and \textless1\% for the bivariate model. The standard
+deviation values in \cref{tab:cp-table-sim} are also low, meaning there
+is not much variability among the predictions, thus making intervals
+narrow. The low coverage values show that the model has room for
+improvement in terms of prediction accuracy.
 
 \hypertarget{results}{%
 \section{Results}\label{results}}
