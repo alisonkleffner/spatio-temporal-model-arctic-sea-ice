@@ -310,6 +310,8 @@ xmap_10CV_pred(m2,m4, 15, 66, anim_plot_data3) #23, 7: 12,365.2133 92,621.5645 1
 xmap_10CV_pred2(m2,m4, 15, 66, anim_plot_data3) #19, 7: 12,013.4649 92,671.5933 0 
 
 
+xmap_10CV_pred2(m1,m3, 10, 55, anim_plot_data1) #117,764.664 889,140.7397 0 
+
 #get this warning a lot: system is singular; attempting approx solution
 
 w1_xcvn <- all_cv_x_pred2(m1,m3,anim_plot_data1) #seems to be having more issues with linearly depedent columns (og= 2154, new-2143, diff-9)

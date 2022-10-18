@@ -65,11 +65,11 @@
   \title{\bf A Spatio-Temporal Model for Arctic Sea Ice}
 
   \author{
-        Alison Kleffner 1 \\
+        Alison Kleffner \\
     Department of Statistics, University of Nebraska - Lincoln\\
-     and \\     Susan VanderPlas 2 \\
+     and \\     Susan VanderPlas \\
     Department of Statistics, University of Nebraska - Lincoln\\
-     and \\     Yawen Guan 3 \\
+     and \\     Yawen Guan \\
     Department of Statistics, University of Nebraska - Lincoln\\
       }
   \maketitle
@@ -91,21 +91,20 @@
 Arctic Sea Ice is a barrier between the warm air of the ocean and the
 atmosphere, thus playing an important role in the climate. When narrow
 linear cracks (leads) form in the sea ice, the heat from the ocean is
-released into the atmosphere. To estimate where cracks may form, motion
+released into the atmosphere. To estimate where leads may form, motion
 data from the RADARSAT Geophysical Processing System (RGPS) is analyzed.
 RGPS provides a set of trajectories of points on the ice sheet to trace
 the displacement of sea ice, however, chunks of data are missing due to
-the data collection method by satellite. We propose a spatio-temporal
-clustering and interpolation method that estimates where a crack may
-form and allows us to infer missing observations. Features based on the
-sea ice displacement are created for k-means clustering by creating a
-bounding box around each trajectory, resulting in trajectories being
-assigned a cluster. A crack is considered to have formed on the boundary
-between different clusters. Within the clusters, a spatio-temporal
-interpolation model using a Gaussian Process is used to infer missing
-locations. Our clustering approach is compared to ice lead detection
-methods, and cross-validation is used to assess our interpolation
-method.
+collecting data by satellite. We propose a spatio-temporal clustering
+and interpolation method that estimates where a lead may form and allows
+us to infer missing observations. Features based on the sea ice
+displacement are created for k-means clustering by creating a bounding
+box around each trajectory, resulting in trajectories being assigned a
+cluster. A lead is considered to have formed on the boundary between
+different clusters. Using the clusters, a spatio-temporal interpolation
+model using a Gaussian Process is used to infer missing locations. Our
+clustering approach is compared to ice lead detection methods, and
+cross-validation is used to assess our interpolation method.
 \end{abstract}
 
 \noindent%
@@ -115,18 +114,17 @@ method.
 \newpage
 \spacingset{1.45} % DON'T change the spacing!
 
-\hypertarget{introduction}{%
-\section{Introduction}\label{introduction}}
+\hypertarget{intro}{%
+\section{Introduction}\label{intro}}
 
-Sea ice in the Arctic Ocean that acts as an insulator between the warm
-ocean and the cooler atmosphere \citep{peterson_evaluating_2011}.
-However, sea ice is constantly changing and moving due to dynamic
-processes, including wind and ocean current, which causes leads in the
-ice to form \citetext{\citealp{peterson_evaluating_2011}; \citealp[
-]{hoffman_detection_2019}; \citealp{hutter_leads_2019}}. When a lead
-forms in the sea ice it provides a significant source of heat and
-moisture into the atmosphere, which reduces the overall sea ice
-concentration and warms the regional atmospheric boundary layer
+Sea ice in the Arctic Ocean acts as an insulator between the warm ocean
+and the cooler atmosphere \citep{peterson_evaluating_2011}. However, sea
+ice is constantly changing and moving due to dynamic processes,
+including wind and ocean currents, which causes leads in the ice to form
+\citep{peterson_evaluating_2011, hoffman_detection_2019, hutter_leads_2019}.
+When a lead forms in the sea ice it provides a significant source of
+heat and moisture into the atmosphere, which reduces the overall sea ice
+concentration, and warms the regional atmospheric boundary layer
 \citep[\citet{reiser_new_2020}]{key_detectability_1993}. Additionally,
 the formation of leads also has an affect on atmosphere and ocean
 chemical exchanges, which include carbon dioxide and mercury
@@ -139,12 +137,12 @@ release of warmer air \citep{peterson_evaluating_2011}.
 
 Current methods to determine the location of leads generally either
 involve the use of thermal infrared satellite data or the calculation of
-ice deformation using movement. Thermal methods tend to use thermal
-channels from the Advanced Very High Resolution Radiometer (AVHRR), as
-the surface temperatures between a lead and the surrounding sea ice are
-different \citep{key_detectability_1993}. Using thermal channels from
-the AVHRR is highly dependent on clear skies as clouds can also give a
-higher temperature and may be mistaken for a lead. Methods have been
+ice deformation. Thermal methods tend to use thermal channels from the
+Advanced Very High Resolution Radiometer (AVHRR), as the surface
+temperatures between a lead and the surrounding sea ice are different
+\citep{key_detectability_1993}. Using thermal channels from the AVHRR is
+highly dependent on clear skies as clouds can also give a higher
+temperature reading and may be mistaken for a lead. Methods have been
 suggested to reduce the impact of clouds.
 \citet{willmes_pan-arctic_2015} uses only clear sky pixels from the
 Moderate Resolution Imagery Spectroradtiometer (MODIS). However, MODIS
@@ -166,11 +164,11 @@ deformation of the ice is calculated within each grid cell, where areas
 of high deformation may be denoted as leads
 \citep{peterson_evaluating_2011}. These methods can provide additional
 information about a lead, such as size and deformation. However,
-satellite images only pass the same area typically every three to six
-days, thus we do not have a complete set of space-time observations to
-calculate deformation. Additionally, the error in the deformation
-calculations may be strongly underestimated as the grid cells may become
-distorted due to movement, which affects deformation calculations
+satellite images only pass over the same area every three to six days,
+so we do not have a complete set of space-time observations to calculate
+deformation. Additionally, the error in the deformation calculations may
+be strongly underestimated as the grid cells may become distorted due to
+movement, which affects deformation calculations
 \citep{bouillon_producing_2015}.
 
 When working with dynamic data, like the ocean surface, the
@@ -179,14 +177,14 @@ interpolate. Satellite-derived data used to monitor dynamic items can
 have large missing data rates either due to the sampling rate of
 atmospheric conditions \citep{fablet_data-driven_2017}. Thus, if we want
 to have complete gridded data, interpolation is necessary. In optimal
-interpolation, the model of the covariance function of the
-spatio-temporal field-dynamics is used. The interpolated field is a
-result of a linear combination of the observations, assuming stationary
-\citep{fablet_data-drive_2017, ouala_neural_2018}. Additionally, due to
+interpolation, the covariance function of the spatio-temporal
+field-dynamics is used. The interpolated field is a result of a linear
+combination of the observations, assuming stationarity
+\citep{fablet_data-driven_2017, ouala_neural_2018}. Additionally, due to
 large amounts of data being collected, data driven methods have become
 popular. For example, data assimilation involves the construction of a
 dynamical systems made using the data
-\citep{li_variational_2015, fablet_data-drive_2017, ouala_neural_2018}.
+\citep{li_variational_2015, fablet_data-driven_2017, ouala_neural_2018}.
 
 Often when working with data relating to the environment, a simple
 global mean and covariance function is inaccurate as the relationships
@@ -336,35 +334,26 @@ Interpolation}\label{spatio-temporal-interpolation}}
 \subsubsection{Finding Spatio-Temporal
 Neighbors}\label{finding-spatio-temporal-neighbors}}
 
-\begin{figure}[tbp]
-
-{\centering \includegraphics[width=0.7\linewidth,]{images/int-one} 
-
-}
-
-\caption{(a). Polygons of week 1 clusters (b). Polygons of week 2 clusters (c). Intersection polygons of the overlap of week 1 and week 2 polygons}\label{fig:int-plot}
-\end{figure}
-
 Due to the data collection method, the data is susceptible to be missing
 in chunks due to the path of the satellite. Hence, we want to be able to
-interpolate these missing points to have completely gridded data. This
-can be challenging due to the lack of close neighbors, as all the data
-round a point may also be missing. Additionally, some interpolation
-methods are not available due to the non-stationarity of the data, as
-the ice is moving in patches.
+interpolate the missing points to have a complete data set of gridded
+data. This can be challenging due to the lack of close neighbors, as all
+of the observations around a point may also be missing. Additionally,
+some interpolation methods are not available due to the non-stationarity
+of the data.
 
 Our proposed method for interpolation missing locations involves finding
-and using spatio-temporal neighbors of the missing identifier. The
-clusters determined by the bounding box features can also be used to
-identify these spatio-temporal neighbors. Creation of the clusters is
-determined by similar movements, so we can use the information given to
-us by these clusters to interpolate. Meaning, if we know how points move
-in a cluster at a specific time, we can assume a missing identifier in
-the same cluster would move similarly. In this method, new clusters are
-created for each week. The idea is that the intersection of one week's
-clusters with the week before and week after would create groups. Each
-member of a group is then a spatio-temporal neighbor of the other
-members as they are in a similar geographic location over time.
+and using spatio-temporal neighbors of the missing \(g_j\). The clusters
+determined by the bounding box features are be used to identify these
+spatio-temporal neighbors. Creation of the clusters is determined by
+similar movements, so we can use the information given to us by these
+clusters to interpolate. Meaning, if we know how known points move in a
+cluster at a specific time, we can assume a missing point in the same
+cluster would move similarly. In this method, new clusters are created
+for each week. The idea is that the intersection of one week's clusters
+with the week before and week after would create groups. Each member of
+a group is then a spatio-temporal neighbor of the other members, as they
+are in a similar geographic location over time.
 
 The first step in finding these intersections is to create polygons for
 each cluster. A polygon is created by finding the boundary coordinates
@@ -374,9 +363,7 @@ ice sheet followed by neighboring clusters until there is a polygon for
 each cluster. After each polygon is created, then all of the \(g_j\)
 located within this polygon are removed from the dataset, even if the
 \(g_j\) was assigned to a different cluster. This was done to reduce the
-amount of polygon overlapping. Additionally, if a \(g_j\) is classified
-to a different cluster than all of it's neighbors, most likely that
-\(g_j\) should actually be classified like it's neighbors.
+amount of polygon overlapping.
 
 Once we create the polygons for each week, we can find the intersection
 of polygons for different weeks to define spatio-temporal neighbors. The
@@ -386,94 +373,87 @@ intersection based on which intersection coordinates contains its first
 observed location of the week. All of the points within that
 intersection are considered to be spatio-temporal neighbors since they
 are located in a similar geographic region over time. For example, if we
-want to interpolate missing data in week 1, would first find its
+want to interpolate missing data in Week 1, we would first find its
 spatio-temporal neighbors. Since it is the first week, there is no
-previous week information, so we can only use week 2 to find neighbors.
+previous week information, so we can only use Week 2 to find neighbors.
 Next, we identify the coordinates for the intersecting polygons for
 these two weeks. Then, the \(g_j\) located in each intersecting polygon
 are spatio-temporal neighbors and will be used to create a model for
-interpolation in each of the intersecting polygons. \cref{fig:int-plot}
-shows this process with (a) and (b) showing the polygons of the clusters
-for week 1 and week 2 respectively, and (c) showing the intersections of
-the polygons. Some of the intersection polygons are now shown due to
-duplicate intersections (caused by overlapping polygons), but each
-\(g_j\) is only assigned to one intersection. If a \(g_j\) is not found
-in an intersection, it is then removed from the data during this
+interpolation in each of the intersecting polygons. If a \(g_j\) is not
+found in an intersection, it is then removed from the data during this
 process, which is a potential area for improvement. Spatio-temporal
-neighbors for week 3 are found using a similar process, with just week
-2, as this was the last week in the dataset. Creating the intersecting
-polygons for week 2 involved the intersection of it's polygons from both
-week 1 and week 3.
+neighbors for Week 3 are found using a similar process, with just Week
+2, as this was the last week in the data set. Creating the intersecting
+polygons for Week 2 involved the intersection of it's polygons with both
+Week 1 and Week 3.
 
 To use this interpolation method, a spatial grid encompassing the ice
 sheet is created for each day. The grid is used in our model as an
 estimation of the initial locations of missing \(g_j\), where the model
-will adjust this location using its known neighbors. This size of our
-grid cells was chosen for a maximum of four \(g_j\) to be located in a
-cell, matching with the initial grid used to track the trajectories. The
+will adjust this location using its known neighbors. The size of our
+grid cells was chosen to restrict the number of \(g_j\) located in a
+cell to four, similar to the grid used to track the trajectories. The
 centroid of the cell was used to estimate each \(g_j\), so each of the
 \(g_j\) located in that cell would have the same initial estimate. We do
 not want to use these as the final estimate of our missing locations as
-it does not take into account movement.
+it does not take into account movement. Once the grid was created for
+initial location estimates of the missing data, a univariate and
+bivariate approach were both developed.
 
 \hypertarget{univariate-interpolation}{%
 \subsubsection{Univariate
 Interpolation}\label{univariate-interpolation}}
 
-Once the grid was created for initial location estimates of the missing
-data, a univariate model was developed for both coordinates. These
-models were created using the \texttt{GpGp} package in R, which uses the
-Vecchia's Approximation for a Gaussian Process \citep{gpgp_pkg}.
-Generally, likelihood methods for the covariance parameter estimates of
-a Gaussian Process are computationally unfeasible. Hence,
-\citet{vecchia1988estimation} developed an approximation where the joint
-density of the Gaussian Process is written as a product of conditional
-distributions that use only a subset of the data. The subset chosen
-greatly affects the approximation and is formed by neighbors of the
-observation. Within the \texttt{GpGp} package, updates to this
-approximation are also made. A new ordering method to find neighbors was
-introduced, which sorted the data by sequentially picking the next point
-that has the maximum minimum distance to all previously selected points
-\citep{guinness_permutation_2018}. Additionally,
-\citet{guinness_permutation_2018} introduces a grouping method, where
-data is partitioned into blocks and each block's input to the likelihood
-can be computed at the same time. Further \citet{guinness_gaussian_2019}
-provides an efficient method for applying Fisher scoring to maximize the
-log-likelihood. These updates were shown to further increase the
-accuracy of the models and lowers computation time.
+A univariate model for \(x\) and \(y\) were developed using the
+\texttt{GpGp} package in R, which uses the Vecchia's Approximation for a
+Gaussian Process \citep{gpgp_pkg}. Generally, likelihood methods for the
+covariance parameter estimates of a Gaussian Process are computationally
+unfeasible. Hence, \citet{vecchia1988estimation} developed an
+approximation where the joint density of the Gaussian Process is written
+as a product of conditional distributions that use only a subset of the
+data. The subset chosen greatly affects the approximation and is formed
+by neighbors of an observation. Within the \texttt{GpGp} package,
+updates to this approximation are also made. A new ordering method to
+find neighbors was introduced, which sorted the data by sequentially
+picking the next point that has the maximum minimum distance to all
+previously selected points \citep{guinness_permutation_2018}.
+Additionally, \citet{guinness_permutation_2018} introduced a grouping
+method, where data is partitioned into blocks and each block's input to
+the likelihood can be computed at the same time. Further
+\citet{guinness_gaussian_2019} provides an efficient method for applying
+Fisher scoring to maximize the log-likelihood. These updates were shown
+to further increase the accuracy of the models and lowers computation
+time.
 
-To fit the model, we need to define:
+To fit a spatial model with a time fixed effect, we need to define:
 
 \begin{itemize}
 \tightlist
 \item
   \(Y\) = \(x\) or \(y\) (univariate response vector of the coordinates.
 \item
-  loc = The matrix of \(x\), \(y\), and time (\(t\)) of known data. Made
-  of locations at the desired time (\(t\)), the day before (\(t-1\)),
-  and the day after (\(t+1\)).
+  loc = The matrix of \(x\) and \(y\) coordinates of the known data.
+  Made of locations at the desired time (\(t\)), the day before
+  (\(t-1\)), and the day after (\(t+1\)).
 \item
-  \(X\) = design matrix (single column of ones)
+  \(X\) = matrix of intercept and times
 \item
   Sequence of values for number of neighbors.
 \end{itemize}
 
-We specified the covariance function as the exponential space-time
+We specified the covariance function as the exponential isotropic
 covariance function. It is defined as
-\[\Sigma_{\theta}(s;t) = \Sigma^{(s)}_{\theta}*\Sigma^{(t)}_{\theta} \quad (1)\]
-where
-\(\Sigma^{(s)}_{\theta} = \sigma^2\exp\left\{||x-y||/\phi\right\}\) and
-\(\Sigma^{(t)}_{\theta} = \sigma^2\exp\left\{-|t|/\tau\right\}\). The
-parameters in the covariance function are \(\sigma^2\) (variance),
-\(\phi\) (spatial range), and \(tau\) (temporal range). The spatial and
-temporal ranges are smoothness parameters that relate to dependence over
-space and time respectively. The output is the maximum Vecchia
-likelihood estimates for the covariance parameters. The model created by
-these estimates can be used to predict the unobserved locations at the
-time (\(t\)). The initial grid estimates of the coordinates are used as
-the starting locations in the prediction function and shifted based on
-the estimated model parameters. Predictions for the coordinate are made
-by finding the conditional expectation of the model developed.
+\[\Sigma_{\theta}(s) = \sigma^2\exp\left\{||x-y||/\phi\right\} \quad (1).\]
+The parameters in the covariance function are \(\sigma^2\) (variance)
+and \(\phi\) (spatial range). The spatial range is a smoothness
+parameter that relates to dependence over space. The output is the
+maximum Vecchia likelihood estimates for the covariance parameters. The
+model created by these estimates can be used to predict the unobserved
+locations at the time (\(t\)). The initial grid estimates of the
+coordinates are used as the starting locations in the prediction
+function and shifted based on the estimated model parameters.
+Predictions for each coordinate are made by finding the conditional
+expectation of the model developed.
 
 \hypertarget{bivariate-interpolation}{%
 \subsubsection{Bivariate Interpolation}\label{bivariate-interpolation}}
@@ -486,21 +466,23 @@ Laplace Approximation (INLA), using the R-INLA package can create joint
 response models \citep[\citet{rue_review_2017}]{rue_inla_2009}. INLA is
 a Bayesian Hierarchical approach which allows for the spatio-temporal
 structure of the data to be taken into account in the inferential
-process. In INLA, the linear predictor,
-\[\eta_{i} = \sum^{M}_{m=1}\beta_{M}x_{mi} + \sum^{L}_{l=1}f_{l}(z_{li}) \quad (3)\]
+process. For spatio-temporal data defined by the process
+\(\left\{H(s,t), (s,t) \in \mathcal{D} \in \mathcal{R}\right\}\), the
+linear predictor defined as,
+\[\eta_{i} = \sum^{M}_{m=1}\beta_{M}x_{mi} + \sum^{L}_{l=1}f_{l}(z_{li}),\]
 takes on the form of a Bayesian Additive Model, where \(f_{l}(z_{li})\)
 are unknown functions of the covariates and \(\beta_{M}x_{mi}\) are
 linear effects of the covariates \citep{BLANGIARDO201333}. A subset of
 Bayesian additive models, latent Gaussian models, are used and assigned
 Gaussian priors \citep{MORAGA2021100440}. This is beneficial as a latent
 field is a Gaussian Markov Random Field with a sparse precision matrix
-\citep{BLANGIARDO201333}. Latent effects are denoted by x and
-hyperparameters by \(\theta\). In INLA, the main aim is to solve for the
-posterior marginal distributions of x (\(\pi(x_i|y)\)) and \(\theta\)
-\((\pi(\theta_j|y))\). Solving for the posterior marginal exploits
-assumptions of the model where a numerical approximation to the
-posterior is found through the Laplace Approximation
-\citep{rue_inla_2009}.
+\citep{BLANGIARDO201333}. Latent effects are denoted by \(d\) and
+hyperparameters by \(\theta\) = \(\left\{\alpha, \beta, f\right\}\). In
+INLA, the main aim is to solve for the posterior marginal distributions
+of \(d\) (\(\pi(d_i|h)\)) and \(\theta\) \((\pi(\theta_j|h))\). Solving
+for the posterior marginal exploits assumptions of the model where a
+numerical approximation to the posterior is found through the Laplace
+Approximation \citep{rue_inla_2009}.
 
 \hypertarget{simulation}{%
 \section{Simulation Study}\label{simulation}}
@@ -708,7 +690,7 @@ objects unknown location along a straight-line path between two known
 locations. It has been shown to work well for trajectories that follow a
 straight-line path and sampled at a high rate. On the other hand, it
 tends to underperform when a trajectory follows a curved path or is not
-heavily sampled \citep{wentz_comparison_2003, guo_improved_2011}.
+heavily sampled \citep{wentz_comparison_2003, guo_improved_2021}.
 Another method used for comparison is similar to our proposed method,
 except now the intersections are ignored. Instead a model was developed
 using all known points for \(t-1\), \(t\), and \(t+1\) (this essentially
@@ -726,7 +708,7 @@ may perform better. If just strictly comparing our proposed method to
 linear interpolation for now, linear interpolation performs better in
 Simulation 1 and Simulation 3. In Simulation 2, our method outperforms
 linear interpolation for \(y\) in cluster 2. For Simulation 2 in
-\cref{fig:traj-plot}, the \(y\)-values of cluster 2 are more spread out
+\cref{fig:traj-wrap}, the \(y\)-values of cluster 2 are more spread out
 and curved than the others. The other simulations may have some
 curvature, but samples are taken closer together, or the data may be
 spread out but mostly linear. Nonetheless, the performance of linear
@@ -818,7 +800,7 @@ mainly in the 20\%-30\% range. Like the RMSE values, the proportions can
 be separated by cluster, which are found in \cref{tab:cp-sim-table}.
 These values are also low, with no proportion over 50\%. Also, the
 \(x\)-values in cluster 1 for Simulation 3 have almost no intervals that
-contain the true value. The standard deviation vlaues in
+contain the true value. The standard deviation values in
 \cref{tab:cp-table-sim} are also low, meaning there is not much
 variability among the predictions and the intervals are narrow. The low
 coverage values show that the model has room for improvement in terms of
@@ -902,7 +884,7 @@ between them. The clusters by week can be found in
 \cref{fig:by-week-cluster-plot}, where can see some similarities in
 clusters over time. In the clusters for week 1 and week 2, there is a
 line moving from the top and down to the left, which is seen in the
-kinematic crack algorithm, but not in \cref{fig:ex-resutls}. This is an
+kinematic crack algorithm, but not in \cref{fig:ex-result}. This is an
 example of where clustering the sub-trajectories may provide additional
 information.
 
@@ -993,7 +975,7 @@ week is not useful for comparison. In \cref{tab:results-table2}, linear
 interpolation outperforms the other methods except for the \(y\)-values
 in week 1.
 
-However, when looking at the trajectory plot in \cref{traj-plot}, some
+However, when looking at the trajectory plot in \cref{traj-wrap}, some
 of the trajectories in the plot are more linear than others (ie. have
 different movements defined by the clusters). Based on our simulation
 study, our method may have improvement over linear interpolation on
@@ -1006,14 +988,14 @@ generally outperforms our method, but there are two exceptions. For week
 1 and week 2, linear interpolation performed the worst of the other two
 methods for cluster 1. In \cref{fig:by-week-cluster-plot}, cluster 1 for
 both of these weeks is at the top of the plot. When comparing this
-cluster location to the trajectory plot in \cref{fig:traj-plot}, the top
+cluster location to the trajectory plot in \cref{fig:traj-wrap}, the top
 of the figure is where the most curved movement happens with a longer
 distance traveled over time. Hence, linear interpolation may not work as
-well here. Further, \cref{fig:int-best-plot} zooms in on an example for
+well here. Further, \cref{fig:int-best-plots} zooms in on an example for
 week 2 where our intersection method performs best (plot (a)) and linear
-interpolation performs best (plot (b)). \cref{fig:int-best-plot}a) is
+interpolation performs best (plot (b)). \cref{fig:int-best-plots}a) is
 cluster 1, where the observed points are more spread out along the
-trajectory. On the other hand \cref{fig:int-best-plot}b) has small,
+trajectory. On the other hand \cref{fig:int-best-plots}b) has small,
 linear movement, which is why linear interpolation performs best.
 
 As previously stated, though the RMSE for the overall model was lower
