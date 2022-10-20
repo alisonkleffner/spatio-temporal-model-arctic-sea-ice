@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.3.11)  20 OCT 2022 09:54
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.3.11)  20 OCT 2022 15:53
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -776,6 +776,18 @@ Overfull \hbox (1.85246pt too wide) in paragraph at lines 867--890
  [][] 
  []
 
+
+LaTeX Warning: Reference `tab:results-clust1-actual' on page 1 undefined on inp
+ut line 899.
+
+
+LaTeX Warning: Reference `tab:results-clust2-actual' on page 1 undefined on inp
+ut line 899.
+
+
+LaTeX Warning: Reference `tab:results-clust3-actual' on page 1 undefined on inp
+ut line 900.
+
 [21
 pdfTeX warning (ext4): destination with the same identifier (name{figure.8}) ha
 s been already used, duplicate ignored
@@ -798,33 +810,21 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.2}) has
 l.916 
       ]
 
-LaTeX Warning: Reference `tab:cp-table' on page 1 undefined on input line 989.
+LaTeX Warning: Reference `tab:cp-table' on page 1 undefined on input line 965.
 
 [24] [25
 pdfTeX warning (ext4): destination with the same identifier (name{table.3}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1013 
-       
-pdfTeX warning (ext4): destination with the same identifier (name{table.4}) has
- been already used, duplicate ignored
-<argument> ...shipout:D \box_use:N \l_shipout_box 
-                                                  \__shipout_drop_firstpage_...
-l.1013 
-       ] [26
-pdfTeX warning (ext4): destination with the same identifier (name{table.5}) has
- been already used, duplicate ignored
-<argument> ...shipout:D \box_use:N \l_shipout_box 
-                                                  \__shipout_drop_firstpage_...
-l.1031 
-       ]
+l.989 
+      ] [26]
 
-LaTeX Warning: Reference `tab:cp-table' on page 1 undefined on input line 1058.
+LaTeX Warning: Reference `tab:cp-table' on page 1 undefined on input line 1034.
 
 
-[27] (spatio-temporal-model-arctic-sea-ice.bbl [28] [29] [30]) [31] (spatio-tem
-poral-model-arctic-sea-ice.aux)
+[27] (spatio-temporal-model-arctic-sea-ice.bbl [28] [29]) [30] (spatio-temporal
+-model-arctic-sea-ice.aux)
 
 LaTeX Warning: There were undefined references.
 
@@ -833,13 +833,13 @@ s not changed.
 (rerunfilecheck)             Checksum: 561770FD236B84EF38D0AF7CC2A3A0AF;2968.
  ) 
 Here is how much of TeX's memory you used:
- 14228 strings out of 478582
- 244939 string characters out of 2841984
- 544863 words of memory out of 3000000
- 32083 multiletter control sequences out of 15000+600000
+ 14224 strings out of 478582
+ 244894 string characters out of 2841984
+ 542644 words of memory out of 3000000
+ 32082 multiletter control sequences out of 15000+600000
  477426 words of font info for 57 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 60i,10n,63p,428b,482s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 60i,10n,63p,428b,470s stack positions out of 5000i,500n,10000p,200000b,80000s
  <C:\Users\akleffner2\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600
 \tcrm1200.pk><C:/Users/akleffner2/AppData/Local/Programs/MiKTeX/fonts/type1/pub
 lic/amsfonts/cm/cmbx10.pfb><C:/Users/akleffner2/AppData/Local/Programs/MiKTeX/f
@@ -856,10 +856,10 @@ Data/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/a
 kleffner2/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti12.p
 fb><C:/Users/akleffner2/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfon
 ts/cm/cmtt12.pfb>
-Output written on spatio-temporal-model-arctic-sea-ice.pdf (31 pages, 9009126 b
+Output written on spatio-temporal-model-arctic-sea-ice.pdf (30 pages, 9007039 b
 ytes).
 PDF statistics:
- 541 PDF objects out of 1000 (max. 8388607)
- 114 named destinations out of 1000 (max. 500000)
+ 531 PDF objects out of 1000 (max. 8388607)
+ 111 named destinations out of 1000 (max. 500000)
  206 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -925,7 +925,7 @@ method has some promise with non-linear and less-sampled data.
 
 \begin{table}
 
-\caption{\label{tab:results-clust1-actual}RMSE by Cluster for Week 1 for Interpolation Methods}
+\caption{\label{tab:results-clust-actual}RMSE by Cluster for Interpolation Methods}
 \centering
 \begin{tabular}[t]{rrrrrrrrr}
 \toprule
@@ -933,53 +933,29 @@ method has some promise with non-linear and less-sampled data.
 \cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7} \cmidrule(l{3pt}r{3pt}){8-9}
 Cluster & $X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$\\
 \midrule
-1 & 3.20 & 13.04 & 3.07 & 4.10 & 2.52 & 3.61 & 3.16 & 17.68\\
-2 & 0.19 & 0.36 & 4.36 & 4.30 & 4.26 & 3.98 & 4.58 & 4.63\\
-3 & 1.31 & 3.07 & 3.08 & 3.10 & 2.17 & 2.72 & 2.85 & 9.88\\
-4 & 1.40 & 2.44 & 3.10 & 2.85 & 2.46 & 2.34 & 2.97 & 2.79\\
-5 & 0.77 & 3.17 & 3.91 & 3.67 & 3.89 & 2.55 & 3.99 & 8.78\\
-\addlinespace
-6 & 1.89 & 5.64 & 3.10 & 3.06 & 2.63 & 3.35 & 3.23 & 4.69\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}
-
-\caption{\label{tab:results-clust2-actual}RMSE by Cluster for Week 2 for Interpolation Methods}
-\centering
-\begin{tabular}[t]{rrrrrrrrr}
-\toprule
-\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{Univariate Intersection} & \multicolumn{2}{c}{Overall Univariate} & \multicolumn{2}{c}{Bivariate} \\
-\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7} \cmidrule(l{3pt}r{3pt}){8-9}
-Cluster & $X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$\\
-\midrule
-1 & 3.24 & 3.32 & 3.00 & 2.93 & 2.62 & 3.04 & 3.05 & 4.60\\
-2 & 2.55 & 1.03 & 2.94 & 2.89 & 2.89 & 2.94 & 3.04 & 2.88\\
-3 & 1.58 & 1.99 & 2.94 & 2.90 & 2.95 & 3.03 & 2.95 & 2.91\\
-4 & 1.40 & 0.52 & 3.26 & 3.13 & 3.45 & 3.19 & 3.37 & 3.17\\
-5 & 0.31 & 0.37 & 4.23 & 4.16 & 4.41 & 4.20 & 4.32 & 4.28\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}
-
-\caption{\label{tab:results-clust3-actual}RMSE by Cluster for Week 3 for Interpolation Methods}
-\centering
-\begin{tabular}[t]{rrrrrrrrr}
-\toprule
-\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{Univariate Intersection} & \multicolumn{2}{c}{Overall Univariate} & \multicolumn{2}{c}{Bivariate} \\
-\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7} \cmidrule(l{3pt}r{3pt}){8-9}
-Cluster & $X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$\\
-\midrule
-1 & 2.04 & 2.67 & 2.85 & 2.85 & 2.70 & 3.04 & 2.94 & 2.84\\
-2 & 2.15 & 2.06 & 2.81 & 2.95 & 2.65 & 2.85 & 2.68 & 2.97\\
-3 & 0.19 & 0.44 & 3.65 & 3.59 & 3.75 & 3.60 & 3.70 & 3.61\\
-4 & 1.53 & 0.72 & 2.67 & 2.78 & 2.87 & 2.92 & 2.61 & 2.87\\
-5 & 0.21 & 0.48 & 3.16 & 3.04 & 3.08 & 3.09 & 3.11 & 2.99\\
-\addlinespace
-6 & 0.28 & 0.55 & 3.21 & 3.01 & 3.23 & 3.01 & 3.25 & 3.03\\
+\addlinespace[0.3em]
+\multicolumn{9}{l}{\textbf{Cluster 1}}\\
+\hspace{1em}1 & 3.20 & 13.04 & 3.07 & 4.10 & 2.52 & 3.61 & 3.16 & 17.68\\
+\hspace{1em}2 & 0.19 & 0.36 & 4.36 & 4.30 & 4.26 & 3.98 & 4.58 & 4.63\\
+\hspace{1em}3 & 1.31 & 3.07 & 3.08 & 3.10 & 2.17 & 2.72 & 2.85 & 9.88\\
+\hspace{1em}4 & 1.40 & 2.44 & 3.10 & 2.85 & 2.46 & 2.34 & 2.97 & 2.79\\
+\hspace{1em}5 & 0.77 & 3.17 & 3.91 & 3.67 & 3.89 & 2.55 & 3.99 & 8.78\\
+\hspace{1em}6 & 1.89 & 5.64 & 3.10 & 3.06 & 2.63 & 3.35 & 3.23 & 4.69\\
+\addlinespace[0.3em]
+\multicolumn{9}{l}{\textbf{Cluster 2}}\\
+\hspace{1em}1 & 3.24 & 3.32 & 3.00 & 2.93 & 2.62 & 3.04 & 3.05 & 4.60\\
+\hspace{1em}2 & 2.55 & 1.03 & 2.94 & 2.89 & 2.89 & 2.94 & 3.04 & 2.88\\
+\hspace{1em}3 & 1.58 & 1.99 & 2.94 & 2.90 & 2.95 & 3.03 & 2.95 & 2.91\\
+\hspace{1em}4 & 1.40 & 0.52 & 3.26 & 3.13 & 3.45 & 3.19 & 3.37 & 3.17\\
+\hspace{1em}5 & 0.31 & 0.37 & 4.23 & 4.16 & 4.41 & 4.20 & 4.32 & 4.28\\
+\addlinespace[0.3em]
+\multicolumn{9}{l}{\textbf{Cluster 3}}\\
+\hspace{1em}1 & 2.04 & 2.67 & 2.85 & 2.85 & 2.70 & 3.04 & 2.94 & 2.84\\
+\hspace{1em}2 & 2.15 & 2.06 & 2.81 & 2.95 & 2.65 & 2.85 & 2.68 & 2.97\\
+\hspace{1em}3 & 0.19 & 0.44 & 3.65 & 3.59 & 3.75 & 3.60 & 3.70 & 3.61\\
+\hspace{1em}4 & 1.53 & 0.72 & 2.67 & 2.78 & 2.87 & 2.92 & 2.61 & 2.87\\
+\hspace{1em}5 & 0.21 & 0.48 & 3.16 & 3.04 & 3.08 & 3.09 & 3.11 & 2.99\\
+\hspace{1em}6 & 0.28 & 0.55 & 3.21 & 3.01 & 3.23 & 3.01 & 3.25 & 3.03\\
 \bottomrule
 \end{tabular}
 \end{table}
