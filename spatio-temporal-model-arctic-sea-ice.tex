@@ -576,15 +576,6 @@ for each simulation can be found in \cref{fig:traj-wrap}.
 
 \begin{figure}[tbp]
 
-{\centering \includegraphics[width=\linewidth,]{spatio-temporal-model-arctic-sea-ice_files/figure-latex/plot-og-clus-1} 
-
-}
-
-\caption{Clusterings of Observed Data on Original Grid}\label{fig:plot-og-clus}
-\end{figure}
-
-\begin{figure}[tbp]
-
 {\centering \includegraphics[width=\linewidth,]{spatio-temporal-model-arctic-sea-ice_files/figure-latex/all-clus-1} 
 
 }
@@ -596,34 +587,26 @@ Now our proposed spatio-temporal clustering method, using a bounding
 box, is performed on each of the simulated datasets. Since the true
 number of clusters is two, two is used as the \(k\) input in the k-means
 clustering algorithm. The results are shown at two different time
-points. First, the k-means determined clusters are plotted on the
-initial grid to visualize how well our method performs when we can see
-the true clusterings (see \cref{fig:plot-og-clus}). The cut-off for the
-initially assigned cluster groupings is given by the red-dashed line. In
-this figure, a majority of points are clustered correctly, however,
-there are a number of misclassified points in each simulation. In
-Simulation 1, most of the misclassifications happen along the border,
-but seem to increase from left to right. Most of cluster 2 is clustered
-correctly in Simulation 2, with the majority of the misclassification in
-cluster 1 happening along the edges and boundary. Similarly, in
-Simulation 3 most of the misclassifications are near the border, with a
-handful along the right edge of cluster 2.
-
-The clusters are also visualized on the last day of the week to see if
-the clusters determined by the bounding box can distinguish movement
-over time. In \cref{fig:all-clus}, there are distinguishable boundaries
-between clusters for each of the simulations. Thus, by clustering using
-the movement features of a trajectory, we are able to distinguish the
-different movement patterns of the data with a clearly defined boundary.
-Some of the misclassifications on the original grid may be due to the
-value of the underlying process that was added to get the new location.
-This value was determined by the closest grid cell of the underlying
-process by Euclidean distance. If a point eventually becomes closer to
-the other cluster, that cluster's underlying process values are then
-added to cause the movement. Hence, it will eventually start to move
-like the other cluster. So, if a point spends more time moving like
-cluster 1 than cluster 2, as an example, it will most likely be
-classified as cluster 1, even if that was not the initial cluster
+points. We first plotted the k-means determined cluster on the initial
+grid to visualize how well our method performs when we can see the true
+clusterings. A majority of points are clustered correctly, however,
+there are a number of misclassified points in each simulation, mostly
+occuring along the border between clusters and along the edges. More
+interestingly, the clusters are visualized on the last day of the week
+to see if the clusters determined by the bounding box can distinguish
+movement over time. In \cref{fig:all-clus}, there are distinguishable
+boundaries between clusters for each of the simulations. Thus, by
+clustering using the movement features of a trajectory, we are able to
+distinguish the different movement patterns of the data with a clearly
+defined boundary. Some of the misclassifications on the original grid
+may be due to the value of the underlying process that was added to get
+the new location. This value was determined by the closest grid cell of
+the underlying process by Euclidean distance. If a point eventually
+becomes closer to the other cluster, that cluster's underlying process
+values are then added to cause the movement. Hence, it will eventually
+start to move like the other cluster. So, if a point spends more time
+moving like cluster 1 than cluster 2, as an example, it will most likely
+be classified as cluster 1, even if that was not the initial cluster
 assignment.
 
 \hypertarget{interpolation-method}{%
