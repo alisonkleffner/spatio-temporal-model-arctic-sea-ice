@@ -655,29 +655,6 @@ assignment.
 \hypertarget{interpolation-method}{%
 \subsection{Interpolation Method}\label{interpolation-method}}
 
-\begin{table}
-
-\caption{\label{tab:results-table}RMSE for Interpolation Methods}
-\centering
-\begin{tabular}[t]{rrrrrrrr}
-\toprule
-\multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{Univariate Intersection} & \multicolumn{2}{c}{Overall Univariate} & \multicolumn{2}{c}{Bivariate} \\
-\cmidrule(l{3pt}r{3pt}){1-2} \cmidrule(l{3pt}r{3pt}){3-4} \cmidrule(l{3pt}r{3pt}){5-6} \cmidrule(l{3pt}r{3pt}){7-8}
-$X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$\\
-\midrule
-\addlinespace[0.3em]
-\multicolumn{8}{l}{\textbf{Simulation 1}}\\
-\hspace{1em}1.04 & 1.23 & 1.50 & 1.51 & 1.43 & 1.29 & 1.54 & 1.67\\
-\addlinespace[0.3em]
-\multicolumn{8}{l}{\textbf{Simulation 2}}\\
-\hspace{1em}1.45 & 1.54 & 1.54 & 1.55 & 1.47 & 1.49 & 1.63 & 1.58\\
-\addlinespace[0.3em]
-\multicolumn{8}{l}{\textbf{Simulation 3}}\\
-\hspace{1em}0.95 & 0.92 & 1.41 & 1.40 & 1.46 & 1.51 & 1.43 & 1.51\\
-\bottomrule
-\end{tabular}
-\end{table}
-
 The same simulated data are also used to check the performance of our
 spatio-temporal interpolation model. For each of the simulations,
 another week of data is similarly simulated and clustered. Polygons for
@@ -734,50 +711,35 @@ never outperforms our proposed univariate method, which makes sense as
 
 \begin{table}
 
-\caption{\label{tab:results-table-by-clust}RMSE for Interpolation Methods by cluster}
+\caption{\label{tab:results-table-by-clust}RMSE for Interpolation Methods}
 \centering
-\begin{tabular}[t]{rrrrrrrrr}
+\begin{tabular}[t]{lllrrllrr}
 \toprule
-\multicolumn{1}{c}{ } & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{Univariate Intersection} & \multicolumn{2}{c}{Overall Unviariate} & \multicolumn{2}{c}{Bivariate} \\
+\multicolumn{1}{c}{} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{Univariate Intersection} & \multicolumn{2}{c}{Overall Univariate} & \multicolumn{2}{c}{Bivariate} \\
 \cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7} \cmidrule(l{3pt}r{3pt}){8-9}
-Cluster & $X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$\\
+ & $X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$\\
 \midrule
 \addlinespace[0.3em]
 \multicolumn{9}{l}{\textbf{Simulation 1}}\\
-\hspace{1em}1 & 0.82 & 1.16 & 1.41 & 1.58 & 1.54 & 1.28 & 1.41 & 1.77\\
-\hspace{1em}2 & 1.19 & 1.27 & 1.57 & 1.47 & 1.35 & 1.29 & 1.63 & 1.59\\
+\hspace{1em}Overall & 1.04 & 1.23 & 1.500 & 1.510 & 1.43 & 1.29 & 1.540 & 1.670\\
+\hspace{1em}Cluster 1 & 0.82 & 1.16 & 1.410 & 1.580 & 1.54 & 1.28 & 1.410 & 1.770\\
+\hspace{1em}Cluster 2 & 1.19 & 1.27 & 1.570 & 1.470 & 1.35 & 1.29 & 1.630 & 1.590\\
+\hspace{1em}Coverage &  &  & 0.257 & 0.271 &  &  & 0.014 & 0.014\\
+\hspace{1em}Average SD &  &  & 0.383 & 0.351 &  &  & 0.016 & 0.035\\
 \addlinespace[0.3em]
 \multicolumn{9}{l}{\textbf{Simulation 2}}\\
-\hspace{1em}1 & 1.32 & 1.33 & 1.70 & 1.64 & 1.66 & 1.60 & 1.80 & 1.72\\
-\hspace{1em}2 & 1.50 & 1.61 & 1.50 & 1.52 & 1.40 & 1.45 & 1.57 & 1.54\\
+\hspace{1em}Overall & 1.45 & 1.54 & 1.540 & 1.550 & 1.47 & 1.49 & 1.630 & 1.580\\
+\hspace{1em}Cluster 1 & 1.32 & 1.33 & 1.700 & 1.640 & 1.66 & 1.6 & 1.800 & 1.720\\
+\hspace{1em}Cluster 2 & 1.5 & 1.61 & 1.500 & 1.520 & 1.4 & 1.45 & 1.570 & 1.540\\
+\hspace{1em}Coverage &  &  & 0.214 & 0.196 &  &  & 0.000 & 0.000\\
+\hspace{1em}Average SD &  &  & 0.349 & 0.378 &  &  & 0.001 & 0.001\\
 \addlinespace[0.3em]
 \multicolumn{9}{l}{\textbf{Simulation 3}}\\
-\hspace{1em}1 & 1.16 & 1.10 & 1.46 & 1.48 & 1.43 & 1.44 & 1.49 & 1.51\\
-\hspace{1em}2 & 0.65 & 0.67 & 1.35 & 1.31 & 1.49 & 1.58 & 1.36 & 1.51\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}
-
-\caption{\label{tab:cp-table-sim}Coverage of the proposed Univariate and Bivariate Models along with their Average Standard Deviation for the Simulated Data}
-\centering
-\begin{tabular}[t]{lrrrr}
-\toprule
-Method & $Coverage_{X}$ & $\bar{SD_{X}}$ & $Coverage_{Y}$ & $\bar{SD_{Y}}$\\
-\midrule
-\addlinespace[0.3em]
-\multicolumn{5}{l}{\textbf{Simulation 1}}\\
-\hspace{1em}Univariate & 0.257 & 0.383 & 0.271 & 0.351\\
-\hspace{1em}Bivariate & 0.014 & 0.016 & 0.014 & 0.035\\
-\addlinespace[0.3em]
-\multicolumn{5}{l}{\textbf{Simulation 2}}\\
-\hspace{1em}Univariate & 0.214 & 0.349 & 0.196 & 0.378\\
-\hspace{1em}Bivariate & 0.000 & 0.001 & 0.000 & 0.001\\
-\addlinespace[0.3em]
-\multicolumn{5}{l}{\textbf{Simulation 3}}\\
-\hspace{1em}Univariate & 0.243 & 0.319 & 0.311 & 0.337\\
-\hspace{1em}Bivariate & 0.014 & 0.001 & 0.000 & 0.001\\
+\hspace{1em}Overall & 0.95 & 0.92 & 1.410 & 1.400 & 1.46 & 1.51 & 1.430 & 1.510\\
+\hspace{1em}Cluster 1 & 1.16 & 1.1 & 1.460 & 1.480 & 1.43 & 1.44 & 1.490 & 1.510\\
+\hspace{1em}Cluster 2 & 0.65 & 0.67 & 1.350 & 1.310 & 1.49 & 1.58 & 1.360 & 1.510\\
+\hspace{1em}Coverage &  &  & 0.243 & 0.311 &  &  & 0.014 & 0.000\\
+\hspace{1em}Average SD &  &  & 0.319 & 0.337 &  &  & 0.001 & 0.001\\
 \bottomrule
 \end{tabular}
 \end{table}
