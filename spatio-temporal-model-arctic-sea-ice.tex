@@ -571,32 +571,6 @@ for each simulation can be found in \cref{fig:traj-wrap}.
 \caption{Trajectory Plots for each Simulated Data Set }\label{fig:traj-wrap}
 \end{figure}
 
-\begin{table}
-
-\caption{\label{tab:parms-table}Parameters Y for Underlying Process for Each Cluster}
-\centering
-\begin{tabular}[t]{rrrrrrrrrrr}
-\toprule
-\multicolumn{1}{c}{ } & \multicolumn{5}{c}{X} & \multicolumn{5}{c}{Y} \\
-\cmidrule(l{3pt}r{3pt}){2-6} \cmidrule(l{3pt}r{3pt}){7-11}
-Cluster & $\sigma^{2}_{x}$ & $\phi_{x,s}$ & $\tau_{x}$ & $c(0)$ & $\mu_x$ & $\sigma^{2}_{y}$ & $\phi_{y,s}$ & $\tau_{y}$ & $c(0)$ & $\mu_y$\\
-\midrule
-\addlinespace[0.3em]
-\multicolumn{11}{l}{\textbf{Simulation 1}}\\
-\hspace{1em}1 & 5 & 5 & 5 & 0 & 2.0 & 5 & 5 & 5 & 0 & 1.5\\
-\hspace{1em}2 & 40 & 60 & 10 & 0 & 10.0 & 80 & 50 & 10 & 0 & 6.0\\
-\addlinespace[0.3em]
-\multicolumn{11}{l}{\textbf{Simulation 2}}\\
-\hspace{1em}1 & 1 & 10 & 5 & 0 & 0.5 & 2 & 10 & 7 & 0 & 2.0\\
-\hspace{1em}2 & 20 & 20 & 2 & 0 & 2.0 & 25 & 20 & 3 & 0 & 4.0\\
-\addlinespace[0.3em]
-\multicolumn{11}{l}{\textbf{Simulation 3}}\\
-\hspace{1em}1 & 2 & 10 & 5 & 0 & 1.5 & 2 & 10 & 5 & 0 & 1.0\\
-\hspace{1em}2 & 20 & 20 & 10 & 0 & 6.0 & 20 & 30 & 10 & 0 & 3.0\\
-\bottomrule
-\end{tabular}
-\end{table}
-
 \hypertarget{clustering-method}{%
 \subsection{Clustering Method}\label{clustering-method}}
 
@@ -863,29 +837,6 @@ each week were used to develop the intersections used for interpolation.
 \caption{Trajectories for a) Week 2 Cluster 1, where our proposed univariate method peforms best and b) Week 2 Cluster 5, where linear interpolation performs best.}\label{fig:int-best-plots}
 \end{figure}
 
-\begin{table}
-
-\caption{\label{tab:results-table2}RMSE for Interpolation Methods}
-\centering
-\begin{tabular}[t]{rrrrrrrr}
-\toprule
-\multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{Univariate Intersection} & \multicolumn{2}{c}{Univariate Overall} & \multicolumn{2}{c}{Bivariate} \\
-\cmidrule(l{3pt}r{3pt}){1-2} \cmidrule(l{3pt}r{3pt}){3-4} \cmidrule(l{3pt}r{3pt}){5-6} \cmidrule(l{3pt}r{3pt}){7-8}
-$X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$\\
-\midrule
-\addlinespace[0.3em]
-\multicolumn{8}{l}{\textbf{Week 1}}\\
-\hspace{1em}1.53 & 4.18 & 3.25 & 3.21 & 3.09 & 2.88 & 3.17 & 7.72\\
-\addlinespace[0.3em]
-\multicolumn{8}{l}{\textbf{Week 2}}\\
-\hspace{1em}2.00 & 1.40 & 3.14 & 3.06 & 3.20 & 3.15 & 3.19 & 3.11\\
-\addlinespace[0.3em]
-\multicolumn{8}{l}{\textbf{Week 3}}\\
-\hspace{1em}1.03 & 1.21 & 3.17 & 3.09 & 3.19 & 3.15 & 3.13 & 3.04\\
-\bottomrule
-\end{tabular}
-\end{table}
-
 Next, we tested our spatio-temporal interpolation method on the ice
 motion data set to see how it performs on real data. We did not estimate
 the already missing data for validation purposes. For cross validation,
@@ -908,6 +859,35 @@ was only able to be developed for two out of the seven days in Week 1.
 Hence, the week 1 RMSE value for this week is not useful for comparison.
 In \cref{tab:results-table2}, linear interpolation outperforms the other
 methods except for the \(y\)-values in week 1.
+
+\begin{table}
+
+\caption{\label{tab:results-table2}RMSE for Interpolation Methods}
+\centering
+\begin{tabular}[t]{lllrrllrr}
+\toprule
+\multicolumn{1}{c}{} & \multicolumn{2}{c}{Linear} & \multicolumn{2}{c}{Univariate Intersection} & \multicolumn{2}{c}{Univariate Overall} & \multicolumn{2}{c}{Bivariate} \\
+\cmidrule(l{3pt}r{3pt}){2-3} \cmidrule(l{3pt}r{3pt}){4-5} \cmidrule(l{3pt}r{3pt}){6-7} \cmidrule(l{3pt}r{3pt}){8-9}
+ & $X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$\\
+\midrule
+\addlinespace[0.3em]
+\multicolumn{9}{l}{\textbf{Week 1}}\\
+\hspace{1em}RMSE & 1.53 & 4.18 & 3.250 & 3.210 & 3.09 & 2.88 & 3.170 & 7.720\\
+\hspace{1em}Coverage &  &  & 0.256 & 0.293 &  &  & 0.005 & 0.018\\
+\hspace{1em}Average SD &  &  & 0.788 & 0.834 &  &  & 0.016 & 0.087\\
+\addlinespace[0.3em]
+\multicolumn{9}{l}{\textbf{Week 2}}\\
+\hspace{1em}RMSE & 2 & 1.4 & 3.140 & 3.060 & 3.2 & 3.15 & 3.190 & 3.110\\
+\hspace{1em}Coverage &  &  & 0.263 & 0.298 &  &  & 0.009 & 0.015\\
+\hspace{1em}Average SD &  &  & 0.751 & 0.810 &  &  & 0.026 & 0.026\\
+\addlinespace[0.3em]
+\multicolumn{9}{l}{\textbf{Week 3}}\\
+\hspace{1em}RMSE & 1.03 & 1.21 & 3.170 & 3.090 & 3.19 & 3.15 & 3.130 & 3.040\\
+\hspace{1em}Coverage &  &  & 0.246 & 0.263 &  &  & 0.004 & 0.007\\
+\hspace{1em}Average SD &  &  & 0.760 & 0.796 &  &  & 0.010 & 0.019\\
+\bottomrule
+\end{tabular}
+\end{table}
 
 However, when looking at the trajectory plot in \cref{fig:trajectories},
 some of the trajectories in the plot are more linear than others (ie.
@@ -1013,30 +993,6 @@ than what was seen with the simulated data, but the coverage is similar
 However, once again, none of the values are as large as desired. The
 model then may need further investigation and development to increase
 this, as this may be indicating something is wrong.
-
-\begin{table}
-
-\caption{\label{tab:cp-table}Proportion of Prediction interval containing observed and Average Standard Deviation for Ice Data}
-\centering
-\begin{tabular}[t]{lrrrr}
-\toprule
-Method & Proportion of X & $\bar{SD_X}$ & Proportion of Y & $\bar{SD_Y}$\\
-\midrule
-\addlinespace[0.3em]
-\multicolumn{5}{l}{\textbf{Week 1}}\\
-\hspace{1em}Univariate & 0.256 & 0.788 & 0.293 & 0.834\\
-\hspace{1em}Bivariate & 0.005 & 0.016 & 0.018 & 0.087\\
-\addlinespace[0.3em]
-\multicolumn{5}{l}{\textbf{Week 2}}\\
-\hspace{1em}Univariate & 0.263 & 0.751 & 0.298 & 0.810\\
-\hspace{1em}Bivariate & 0.009 & 0.026 & 0.015 & 0.026\\
-\addlinespace[0.3em]
-\multicolumn{5}{l}{\textbf{Week 3}}\\
-\hspace{1em}Univariate & 0.246 & 0.760 & 0.263 & 0.796\\
-\hspace{1em}Bivariate & 0.004 & 0.010 & 0.007 & 0.019\\
-\bottomrule
-\end{tabular}
-\end{table}
 
 \hypertarget{discussion}{%
 \section{Discussion}\label{discussion}}
