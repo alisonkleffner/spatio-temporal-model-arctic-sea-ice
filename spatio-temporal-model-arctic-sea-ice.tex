@@ -651,7 +651,7 @@ except now the intersections are ignored (overall model). Instead a
 model was developed using all known points for \(t-1\), \(t\), and
 \(t+1\) (this essentially ignores the non-stationarity aspect of our
 data). The Root Mean Square Error (RMSE) for each simulation and
-interpolation method can be found in \cref{tab:results-table}.
+interpolation method can be found in \cref{tab:results-table-by-clust}.
 
 Our interpolation method never outperform linear interpolation. Further,
 only in Simulation 3 does running the model within each intersection
@@ -735,14 +735,14 @@ our estimates. The intervals are found by \(\hat{x} \pm (2*sd_x)\) and
 predictions, and \(sd_x\) and \(sd_y\) are the standard deviations of a
 prediction. Next, we found the proportion of the intervals that contain
 the true value, otherwise known as coverage. For each simulation the
-coverage can be found in \cref{tab:cp-table-sim} along with the average
-standard deviation values to show typical interval width. The
-proportions in this table are low, mainly in the 20\%-30\% range for the
-univariate model and \textless1\% for the bivariate model. The standard
-deviation values in \cref{tab:cp-table-sim} are also low, meaning there
-is not much variability among the predictions, thus making intervals
-narrow. The low coverage values show that the model has room for
-improvement in terms of prediction accuracy.
+coverage can be found in \cref{tab:results-table-by-clust} along with
+the average standard deviation values to show typical interval width.
+The proportions in this table are low, mainly in the 20\%-30\% range for
+the univariate model and \textless1\% for the bivariate model. The
+standard deviation values in \cref{results-table-by-clust} are also low,
+meaning there is not much variability among the predictions, thus making
+intervals narrow. The low coverage values show that the model has room
+for improvement in terms of prediction accuracy.
 
 \hypertarget{results}{%
 \section{Results}\label{results}}
@@ -896,8 +896,7 @@ study, our univariate method shows improvement over linear interpolation
 on curved and less-sampled trajectories. Thus, the RMSE values are also
 broken out by cluster, as these are the groups of movement patterns in
 the data. These values can be found for each week in
-\cref{tab:results-clust1-actual}, \cref{tab:results-clust2-actual}, and
-\cref{tab:results-clust3-actual}. Once again, linear interpolation
+\cref{tab:results-clust-actual}. Once again, linear interpolation
 generally outperforms our proposed methods, but there are two
 exceptions. For Week 1 and Week 2, linear interpolation performs worse
 than our proposed linear model in Cluster 1. In
@@ -962,13 +961,13 @@ Cluster & $X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$ & $X$ & $Y$\\
 
 The proportion of the prediction intervals containing the observed data,
 along with the average standard deviations are given in
-\cref{tab:cp-table}. These values were found in the same way as the
-simulated data. The standard deviations for the univariate are higher
-than what was seen with the simulated data, but the coverage is similar
-(ranging from 25\%-30\%), but around the same for the bivariate model.
-However, once again, none of the values are as large as desired. The
-model then may need further investigation and development to increase
-this, as this may be indicating something is wrong.
+\cref{tab:results-table2}. These values were found in the same way as
+the simulated data. The standard deviations for the univariate are
+higher than what was seen with the simulated data, but the coverage is
+similar (ranging from 25\%-30\%), but around the same for the bivariate
+model. However, once again, none of the values are as large as desired.
+The model then may need further investigation and development to
+increase this, as this may be indicating something is wrong.
 
 \hypertarget{discussion}{%
 \section{Discussion}\label{discussion}}
@@ -1031,7 +1030,7 @@ When this happens the model does not produce an error like it does for
 the univariate model, instead it estimates parameters of 0 or infinity
 which return very poor predictions.
 
-Finally as shown in \cref{tab:cp-table}, the coverage for both the
+Finally as shown in \cref{tab:results-table2}, the coverage for both the
 univariate and bivariate models are low. So while the univariate method
 may show some promise with curved data, more investigation needs to be
 done as this coverage may be pointing to some flaw in our model that
