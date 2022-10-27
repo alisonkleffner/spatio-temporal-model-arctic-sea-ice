@@ -727,7 +727,7 @@ To fit a spatial model with a time fixed effect, we need to define:
  + $X$ = matrix of intercept and times
  + Sequence of values for number of neighbors. 
 
-We specified the covariance function as the exponential isotropic covariance function. It is defined as $$\Sigma_{\theta}(s) = \sigma^2\exp\left\{||x-y||/\phi\right\} \quad (1).$$ The parameters in the covariance function are $\sigma^2$ (variance) and $\phi$ (spatial range). The spatial range is a smoothness parameter that relates to dependence over space. The output is the maximum Vecchia likelihood estimates for the covariance parameters. The model created by these estimates can be used to predict the unobserved locations at the time ($t$). The initial grid estimates of the coordinates are used as the starting locations in the prediction function and shifted based on the estimated model parameters. Predictions for each coordinate are made by finding the conditional expectation of the model developed.  
+We specified the covariance function as the exponential isotropic covariance function. It is defined as $$\Sigma_{\theta}(s) = \sigma^2\exp\left\{||x-y||/\phi\right\} \quad (1).$$ The parameters in the covariance function are $\sigma^2$ (variance) and $\phi$ (spatial range). The spatial range is a smoothness parameter that relates to dependence over space. Through testing of our method we found that there is not much difference between using a spatial only covariance function versus a spatio-temporal covariance function as time range used to estimate the model is three days. The output is the maximum Vecchia likelihood estimates for the covariance parameters. The model created by these estimates can be used to predict the unobserved locations at the time ($t$). The initial grid estimates of the coordinates are used as the starting locations in the prediction function and shifted based on the estimated model parameters. Predictions for each coordinate are made by finding the conditional expectation of the model developed.  
 
 ### Bivariate Interpolation
 
@@ -776,7 +776,7 @@ og <- data.frame(gpid = 1:nrow(og_grid), xmap = og_grid[,1], ymap = og_grid[,2],
 ```
 
 
-```{r grids-combined, message=FALSE, warning = FALSE, fig.scap = "Simulation Grids", fig.cap = "Underlying Process Grid and Observed Grid together, where the true cluster is also given.", cache=TRUE, fig.height = 5, fig.width = 9, fig.align = 'center'}
+```{r grids-combined, message=FALSE, warning = FALSE, fig.scap = "Simulation Grids", fig.cap = "Underlying Process Grid and Observed Grid together, where the true cluster is also given.", cache=TRUE, fig.height = 5, fig.width = 9, fig.align = 'center', include=FALSE}
 
 og_combine <- og[,-1]
 og_combine$cluster <- 1
@@ -916,7 +916,7 @@ og_clust$clust <- 1
 og_clust$clust[og_clust$ymap > 15.5] <- 2
 og_clust$clust <- as.factor(og_clust$clust)
 
-final_t1_2 <- full_join(og_clust, final_t1[,-2], by = "gpid")
+final_t1_2 <- full_join(og_clust[,-4], final_t1, by = "gpid")
 final_t1_2$simulation <- 1
 
 ```
@@ -1044,7 +1044,7 @@ og_clust$clust <- 1
 og_clust$clust[og_clust$ymap > 15.5] <- 2
 og_clust$clust <- as.factor(og_clust$clust)
 
-final_t2_2 <- full_join(og_clust, final_t2[,-2], by = "gpid")
+final_t2_2 <- full_join(og_clust[,-4], final_t2, by = "gpid")
 final_t2_2$simulation <- 2
 
 ```
@@ -1167,7 +1167,7 @@ og_clust$clust <- 1
 og_clust$clust[og_clust$ymap > 15.5] <- 2
 og_clust$clust <- as.factor(og_clust$clust)
 
-final_t3_2 <- full_join(og_clust, final_t3[,-2], by = "gpid")
+final_t3_2 <- full_join(og_clust[,-4], final_t3, by = "gpid")
 final_t3_2$simulation <- 3
 
 ```
@@ -1176,13 +1176,14 @@ final_t3_2$simulation <- 3
 
 final_traj <- rbind(final_t1_2, final_t2_2, final_t3_2)
 
+final_traj <- filter(final_traj, t < 8)
+
 final_traj2 <- final_traj %>% highlight_key(~gpid)
 
 ggplot(final_traj2, aes(x = xnew, y = ynew, group = gpid, hoverinfo = NULL,
                    color = clust)) + 
   geom_path(arrow = arrow(length = unit(1, "mm")), alpha = .5) + ggtitle("Simulation Trajectories") + scale_fill_manual(values = alpha(c("blue", "orange"), .5)) + 
   facet_wrap(vars(simulation))
-
 ```
 
 ```{r parms-table, include=FALSE}
@@ -1358,15 +1359,27 @@ feat_data1_1$sim <- 1
 feat_data1_2$sim <- 2
 feat_data1_3$sim <- 3
 
+#force clusters to remain consistent
+feat_data1_1$clust2 <- 1
+feat_data1_1$clust2[feat_data1_1$clust == 1] <- 2
+feat_data1_1$clust2 <- as.factor(feat_data1_1$clust2)
+feat_data1_1 <- feat_data1_1[,c(1,2,3,4,5,6,7,10,9)] 
+colnames(feat_data1_1)[8] <- "clust"
+
+feat_data1_2$clust2 <- 1
+feat_data1_2$clust2[feat_data1_2$clust == 1] <- 2
+feat_data1_2$clust2 <- as.factor(feat_data1_2$clust2)
+feat_data1_2 <- feat_data1_2[,c(1,2,3,4,5,6,7,10,9)] 
+colnames(feat_data1_2)[8] <- "clust"
+
+
 f2 <- rbind(feat_data1_1, feat_data1_2, feat_data1_3)
 
 
 filter(f2, t ==7) %>%
   ggplot(aes(x = xmap, y = ymap, group = gpid, ids = gpid,
              color = clust, fill = clust)) + 
-  geom_point() +
-  scale_color_viridis_d() + 
-  scale_fill_viridis_d() + ggtitle("Simulation Plot at t=7") +
+  geom_point() + ggtitle("Simulation Plot at t=7") + scale_fill_manual(values = alpha(c("blue", "orange"), .5)) + 
   facet_wrap(vars(sim))
 
 

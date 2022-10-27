@@ -446,11 +446,14 @@ covariance function. It is defined as
 \[\Sigma_{\theta}(s) = \sigma^2\exp\left\{||x-y||/\phi\right\} \quad (1).\]
 The parameters in the covariance function are \(\sigma^2\) (variance)
 and \(\phi\) (spatial range). The spatial range is a smoothness
-parameter that relates to dependence over space. The output is the
-maximum Vecchia likelihood estimates for the covariance parameters. The
-model created by these estimates can be used to predict the unobserved
-locations at the time (\(t\)). The initial grid estimates of the
-coordinates are used as the starting locations in the prediction
+parameter that relates to dependence over space. Through testing of our
+method we found that there is not much difference between using a
+spatial only covariance function versus a spatio-temporal covariance
+function as time range used to estimate the model is three days. The
+output is the maximum Vecchia likelihood estimates for the covariance
+parameters. The model created by these estimates can be used to predict
+the unobserved locations at the time (\(t\)). The initial grid estimates
+of the coordinates are used as the starting locations in the prediction
 function and shifted based on the estimated model parameters.
 Predictions for each coordinate are made by finding the conditional
 expectation of the model developed.
@@ -552,15 +555,6 @@ In order to evaluate our ice crack detection and interpolation methods,
 three different data sets were simulated in this manner with different
 parameter values (\cref{tab:parms-table}). A plot of the trajectories
 for each simulation can be found in \cref{fig:traj-wrap}.
-
-\begin{figure}[tbp]
-
-{\centering \includegraphics[width=\linewidth,]{spatio-temporal-model-arctic-sea-ice_files/figure-latex/grids-combined-1} 
-
-}
-
-\caption[Simulation Grids]{Underlying Process Grid and Observed Grid together, where the true cluster is also given.}\label{fig:grids-combined}
-\end{figure}
 
 \begin{figure}[tbp]
 
