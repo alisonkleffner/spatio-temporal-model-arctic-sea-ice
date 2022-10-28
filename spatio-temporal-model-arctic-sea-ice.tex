@@ -266,15 +266,6 @@ differently.
 \subsection{Spatio-Temporal Clustering: Bounding
 Box}\label{spatio-temporal-clustering-bounding-box}}
 
-\begin{figure}[tbp]
-
-{\centering \includegraphics[width=0.5\linewidth,]{images/bounding-box} 
-
-}
-
-\caption[Bounding Example]{Picture of points used to calculate features of our Bounding Box}\label{fig:bb-pic}
-\end{figure}
-
 \hypertarget{bounding-box-features}{%
 \subsubsection{Bounding Box Features}\label{bounding-box-features}}
 
@@ -556,25 +547,16 @@ three different data sets were simulated in this manner with different
 parameter values (\cref{tab:parms-table}). A plot of the trajectories
 for each simulation can be found in \cref{fig:traj-wrap}.
 
-\begin{figure}[tbp]
-
-{\centering \includegraphics[width=\linewidth,]{spatio-temporal-model-arctic-sea-ice_files/figure-latex/traj-wrap-1} 
-
-}
-
-\caption{Trajectory Plots for each Simulated Data Set }\label{fig:traj-wrap}
-\end{figure}
-
 \hypertarget{clustering-method}{%
 \subsection{Clustering Method}\label{clustering-method}}
 
 \begin{figure}[tbp]
 
-{\centering \includegraphics[width=\linewidth,]{spatio-temporal-model-arctic-sea-ice_files/figure-latex/all-clus-1} 
+{\centering \includegraphics[width=\linewidth,]{spatio-temporal-model-arctic-sea-ice_files/figure-latex/all-combine-1} 
 
 }
 
-\caption{Clusterings of Observed Data on Final Day of Data Set}\label{fig:all-clus}
+\caption{a). Trajectory Plots for each Simulated Data Set b). Clusterings of Observed Data on Final Day of Data Set}\label{fig:all-combine}
 \end{figure}
 
 Now our proposed spatio-temporal clustering method, using a bounding
@@ -585,7 +567,7 @@ points. We first plotted the k-means determined cluster on the initial
 grid to visualize how well our method performs when we can see the true
 clusterings. A majority of points are clustered correctly, however,
 there are a number of misclassified points in each simulation, mostly
-occuring along the border between clusters and along the edges. More
+occurring along the border between clusters and along the edges. More
 interestingly, the clusters are visualized on the last day of the week
 to see if the clusters determined by the bounding box can distinguish
 movement over time. In \cref{fig:all-clus}, there are distinguishable
@@ -811,7 +793,7 @@ each week were used to develop the intersections used for interpolation.
 
 }
 
-\caption{Trajectories for a) Week 2 Cluster 1, where our proposed univariate method peforms best and b) Week 2 Cluster 5, where linear interpolation performs best.}\label{fig:int-best-plots}
+\caption{Trajectories for a) Week 2 Cluster 5, where linear interpolation performs best and b) Week 2 Cluster 1, where our proposed univariate method peforms best.}\label{fig:int-best-plots}
 \end{figure}
 
 Next, we tested our spatio-temporal interpolation method on the ice

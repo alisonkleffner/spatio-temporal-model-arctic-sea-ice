@@ -676,7 +676,7 @@ Since we want to detect cracks only using movement data, it is first important t
 
 ## Spatio-Temporal Clustering: Bounding Box
 
-```{r bb-pic, fig.scap="Bounding Example", fig.cap= "Picture of points used to calculate features of our Bounding Box", out.width="50%"}
+```{r bb-pic, fig.scap="Bounding Example", fig.cap= "Picture of points used to calculate features of our Bounding Box", out.width="50%", include=FALSE}
 
 knitr::include_graphics("images/bounding-box.png")
 ```
@@ -1180,9 +1180,9 @@ final_traj <- filter(final_traj, t < 8)
 
 final_traj2 <- final_traj %>% highlight_key(~gpid)
 
-ggplot(final_traj2, aes(x = xnew, y = ynew, group = gpid, hoverinfo = NULL,
+a <- ggplot(final_traj2, aes(x = xnew, y = ynew, group = gpid, hoverinfo = NULL,
                    color = clust)) + 
-  geom_path(arrow = arrow(length = unit(1, "mm")), alpha = .5) + ggtitle("Simulation Trajectories") + scale_fill_manual(values = alpha(c("blue", "orange"), .5)) + 
+  geom_path(arrow = arrow(length = unit(1, "mm")), alpha = .5) + ggtitle("a). Simulation Trajectories") + scale_fill_manual(values = alpha(c("blue", "orange"), .5)) + 
   facet_wrap(vars(simulation))
 ```
 
@@ -1376,17 +1376,25 @@ colnames(feat_data1_2)[8] <- "clust"
 f2 <- rbind(feat_data1_1, feat_data1_2, feat_data1_3)
 
 
-filter(f2, t ==7) %>%
+b <- filter(f2, t ==7) %>%
   ggplot(aes(x = xmap, y = ymap, group = gpid, ids = gpid,
              color = clust, fill = clust)) + 
-  geom_point() + ggtitle("Simulation Plot at t=7") + scale_fill_manual(values = alpha(c("blue", "orange"), .5)) + 
+  geom_point() + ggtitle("b). Simulation Plot at t=7") + scale_fill_manual(values = alpha(c("blue", "orange"), .5)) + 
   facet_wrap(vars(sim))
 
 
 ```
 
 
-Now our proposed spatio-temporal clustering method, using a bounding box, is performed on each of the simulated datasets. Since the true number of clusters is two, two is used as the $k$ input in the k-means clustering algorithm. The results are shown at two different time points. We first plotted the k-means determined cluster on the initial grid to visualize how well our method performs when we can see the true clusterings. A majority of points are clustered correctly, however, there are a number of misclassified points in each simulation, mostly occuring along the border between clusters and along the edges. More interestingly, the clusters are visualized on the last day of the week to see if the clusters determined by the bounding box can distinguish movement over time. In \cref{fig:all-clus}, there are distinguishable boundaries between clusters for each of the simulations. Thus, by clustering using the movement features of a trajectory, we are able to distinguish the different movement patterns of the data with a clearly defined boundary. Some of the misclassifications on the original grid may be due to the value of the underlying process that was added to get the new location. This value was determined by the closest grid cell of the underlying process by Euclidean distance. If a point eventually becomes closer to the other cluster, that cluster's underlying process values are then added to cause the movement. Hence, it will eventually start to move like the other cluster. So, if a point spends more time moving like cluster 1 than cluster 2, as an example, it will most likely be classified as cluster 1, even if that was not the initial cluster assignment.  
+
+```{r all-combine, fig.cap= "a). Trajectory Plots for each Simulated Data Set b). Clusterings of Observed Data on Final Day of Data Set", message=FALSE, warning = FALSE, fig.height = 5, fig.width = 9, fig.align = 'center'}
+
+ggarrange(a,b,nrow=2)
+
+
+```
+
+Now our proposed spatio-temporal clustering method, using a bounding box, is performed on each of the simulated datasets. Since the true number of clusters is two, two is used as the $k$ input in the k-means clustering algorithm. The results are shown at two different time points. We first plotted the k-means determined cluster on the initial grid to visualize how well our method performs when we can see the true clusterings. A majority of points are clustered correctly, however, there are a number of misclassified points in each simulation, mostly occurring along the border between clusters and along the edges. More interestingly, the clusters are visualized on the last day of the week to see if the clusters determined by the bounding box can distinguish movement over time. In \cref{fig:all-clus}, there are distinguishable boundaries between clusters for each of the simulations. Thus, by clustering using the movement features of a trajectory, we are able to distinguish the different movement patterns of the data with a clearly defined boundary. Some of the misclassifications on the original grid may be due to the value of the underlying process that was added to get the new location. This value was determined by the closest grid cell of the underlying process by Euclidean distance. If a point eventually becomes closer to the other cluster, that cluster's underlying process values are then added to cause the movement. Hence, it will eventually start to move like the other cluster. So, if a point spends more time moving like cluster 1 than cluster 2, as an example, it will most likely be classified as cluster 1, even if that was not the initial cluster assignment.  
 
 
 ## Interpolation Method
@@ -2802,7 +2810,9 @@ knitr::include_graphics("images/week-comp.png")
 
 ## Interpolation Methods
 
-```{r data-for-clust-plots, message=FALSE, warning = FALSE, cache=TRUE }
+```{r int-best-plots, message=FALSE, warning = FALSE, cache=TRUE, fig.cap = "Trajectories for a) Week 2 Cluster 5, where linear interpolation performs best and b) Week 2 Cluster 1, where our proposed univariate method peforms best."}
+
+
 apd1_nomiss <- filter(anim_plot_data1, imputed == FALSE)
 apd2_nomiss <- filter(anim_plot_data2, imputed == FALSE)
 apd3_nomiss <- filter(anim_plot_data3, imputed == FALSE)
@@ -2812,30 +2822,37 @@ apd3_nomiss <- filter(anim_plot_data3, imputed == FALSE)
 apd1_nomiss_c21 <- filter(apd2_nomiss, clust == 1)
 apd2_nomiss_c25 <- filter(apd2_nomiss, clust == 5)
 
-tmp1 <-  apd1_nomiss_c21 %>% highlight_key(~gpid)
- 
-p1 <- ggplot(tmp1, aes(x = xmap, y = ymap, group = gpid, 
+apd1_nomiss_c21$uni <- "a"
+apd2_nomiss_c25$uni <- "b"
+
+no_miss <- rbind(apd1_nomiss_c21, apd2_nomiss_c25)
+
+# tmp1 <-  apd1_nomiss_c21 %>% highlight_key(~gpid)
+#  
+# p1 <- ggplot(tmp1, aes(x = xmap, y = ymap, group = gpid, 
+#                  hoverinfo = NULL,
+#                  color = factor(gpid %% 10))) + 
+#   geom_path(arrow = arrow(length = unit(1, "mm")), alpha = .5) + 
+#   scale_color_viridis_d() +
+#   theme(legend.position="none") + ggtitle("a)")
+# 
+# tmp2 <-  apd2_nomiss_c25 %>% highlight_key(~gpid)
+# 
+# p2 <- ggplot(tmp2, aes(x = xmap, y = ymap, group = gpid, 
+#                  hoverinfo = NULL,
+#                  color = factor(gpid %% 10))) + 
+#   geom_path(arrow = arrow(length = unit(1, "mm")), alpha = .5) + 
+#   scale_color_viridis_d() +
+#   theme(legend.position="none")+ ggtitle("b)")
+
+tmp3 <- no_miss %>% highlight_key(~gpid)
+
+ggplot(tmp3, aes(x = xmap, y = ymap, group = gpid, 
                  hoverinfo = NULL,
                  color = factor(gpid %% 10))) + 
   geom_path(arrow = arrow(length = unit(1, "mm")), alpha = .5) + 
   scale_color_viridis_d() +
-  theme(legend.position="none") + ggtitle("a)")
-
-tmp2 <-  apd2_nomiss_c25 %>% highlight_key(~gpid)
-
-p2 <- ggplot(tmp2, aes(x = xmap, y = ymap, group = gpid, 
-                 hoverinfo = NULL,
-                 color = factor(gpid %% 10))) + 
-  geom_path(arrow = arrow(length = unit(1, "mm")), alpha = .5) + 
-  scale_color_viridis_d() +
-  theme(legend.position="none")+ ggtitle("b)")
-
-```
-
-
-```{r int-best-plots, message=FALSE, warning = FALSE, cache=TRUE, fig.cap = "Trajectories for a) Week 2 Cluster 1, where our proposed univariate method peforms best and b) Week 2 Cluster 5, where linear interpolation performs best."}
-
-ggarrange(p1, p2, ncol = 2)
+  theme(legend.position="none") + facet_wrap("uni")
 
 ```
 
