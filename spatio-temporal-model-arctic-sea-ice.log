@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.3.11)  27 OCT 2022 22:38
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.3.11)  27 OCT 2022 22:46
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -763,13 +763,13 @@ s not changed.
 (rerunfilecheck)             Checksum: 561770FD236B84EF38D0AF7CC2A3A0AF;2968.
  ) 
 Here is how much of TeX's memory you used:
- 14170 strings out of 478582
- 242371 string characters out of 2841984
- 541363 words of memory out of 3000000
- 32038 multiletter control sequences out of 15000+600000
- 477426 words of font info for 57 fonts, out of 8000000 for 9000
+ 14174 strings out of 478582
+ 242409 string characters out of 2841984
+ 541362 words of memory out of 3000000
+ 32040 multiletter control sequences out of 15000+600000
+ 478047 words of font info for 59 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 60i,10n,63p,428b,472s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 60i,10n,63p,426b,472s stack positions out of 5000i,500n,10000p,200000b,80000s
  <C:\Users\akleffner2\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600
 \tcrm1200.pk><C:/Users/akleffner2/AppData/Local/Programs/MiKTeX/fonts/type1/pub
 lic/amsfonts/cm/cmbx10.pfb><C:/Users/akleffner2/AppData/Local/Programs/MiKTeX/f
@@ -786,7 +786,7 @@ Data/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/a
 kleffner2/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti12.p
 fb><C:/Users/akleffner2/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfon
 ts/cm/cmtt12.pfb>
-Output written on spatio-temporal-model-arctic-sea-ice.pdf (28 pages, 8870849 b
+Output written on spatio-temporal-model-arctic-sea-ice.pdf (28 pages, 8870980 b
 ytes).
 PDF statistics:
  498 PDF objects out of 1000 (max. 8388607)
