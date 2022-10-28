@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.3.11)  28 OCT 2022 13:50
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.3.11)  28 OCT 2022 14:07
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -653,7 +653,7 @@ LaTeX Warning: Reference `fig:traj-wrap' on page 1 undefined on input line 664.
 
 
 
-Overfull \hbox (87.03908pt too wide) in paragraph at lines 688--717
+Overfull \hbox (25.905pt too wide) in paragraph at lines 688--717
  [][] 
  []
 
@@ -771,7 +771,7 @@ Data/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/a
 kleffner2/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti12.p
 fb><C:/Users/akleffner2/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfon
 ts/cm/cmtt12.pfb>
-Output written on spatio-temporal-model-arctic-sea-ice.pdf (28 pages, 8854834 b
+Output written on spatio-temporal-model-arctic-sea-ice.pdf (28 pages, 8854825 b
 ytes).
 PDF statistics:
  500 PDF objects out of 1000 (max. 8388607)
