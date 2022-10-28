@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.3.11)  27 OCT 2022 22:46
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.3.11)  28 OCT 2022 13:24
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -622,22 +622,21 @@ s been already used, duplicate ignored
                                                   \__shipout_drop_firstpage_...
 l.262 
        <./spatio-temporal-model-arctic-sea-ice_files/figure-latex/trajectories-
-1.pdf>] [6] [7] [8] [9] [10]
-
-LaTeX Warning: Reference `tab:parms-table' on page 1 undefined on input line 52
-2.
-
-[11]
-
-LaTeX Warning: Reference `fig:grids-combined' on page 1 undefined on input line
- 542.
-
+1.pdf>] [6] [7] [8] [9] [10] [11]
 
 LaTeX Warning: Reference `tab:parms-table' on page 1 undefined on input line 54
-8.
+6.
 
 
-LaTeX Warning: Reference `fig:traj-wrap' on page 1 undefined on input line 549.
+LaTeX Warning: Reference `fig:grids-combined' on page 1 undefined on input line
+ 566.
+
+
+LaTeX Warning: Reference `tab:parms-table' on page 1 undefined on input line 57
+2.
+
+
+LaTeX Warning: Reference `fig:traj-wrap' on page 1 undefined on input line 573.
 
 
 <spatio-temporal-model-arctic-sea-ice_files/figure-latex/all-combine-1.pdf, id=
@@ -647,97 +646,99 @@ File: spatio-temporal-model-arctic-sea-ice_files/figure-latex/all-combine-1.pdf
 <use spatio-temporal-model-arctic-sea-ice_files/figure-latex/all-combine-1.pdf>
 
 Package pdftex.def Info: spatio-temporal-model-arctic-sea-ice_files/figure-late
-x/all-combine-1.pdf  used on input line 556.
+x/all-combine-1.pdf  used on input line 580.
 (pdftex.def)             Requested size: 462.26999pt x 256.82495pt.
+[12]
 
-LaTeX Warning: Reference `fig:all-clus' on page 1 undefined on input line 574.
+LaTeX Warning: Reference `fig:all-clus' on page 1 undefined on input line 598.
 
-[12] [13
+[13
 pdfTeX warning (ext4): destination with the same identifier (name{figure.2}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.601 
+l.612 
        <./spatio-temporal-model-arctic-sea-ice_files/figure-latex/all-combine-1
 .pdf>]
 
-LaTeX Warning: Reference `fig:traj-wrap' on page 1 undefined on input line 626.
+LaTeX Warning: Reference `fig:traj-wrap' on page 1 undefined on input line 650.
 
 
 [14]
-Overfull \hbox (1.85246pt too wide) in paragraph at lines 650--679
+Overfull \hbox (1.85246pt too wide) in paragraph at lines 674--703
  [][] 
  []
 
 LaTeX Font Info:    Trying to load font information for OML+cmr on input line 7
-01.
+25.
 (C:\Users\akleffner2\AppData\Local\Programs\MiKTeX\tex/latex/base\omlcmr.fd
 File: omlcmr.fd 2019/12/16 v2.5j Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OML/cmr/m/n' in size <12> not available
-(Font)              Font shape `OML/cmm/m/it' tried instead on input line 701.
+(Font)              Font shape `OML/cmm/m/it' tried instead on input line 725.
 
 LaTeX Warning: Reference `results-table-by-clust' on page 1 undefined on input 
-line 702.
+line 726.
 
-<images/all_weeks_comp_correct.png, id=315, 564.9105pt x 274.626pt>
-File: images/all_weeks_comp_correct.png Graphic file (type png)
-<use images/all_weeks_comp_correct.png>
-Package pdftex.def Info: images/all_weeks_comp_correct.png  used on input line 
-712.
-(pdftex.def)             Requested size: 462.26999pt x 224.72543pt.
 [15] [16
 pdfTeX warning (ext4): destination with the same identifier (name{table.1}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.723 ...l Data}\label{clustering-using-all-data}}
-                                                  ] [17
+l.730 
+      ]
+<images/all_weeks_comp_correct.png, id=322, 564.9105pt x 274.626pt>
+File: images/all_weeks_comp_correct.png Graphic file (type png)
+<use images/all_weeks_comp_correct.png>
+Package pdftex.def Info: images/all_weeks_comp_correct.png  used on input line 
+736.
+(pdftex.def)             Requested size: 462.26999pt x 224.72543pt.
+[17
 pdfTeX warning (ext4): destination with the same identifier (name{figure.3}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.741 T
-       o see how well our method is performing, we can compare it to other sea 
-<./images/all_weeks_comp_correct.png>]
+l.764 
+       <./images/all_weeks_comp_correct.png>]
 
-LaTeX Warning: Reference `fig:ex-result' on page 1 undefined on input line 775.
+LaTeX Warning: Reference `fig:ex-result' on page 1 undefined on input line 799.
 
 
+[18]
 <spatio-temporal-model-arctic-sea-ice_files/figure-latex/by-week-cluster-plot-1
-.pdf, id=338, 650.43pt x 361.35pt>
+.pdf, id=343, 650.43pt x 361.35pt>
 File: spatio-temporal-model-arctic-sea-ice_files/figure-latex/by-week-cluster-p
 lot-1.pdf Graphic file (type pdf)
 <use spatio-temporal-model-arctic-sea-ice_files/figure-latex/by-week-cluster-pl
 ot-1.pdf>
 Package pdftex.def Info: spatio-temporal-model-arctic-sea-ice_files/figure-late
-x/by-week-cluster-plot-1.pdf  used on input line 781.
+x/by-week-cluster-plot-1.pdf  used on input line 805.
 (pdftex.def)             Requested size: 462.26999pt x 256.82495pt.
 <spatio-temporal-model-arctic-sea-ice_files/figure-latex/int-best-plots-1.pdf, 
-id=339, 433.62pt x 289.08pt>
+id=344, 433.62pt x 289.08pt>
 File: spatio-temporal-model-arctic-sea-ice_files/figure-latex/int-best-plots-1.
 pdf Graphic file (type pdf)
 <use spatio-temporal-model-arctic-sea-ice_files/figure-latex/int-best-plots-1.p
 df>
 Package pdftex.def Info: spatio-temporal-model-arctic-sea-ice_files/figure-late
-x/int-best-plots-1.pdf  used on input line 793.
+x/int-best-plots-1.pdf  used on input line 817.
 (pdftex.def)             Requested size: 462.26999pt x 308.19655pt.
-[18] [19
+[19
 pdfTeX warning (ext4): destination with the same identifier (name{figure.4}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.822 
+l.846 
        <./spatio-temporal-model-arctic-sea-ice_files/figure-latex/by-week-clust
 er-plot-1.pdf>] [20
 pdfTeX warning (ext4): destination with the same identifier (name{figure.5}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.822 
+l.846 
        <./spatio-temporal-model-arctic-sea-ice_files/figure-latex/int-best-plot
 s-1.pdf>]
-Overfull \hbox (1.85246pt too wide) in paragraph at lines 827--850
+Overfull \hbox (1.85246pt too wide) in paragraph at lines 851--874
  [][] 
  []
 
@@ -746,30 +747,30 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.2}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.875 
+l.899 
       ] [22] [23
 pdfTeX warning (ext4): destination with the same identifier (name{table.3}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.948 
-      ] [24] (spatio-temporal-model-arctic-sea-ice.bbl [25] [26] [27]) [28] (sp
+l.972 
+      ] [24] [25] (spatio-temporal-model-arctic-sea-ice.bbl [26] [27]) [28] (sp
 atio-temporal-model-arctic-sea-ice.aux)
 
 LaTeX Warning: There were undefined references.
 
 Package rerunfilecheck Info: File `spatio-temporal-model-arctic-sea-ice.out' ha
 s not changed.
-(rerunfilecheck)             Checksum: 561770FD236B84EF38D0AF7CC2A3A0AF;2968.
+(rerunfilecheck)             Checksum: E24210C7F4EF6E281493B8B4D242163A;3026.
  ) 
 Here is how much of TeX's memory you used:
  14174 strings out of 478582
- 242409 string characters out of 2841984
- 541362 words of memory out of 3000000
+ 242442 string characters out of 2841984
+ 542373 words of memory out of 3000000
  32040 multiletter control sequences out of 15000+600000
  478047 words of font info for 59 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 60i,10n,63p,426b,472s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 60i,10n,63p,426b,470s stack positions out of 5000i,500n,10000p,200000b,80000s
  <C:\Users\akleffner2\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600
 \tcrm1200.pk><C:/Users/akleffner2/AppData/Local/Programs/MiKTeX/fonts/type1/pub
 lic/amsfonts/cm/cmbx10.pfb><C:/Users/akleffner2/AppData/Local/Programs/MiKTeX/f
@@ -786,10 +787,10 @@ Data/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/a
 kleffner2/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti12.p
 fb><C:/Users/akleffner2/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfon
 ts/cm/cmtt12.pfb>
-Output written on spatio-temporal-model-arctic-sea-ice.pdf (28 pages, 8870980 b
+Output written on spatio-temporal-model-arctic-sea-ice.pdf (28 pages, 8873304 b
 ytes).
 PDF statistics:
- 498 PDF objects out of 1000 (max. 8388607)
+ 497 PDF objects out of 1000 (max. 8388607)
  105 named destinations out of 1000 (max. 500000)
  186 words of extra memory for PDF output out of 10000 (max. 10000000)
 

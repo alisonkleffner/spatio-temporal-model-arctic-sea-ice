@@ -270,36 +270,42 @@ Box}\label{spatio-temporal-clustering-bounding-box}}
 \hypertarget{bounding-box-features}{%
 \subsubsection{Bounding Box Features}\label{bounding-box-features}}
 
-The bounding box that is created around each trajectory is used to
-derive features that represent it's movement. Features includes the
-length traveled between the minimum and maximum location of a coordinate
-(\(x_{max} - x_{min}\) and \(y_{max} - y_{min}\)), representing the
-total distance traveled. However, the maximum and minimum locations may
-not always correspond to the first and last day of the time frame.
-Hence, the difference in each coordinate (\(x_{1} - x_{0}\) and
-\(y_{1} - y_{0}\)) from the latest observation to the earliest
-observation in the time frame was also found. The change from latest to
-the earliest observation is then used to calculate the angle of change
-to find the direction of movement of the trajectory. Further, since the
-focus is on the cluster boundaries, we must ensure the clusters are
-contiguous, meaning clusters are not co-located across multiple
-geographic locations. To ensure some geographic continuity, we also
-include the average coordinate values for each trajectory.
+A bounding box is a rectangle that encompasses a trajectory. We created
+a bounding box around each trajectory \(g_j\) to derive features that
+represent it's movement. Features of the bounding box include:
+
+\begin{itemize}
+\tightlist
+\item
+  Distance traveled between the maximum and minimum location of a
+  coordinate, representing total displacement.
+\item
+  The above coordinates may not always correspond to the first and last
+  day of the time frame. Hence, the difference in each coordinate from
+  the latest to earliest location, representing displacement in time.
+\item
+  The angle of change, representing the direction of movement of the
+  trajectory, found using displacement in time.
+\item
+  To ensure some geographic continuity, we also include the average
+  coordinate values for each trajectory. We want clusters to be
+  contiguous, since the focus is one the cluster boundaries.
+\end{itemize}
 
 A bounding box can be created around a whole trajectory, or for smaller
-sub-trajectories. Sub-trajectories may provide more information while
-ensuring adequate data is available for the clustering process. A
-balance between ensuring data completeness and capturing sufficient
-movement is essential. If creating a bounding box for a sub-trajectory,
-for instance by week, the features from the previous week may be
-included as inputs into the clustering algorithm. This is done to ensure
-some consistency between consecutive time frames, as previous movement
-may impact current movement. After all of the different features are
-calculated, the values are then standardized to give each feature
-similar weight in the clustering process.
+sub-trajectories. Sub-trajectories may provide more information when
+adequate data is available for the clustering process. A balance between
+ensuring data completeness and capturing sufficient movement is
+essential. If creating a bounding box for a sub-trajectory, for instance
+by week, the features from the previous week may be included as inputs
+into the clustering algorithm. This is done to ensure some consistency
+between consecutive time frames, as previous movement may impact current
+movement. After all of the different features are calculated, the values
+are then standardized to give each feature similar weight in the
+clustering process.
 
-\hypertarget{k-means}{%
-\subsubsection{K-Means}\label{k-means}}
+\hypertarget{k-means-clustering}{%
+\subsubsection{K-Means Clustering}\label{k-means-clustering}}
 
 We partitioned \(n\) trajectories into \(k\) clusters using k-means
 clustering, with \(k\) being a pre-specified number. The goal of this
@@ -307,16 +313,17 @@ method is to minimize the squared Euclidean distance between the
 features of an observation and the centroid vector of a cluster, which
 is made up of the average features of the cluster members
 \citep{steinley_kmeans_2006}. This method requires each observation to
-be in a cluster, which is beneficial as we want to know what group each
-trajectory is more similar to. However, a drawback of k-means is that
-the number of clusters must be known and specified prior to clustering.
-We determine the number of clusters using the silhouette statistic,
-which compares within cluster distances to between cluster distances
-\citep{kodinariya_2013}. Ice movement is a dynamic process, so if
-clustering sub-trajectories, like weeks, then we would expect that each
-week to have a different number of clusters. Thus, when clusters were
-created by week, we calculated the silhouette statistic separtely for
-each week.
+be assigned a cluster, which is beneficial as we want to know what group
+each trajectory is more similar to. However, a drawback of k-means is
+that the number of clusters must be known and specified prior to
+clustering. We determine the number of clusters using the silhouette
+statistic, which compares within cluster distances to between cluster
+distances \citep{kodinariya_2013}. We also tried agglomerative
+hierarchical clustering, which led to similar results. Ice movement is a
+dynamic process, so within each time interval we may expect a different
+number of clusters. Thus, we allow the number of clusters to vary over
+different time intervals by calculating the silhouette statistic
+separately for each time interval.
 
 \hypertarget{spatio-temporal-interpolation}{%
 \subsection{Spatio-Temporal
@@ -327,33 +334,33 @@ Interpolation}\label{spatio-temporal-interpolation}}
 Neighbors}\label{finding-spatio-temporal-neighbors}}
 
 Due to the data collection method, the data is susceptible to be missing
-in chunks due to the path of the satellite. Hence, we want to be able to
-interpolate the missing points to have a complete data set of gridded
-data. This can be challenging due to the lack of close neighbors, as all
-of the observations around a point may also be missing. Additionally,
-some interpolation methods are not available due to the non-stationarity
-of the data.
+in spatial chunks due to the path of the satellite. Hence, we want to be
+able to interpolate the missing points to have completely gridded data.
+This can be challenging due to the lack of close neighbors, as all of
+the observations around a point may also be missing. Additionally, some
+interpolation methods are not available due to the non-stationarity of
+the data.
 
-Our proposed method for interpolation missing locations involves finding
-and using spatio-temporal neighbors of the missing \(g_j\). The clusters
-determined by the bounding box features are be used to identify these
-spatio-temporal neighbors. Creation of the clusters is determined by
-similar movements, so we can use the information given to us by these
-clusters to interpolate. Meaning, if we know how known points move in a
-cluster at a specific time, we can assume a missing point in the same
-cluster would move similarly. In this method, new clusters are created
-for each week. The idea is that the intersection of one week's clusters
-with the week before and week after would create groups. Each member of
-a group is then a spatio-temporal neighbor of the other members, as they
-are in a similar geographic location over time.
+Our proposed method for interpolating missing locations involves finding
+and using the spatio-temporal neighbors of the missing \(g_j\). The
+clusters determined by the bounding box features are used to identify
+these spatio-temporal neighbors. The creation of the clusters is
+determined by similar movements, so we can use the information given to
+us by these clusters to interpolate. Meaning, if we know how observed
+points move in a cluster at a specific time, we can assume a missing
+point in the same cluster would move similarly. In this method, new
+clusters are created for each week. The idea is that the intersection of
+one week's clusters with the week before and week after would create
+groups. Each member of a group is then a spatio-temporal neighbor of the
+other members, as they are in a similar geographic location over time.
 
-The first step in finding these intersections is to create polygons for
-each cluster. A polygon is created by finding the boundary coordinates
+The first step in finding these intersections is to turn each cluster
+into a polygon. A polygon is created by finding the boundary coordinates
 of each of the clusters. In a sequential manner, a polygon is created
 around each cluster, generally starting with one on the top edge of the
-ice sheet followed by neighboring clusters until there is a polygon for
+sea ice followed, by neighboring clusters until there is a polygon for
 each cluster. After each polygon is created, then all of the \(g_j\)
-located within this polygon are removed from the dataset, even if the
+located within this polygon are removed from the data set, even if the
 \(g_j\) was assigned to a different cluster. This was done to reduce the
 amount of polygon overlapping.
 
@@ -361,11 +368,11 @@ Once we create the polygons for each week, we can find the intersection
 of polygons for different weeks to define spatio-temporal neighbors. The
 coordinates of the overlapping polygon create an intersection, where the
 coordinates also form a polygon. Each \(g_j\) is then assigned to an
-intersection based on which intersection coordinates contains its first
-observed location of the week. All of the points within that
-intersection are considered to be spatio-temporal neighbors since they
-are located in a similar geographic region over time. For example, if we
-want to interpolate missing data in Week 1, we would first find its
+intersection based on which intersection contains its first observed
+location of the week. All of the points within that intersection are
+considered to be spatio-temporal neighbors since they are located in a
+similar geographic region over time. For example, if we want to
+interpolate missing data in Week 1, we would first find its
 spatio-temporal neighbors. Since it is the first week, there is no
 previous week information, so we can only use Week 2 to find neighbors.
 Next, we identify the coordinates for the intersecting polygons for
@@ -373,7 +380,8 @@ these two weeks. Then, the \(g_j\) located in each intersecting polygon
 are spatio-temporal neighbors and will be used to create a model for
 interpolation in each of the intersecting polygons. If a \(g_j\) is not
 found in an intersection, it is then removed from the data during this
-process, which is a potential area for improvement. Spatio-temporal
+process, which is a potential area for improvement. This tends to only
+happen for \(g_j\) along the border of the sea ice. Spatio-temporal
 neighbors for Week 3 are found using a similar process, with just Week
 2, as this was the last week in the data set. Creating the intersecting
 polygons for Week 2 involved the intersection of it's polygons with both
@@ -396,33 +404,56 @@ bivariate approach were both developed.
 \subsubsection{Univariate
 Interpolation}\label{univariate-interpolation}}
 
-A univariate model for \(x\) and \(y\) were developed using the
-\texttt{GpGp} package in R, which uses the Vecchia's Approximation for a
-Gaussian Process \citep{gpgp_pkg}. Generally, likelihood methods for the
-covariance parameter estimates of a Gaussian Process are computationally
-unfeasible. Hence, \citet{vecchia1988estimation} developed an
-approximation where the joint density of the Gaussian Process is written
-as a product of conditional distributions that use only a subset of the
-data. The subset chosen greatly affects the approximation and is formed
-by neighbors of an observation. Within the \texttt{GpGp} package,
-updates to this approximation are also made. A new ordering method to
-find neighbors was introduced, which sorted the data by sequentially
+To develop a univariate model for \(x\) and \(y\), we utilized a
+Gaussian Process. A stochastic process,
+\(\left\{H(s): s \in D \subset R^2\right\}\) is a Gaussian Process,
+\(H(s) \sim GP(0,c(.|.))\), if all it's finite-dimensional distributions
+are Gaussian. This means that for \(\left\{s_1,...,s_n\right\}\), \(h\)
+= \((h_1,...,h_n)^T \sim MVN(0, \Sigma_{\theta})\). We specified the
+covariance function as the exponential isotropic covariance function. It
+is defined as
+\[\Sigma_{\theta}(s) = \sigma^2\exp\left\{||x-y||/\phi\right\} \quad (1).\]
+The parameters in the covariance function are \(\sigma^2\) (variance)
+and \(\phi\) (spatial range). The spatial range is a smoothness
+parameter that relates to dependence over space. Through testing of our
+method we found that there is not much difference between using a
+spatial only covariance function versus a spatio-temporal covariance
+function as time range used to estimate the model is three days. The
+joint density for a finite number of locations can be written as a
+product of conditional densities,
+\(f(h_1,...,h_n) = f(h_1)\prod^n_{i=2} f(h_{i}|h_{1},...,h_{i-1})\) This
+is a computationally complex process due to the inversion of
+\(\Sigma_{\theta}\) that is necessary in the likelihood for the
+covariance parameter estimates.
+
+Hence, \citet{vecchia1988estimation} developed an approximation to speed
+up these calculations, where the joint density of the Gaussian Process
+is now written as a product of conditional distributions that use only a
+subset of the data. In other words, the joint density is now written as
+\(f(h_1,...,h_n) = f(h_1)\prod^n_{i=2} f(h_i|h_{n(i)})\) \(\\\) where
+\(n(i)\) are the neighbors of observation \(i\)
+\citep{vecchia1988estimation}. The neighbors chosen greatly affects the
+approximation. \citet{guinness_permutation_2018} introduced a new
+ordering method to find neighbors, which sorted the data by sequentially
 picking the next point that has the maximum minimum distance to all
-previously selected points \citep{guinness_permutation_2018}.
-Additionally, \citet{guinness_permutation_2018} introduced a grouping
-method, where data is partitioned into blocks and each block's input to
-the likelihood can be computed at the same time. Further
+previously selected points. Additionally, a grouping method was
+introduced, where data is partitioned into blocks and each block's input
+to the likelihood can be computed at the same time. Further
 \citet{guinness_gaussian_2019} provides an efficient method for applying
 Fisher scoring to maximize the log-likelihood. These updates were shown
 to further increase the accuracy of the models and lowers computation
 time.
 
-To fit a spatial model with a time fixed effect, we need to define:
+The Vecchia Approximation for a Gaussian Process, along with the
+updates, are implemented using the \texttt{GpGp} package in R
+\citep{gpgp_pkg}. To fit a spatial model with a fixed time effect using
+this package, we need to define:
 
 \begin{itemize}
 \tightlist
 \item
-  \(Y\) = \(x\) or \(y\) (univariate response vector of the coordinates.
+  \(Y\) = \(x\) or \(y\) (univariate response vector of the
+  coordinates).
 \item
   loc = The matrix of \(x\) and \(y\) coordinates of the known data.
   Made of locations at the desired time (\(t\)), the day before
@@ -433,22 +464,13 @@ To fit a spatial model with a time fixed effect, we need to define:
   Sequence of values for number of neighbors.
 \end{itemize}
 
-We specified the covariance function as the exponential isotropic
-covariance function. It is defined as
-\[\Sigma_{\theta}(s) = \sigma^2\exp\left\{||x-y||/\phi\right\} \quad (1).\]
-The parameters in the covariance function are \(\sigma^2\) (variance)
-and \(\phi\) (spatial range). The spatial range is a smoothness
-parameter that relates to dependence over space. Through testing of our
-method we found that there is not much difference between using a
-spatial only covariance function versus a spatio-temporal covariance
-function as time range used to estimate the model is three days. The
-output is the maximum Vecchia likelihood estimates for the covariance
-parameters. The model created by these estimates can be used to predict
-the unobserved locations at the time (\(t\)). The initial grid estimates
-of the coordinates are used as the starting locations in the prediction
-function and shifted based on the estimated model parameters.
-Predictions for each coordinate are made by finding the conditional
-expectation of the model developed.
+The output is the maximum Vecchia likelihood estimates for the
+covariance parameters. The model created by these estimates can be used
+to predict the unobserved locations at the time (\(t\)). The initial
+grid estimates of the coordinates are used as the starting locations in
+the prediction function and shifted based on the estimated model
+parameters. Predictions for each coordinate are made by finding the
+conditional expectation of the model developed.
 
 \hypertarget{bivariate-interpolation}{%
 \subsubsection{Bivariate Interpolation}\label{bivariate-interpolation}}
@@ -457,9 +479,8 @@ Additionally, we considered a joint (bivariate) response method, as when
 a observation is missing it is missing both coordinates. Thus, it is
 desirable to predict both coordinates at the same time as a joint model
 can take into account correlation between x and y. The Integrated Nested
-Laplace Approximation (INLA), using the R-INLA package can create joint
-response models \citep[\citet{rue_review_2017}]{rue_inla_2009}. INLA is
-a Bayesian Hierarchical approach which allows for the spatio-temporal
+Laplace Approximation (INLA) can create joint response models. INLA is a
+Bayesian Hierarchical approach which allows for the spatio-temporal
 structure of the data to be taken into account in the inferential
 process. For spatio-temporal data defined by the process
 \(\left\{H(s,t), (s,t) \in \mathcal{D} \in \mathcal{R}\right\}\), the
@@ -477,11 +498,14 @@ INLA, the main aim is to solve for the posterior marginal distributions
 of \(d\) (\(\pi(d_i|h)\)) and \(\theta\) \((\pi(\theta_j|h))\). Solving
 for the posterior marginal exploits assumptions of the model where a
 numerical approximation to the posterior is found through the Laplace
-Approximation \citep{rue_inla_2009}. The form of the model used is
-\(XY \sim I + f(x,iid) + f(y,iid) + f(t, rw1)\) where \(I\) is the
-intercept, \(f(x,iid)\) and \(f(y,iid)\) are random effects for the
-coordinates using an \(iid\) model, and \(f(t, rw1)\) is a random effect
-for time using a random walk model.
+Approximation \citep{rue_inla_2009}. We considered a spatio-temporal
+model, with random effects for each coordinate and time. Our INLA model
+was implemented using the R-INLA package
+\citep{rue_inla_2009, rue_review_2017}. The form of the model used is
+\(XY \sim I + f(x,iid) + f(y,iid) + f(t, rw1)\) where \(XY\) is the
+joint response, \(I\) is the intercept, \(f(x,iid)\) and \(f(y,iid)\)
+are random effects for the coordinates using an \(iid\) model, and
+\(f(t, rw1)\) is a random effect for time using a random walk model.
 
 \hypertarget{simulation}{%
 \section{Simulation Study}\label{simulation}}
@@ -502,8 +526,8 @@ clusters, each with an equal number of points. Then, this grid is
 shifted seven times, to represent seven days, simulating movement in the
 underlying process. The movement at each time step of the grid decreases
 over time. This data is then used in an exponential space-time
-covariance function, along with the defined parameter values to simulate
-a covariance matrix. The exponential space-time covariance function is
+covariance function, along with defined parameter values, to simulate a
+covariance matrix. The exponential space-time covariance function is
 defined as
 \(\Sigma_{\theta}(s,t) = \Sigma_{\theta}^{(s)} * \Sigma_{\theta}^{(t)}\)
 where \(\Sigma_{\theta}^{(s)}\) is defined in (1) and
