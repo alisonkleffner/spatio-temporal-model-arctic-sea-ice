@@ -13,10 +13,9 @@ library(plotly)
 library(factoextra)
 library(sp)
 library(mvtnorm)
-library(expss)
-library(FNN)
 library(zoo)
 library(INLA)
+library(GpGp)
 
 ## Necessary Functions ---------------------------------------------------------
 
@@ -323,8 +322,8 @@ feat_data1_2 %>%
 ## Get Intersections and Missing Data ------------------------------------------
 
 
-f1 <- filter(feat_data1_1, t < 8)
-f2 <- filter(feat_data1_1, t > 7)
+f1 <- filter(feat_data1_2, t < 8)
+f2 <- filter(feat_data1_2, t > 7)
 
 
 y1 <- polygon_sim(7, f1) #Get Polygons
