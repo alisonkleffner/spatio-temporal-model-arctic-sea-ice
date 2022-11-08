@@ -1,21 +1,19 @@
 ## Necessary Packages ----------------------------------------------------------
 
-library(knitr)
-library(FNN)
-library(expss)
-library(reshape2)
-library(sf)
-library(ggpubr)
+library(FNN) #Neearest neighbor function for simulation
+#library(expss)
+library(reshape2) #melt
+library(sf) #sf objects for spatial methods
+#library(ggpubr) #used for figures with ggplot
 library(tidyverse)
-library(fields)
-library(crosstalk)
-library(plotly)
-library(factoextra)
-library(sp)
-library(mvtnorm)
-library(zoo)
-library(INLA)
-library(GpGp)
+library(fields) #spatial stuff
+#library(crosstalk) #html widgets
+#library(factoextra) #get silhouette statistic
+library(sp) #spatial methods
+library(mvtnorm) #simulate multivariate normal
+library(zoo) #cross validation
+library(INLA) #install.packages("INLA",repos=c(getOption("repos"),INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
+library(GpGp) #get covariance function for simulation
 
 ## Necessary Functions ---------------------------------------------------------
 
@@ -272,14 +270,14 @@ t_14 <- nn_df(d, 13, t_13)
 final_t2 <- rbind(t_1, t_2, t_3, t_4, t_5, t_6, t_7,t_8, t_9, t_10, t_11, t_12, t_13, t_14) #all days - final simulated dataset
 
 
-#Plot of Full Trajectory
-final2_2 <- final_t2 %>% highlight_key(~gpid)
-
-ggplot(final2_2, aes(x = xnew, y = ynew, group = gpid, 
-                     hoverinfo = NULL,
-                     color = factor(gpid %% 10))) + 
-  geom_path(arrow = arrow(length = unit(1, "mm")), alpha = .5) + 
-  scale_color_viridis_d() + ggtitle("Simulation 2") 
+#Plot of Full Trajectory (need crosstalk and plotly packages if want to run)
+# final2_2 <- final_t2 %>% highlight_key(~gpid)
+# 
+# ggplot(final2_2, aes(x = xnew, y = ynew, group = gpid, 
+#                      hoverinfo = NULL,
+#                      color = factor(gpid %% 10))) + 
+#   geom_path(arrow = arrow(length = unit(1, "mm")), alpha = .5) + 
+#   scale_color_viridis_d() + ggtitle("Simulation 2") 
 
 ## Create Clusters -------------------------------------------------------------
 
@@ -349,6 +347,8 @@ for(t in sel){
 val2 <- data_inla(f_sim2, 3, polyg2, w2, n2, 2) #Get Data set up properly (t=3, int = 1)
 val2_known <- filter(val2, !is.na(xmap))
 
+plot(val2_known$xmap, val2_known$ymap)
+
 
 #Create Mesh - nonconvex (create around known values)
 prdomain <- inla.nonconvex.hull(as.matrix(val2_known[, 5:6]),
@@ -359,7 +359,9 @@ prmesh1 <- inla.mesh.2d(boundary = prdomain,
                         max.edge = c(3, 3), cutoff = 0.35,
                         offset = c(-0.05, -0.05))
 
+par(mfrow=c(1,2))
 plot(prmesh1, asp = 1, main = "") #see what mesh looks like
+plot(val2_known$xmap, val2_known$ymap, add=TRUE)
 
 
 val.spde <- inla.spde2.matern(mesh = prmesh1, alpha = 2) #create object for matern model
@@ -493,6 +495,7 @@ ndex.pred <- join.stack$data$index$stdata.pred
 spde.mn2 <- res$summary.fitted.values[ndex.pred, "mean"]
 spde.sd2<- res$summary.fitted.values[ndex.pred, "sd"]
 
+#Both attempts are close to each other for most part
 
 #Attempt 1
 # 4.187057 18.387 13.389 3.898043e-20 8.389 18.3898 23.389 18.3898 8.38984
@@ -648,3 +651,10 @@ a <- c(4.937, 17.441, 13.68, 26.484, 8.207, 16.657, 25.124, 16.122, 10.138)
 
 sqrt(sum((spde.mn4-a)^2)/9) # 8.947133
 sqrt(sum((spde.mn3-a)^2)/9) # 8.947355
+
+sqrt(sum((spde.mn-a)^2)/9) #8.92679
+sqrt(sum((spde.mn2-a)^2)/9) #8.926787
+
+grid_val <- val2_pred$x_grid
+
+#Maybe the third one isn't doing as well because at edge of mesh? only two known points at that same grid value so maybe not encompassed well?
