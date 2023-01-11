@@ -1,3 +1,7 @@
+## Attempt 1 ----------------------------------------------------------------------------------------
+
+#I feel like this method is better at the moment (mathces what doing with gpgp package in paper at the moment)
+
 #Following this example: https://becarioprecario.bitbucket.io/inla-gitbook/ch-spatial.html#sec:geostats
 #Spatial Model with Random/Fixed Time Effect
 
@@ -11,15 +15,15 @@ plot(val2_known$xmap, val2_known$ymap)
 #Create Mesh - nonconvex (create around known values)
 prdomain <- inla.nonconvex.hull(as.matrix(val2_known[, 5:6]),
                                 convex = -0.03, concave = -0.05,
-                                resolution = c(100, 100))
+                                resolution = c(130, 100))
 
 prmesh1 <- inla.mesh.2d(boundary = prdomain,
-                        max.edge = c(2, 3), cutoff = 1,
-                        offset = c(-0.05, -0.05))
+                        max.edge = c(0.1, 5), cutoff = 0.75,
+                        offset = c(-0.1, -0.1))
 
-par(mfrow=c(1,2))
+#par(mfrow=c(1,2))
 plot(prmesh1, asp = 1, main = "") #see what mesh looks like
-plot(val2_known$xmap, val2_known$ymap)
+#plot(val2_known$xmap, val2_known$ymap)
 
 meuse.spde <- inla.spde2.matern(mesh = prmesh1, alpha = 2)
 A.meuse <- inla.spde.make.A(mesh = prmesh1, loc = coordinates(val2_known[,13:14]))
@@ -47,24 +51,29 @@ meuse.stack.pred <- inla.stack(data = list(x = NA),
 join.stack <- inla.stack(meuse.stack, meuse.stack.pred)
 
 #Fixed/random time effect - essentially gives same answer
-form <- x ~ -1 + Intercept + f(spatial.field, model = meuse.spde) + t
-#f(t, model = "rw1")
+form <- x ~ -1 + Intercept + f(spatial.field, model = spde) + t
+  #f(t, model = "rw1")
   
 
-m_new <- inla(form, data = inla.stack.data(join.stack),
+m_new <- inla(form, data = inla.stack.data(join.stack, spde = meuse.spde),
            family = "gaussian",
            control.predictor = list(A = inla.stack.A(join.stack), compute = TRUE),
            control.compute = list(cpo = TRUE, dic = TRUE))
 
+summary(m_new) #fixed effect mean is 0 (not adding anything to model, not big enough?)
+
 index.pred <- inla.stack.index(join.stack, "meuse.pred")$data
 
-m_new$summary.fitted.values[index.pred, "mean"]
-m_new$summary.fitted.values[index.pred, "sd"]
+xest <- m_new$summary.fitted.values[index.pred, "mean"]
+xsd <- m_new$summary.fitted.values[index.pred, "sd"] #not as small as it was for gpgp
+
+
+val2_pred2$x_grid ## Little bit different in decimals (so only moving a little bit)
+val2_pred2$x_actual
 
 
 
-
-#########################################################################################
+##Attempt 2 -------------------------------------------------------------------------------
 
 #Separable Space-Time Model (Discrete Time) - https://becarioprecario.bitbucket.io/spde-gitbook/ch-spacetime.html#discrete-time-domain
 
@@ -75,10 +84,10 @@ val2_known <- filter(val2, !is.na(xmap))
 #Create Mesh - nonconvex (create around known values)
 prdomain <- inla.nonconvex.hull(as.matrix(val2_known[, 5:6]),
                                 convex = -0.03, concave = -0.05,
-                                resolution = c(100, 100))
+                                resolution = c(120, 100))
 
 prmesh1 <- inla.mesh.2d(boundary = prdomain,
-                        max.edge = c(3, 3), cutoff = 0.35,
+                        max.edge = c(4, 3), cutoff = 0.8,
                         offset = c(-0.05, -0.05))
 
 plot(prmesh1, asp = 1, main = "") #see what mesh looks like
@@ -103,7 +112,7 @@ A <- inla.spde.make.A(mesh = prmesh1,
 sdat <- inla.stack(
   data = list(x = val2_known$xmap), 
   A = list(A), 
-  effects = list(c(iset)),
+  effects = list(c(iset, list(Intercept = 1))),
   tag = 'stdata') 
 
 
@@ -117,7 +126,7 @@ A.pred <- inla.spde.make.A(mesh = prmesh1, loc = cbind(val2_pred2$xval, val2_pre
 sdat.pred <- inla.stack(
   data = list(x = NA), 
   A = list(A.pred), 
-  effects = list(c(iset)),
+  effects = list(c(iset, list(Intercept = 1))),
   tag = 'stdata.pred') 
 
 #Join stack
@@ -126,12 +135,14 @@ join.stack <- inla.stack(sdat, sdat.pred)
 
 #Fit model
 
-h.spec <- list(rho = list(prior = 'pc.cor1', param = c(0.1, 0.8)))
+h.spec <- list(rho = list(prior = 'pc.cor1', param = c(0, 0.9)))
 # Model formula
-formulae <- x ~ 0 + f(i, model = spde2, group = i.group, 
-                      control.group = list(model = 'ar1', hyper = h.spec)) 
+formulae <- x ~ -1 + Intercept + f(i, model = spde2, group = i.group, 
+                      control.group = list(model = 'ar1')) #, hyper = h.spec)) 
+
+
 # PC prior on the autoreg. param.
-prec.prior <- list(prior = 'pc.prec', param = c(1, 0.02))
+prec.prior <- list(prior = 'pc.prec', param = c(1, 0.01))
 # Model fitting
 res3 <- inla(formulae,  data = inla.stack.data(join.stack), 
             control.predictor = list(compute = TRUE,
@@ -148,5 +159,31 @@ ndex.pred <- join.stack$data$index$stdata.pred
 spde.mn2 <- res3$summary.fitted.values[ndex.pred, "mean"]
 spde.sd2<- res3$summary.fitted.values[ndex.pred, "sd"]
 
+#Gives a very small number for 4th missing data point. Attempt 1 does not do that. 
+
+#Currently using INLA version 22.05.07 (update?)
+
+#After updated Attempt 2 not longer works, not getting good enough initial values (issue with model specification?)
+
+inla.upgrade() #version 22.12.16
+
+install.packages("INLA",repos=c(getOption("repos"),INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
 
 
+
+
+
+###########################################################################
+
+
+val <- cbind(val2_pred2, pred = xest, sd = xsd)
+
+x_error <- sqrt(sum((val$x_actual-val$pred)^2)/nrow(val)) #1.161 - little bit better than grid
+
+val$ll <- val$pred - (2*val$sd)
+val$ul <- val$pred + (2*val$sd)
+
+val$interval <- 0
+val$interval[val$ll < val$x_actual & val$x_actual < val$ul] <- 1
+
+sum(val$interval)/nrow(val)

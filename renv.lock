@@ -86,9 +86,9 @@
     },
     "INLA": {
       "Package": "INLA",
-      "Version": "22.05.07",
+      "Version": "22.12.16",
       "Source": "unknown",
-      "Hash": "13625e6196b0d3db02e1ca8dad8308ec",
+      "Hash": "64620941f85274eb943f53b350ec2394",
       "Requirements": [
         "Matrix",
         "foreach",
@@ -320,10 +320,10 @@
     },
     "callr": {
       "Package": "callr",
-      "Version": "3.7.2",
+      "Version": "3.7.3",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "358689cac9fe93b1bb3a19088d2dbed8",
+      "Hash": "9b2191ede20fa29828139b9900922e51",
       "Requirements": [
         "R6",
         "processx"
@@ -1041,26 +1041,29 @@
     },
     "htmltools": {
       "Package": "htmltools",
-      "Version": "0.5.3",
+      "Version": "0.5.4",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "6496090a9e00f8354b811d1a2d47b566",
+      "Hash": "9d27e99cc90bd701c0a7a63e5923f9b7",
       "Requirements": [
         "base64enc",
         "digest",
+        "ellipsis",
         "fastmap",
         "rlang"
       ]
     },
     "htmlwidgets": {
       "Package": "htmlwidgets",
-      "Version": "1.5.4",
+      "Version": "1.6.1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "76147821cd3fcd8c4b04e1ef0498e7fb",
+      "Hash": "b677ee5954471eaa974c0d099a343a1a",
       "Requirements": [
         "htmltools",
         "jsonlite",
+        "knitr",
+        "rmarkdown",
         "yaml"
       ]
     },

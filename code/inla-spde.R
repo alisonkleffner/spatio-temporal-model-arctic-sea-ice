@@ -332,6 +332,7 @@ f_sim2 <- f1
 
 p <- 0.1 #proportion of missing values
 set.seed(5)
+
 sel <- sample(nrow(w2), size = p*nrow(w2))
 # Final Data Frame that has missing values (gpid, t, ux, uy, xmap, ymap, k, clust)
 for(t in sel){
